@@ -1,29 +1,52 @@
 {
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
-  "lint-staged": {
-    "*.{js,ts,jsx,tsx,json}": [
-      "prettier --write",
-      "eslint --fix"
-    ],
-    "*": {
-      "{js,ts,jsx,tsx,json}": "[ \\prettier"
-    }
+  "name": "social-tippster",
+  "version": "1.0.0",
+  "description": "Social betting tips platform",
+  "main": "index.js",
+  "scripts": {
+    "prepare": "husky install",
+    "dev": "concurrently --kill-others-on-fail --names \"BACKEND,FRONTEND\" --prefix-colors \"blue,green\" \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && npm run start:dev",
+    "build:frontend": "cd frontend && npm run build",
+    "build:backend": "cd backend && npm run build",
+    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install",
+    "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
+    "lint:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "release": "standard-version",
+    "commit": "git-cz"
   },
   "devDependencies": {
+    "@commitlint/config-conventional": "^19.8.1",
     "@typescript-eslint/eslint-plugin": "^8.32.1",
     "@typescript-eslint/parser": "^8.32.1",
+    "commitizen": "^4.3.1",
+    "commitlint": "^19.8.1",
+    "concurrently": "^9.1.2",
+    "cz-conventional-changelog": "^3.3.0",
     "eslint": "^9.27.0",
     "eslint-config-prettier": "^10.1.5",
     "husky": "^9.1.7",
     "lint-staged": "^16.0.0",
     "prettier": "^3.5.3",
+    "standard-version": "^9.5.0",
     "typescript": "^5.8.3"
   },
-  "scripts": {
-    "prepare": "husky install"
+  "lint-staged": {
+    "frontend/**/*.{js,ts,tsx,jsx,json}": [
+      "prettier --write",
+      "eslint --fix"
+    ],
+    "backend/**/*.{js,ts,json}": [
+      "prettier --write",
+      "eslint --fix"
+    ]
+  },
+  "config": {
+    "commitizen": {
+      "path": "cz-conventional-changelog"
+    }
   }
 }

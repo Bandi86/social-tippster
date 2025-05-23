@@ -1,0 +1,158 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: 18
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: social_tippster_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            frontend/package-lock.json
+            backend/package-lock.json
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Lint code
+        run: |
+          npm run lint
+          npm run format:check
+
+      - name: Type check frontend
+        working-directory: ./frontend
+        run: npm run build
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:3001
+
+      - name: Build backend
+        working-directory: ./backend
+        run: npm run build
+
+      - name: Test backend
+        working-directory: ./backend
+        run: npm run test
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/social_tippster_test
+          JWT_SECRET: test-jwt-secret
+          NODE_ENV: test
+
+      - name: Test frontend (if tests exist)
+        working-directory: ./frontend
+        run: |
+          if [ -f "package.json" ] && npm run test --if-present; then
+            npm run test -- --watchAll=false
+          fi
+        continue-on-error: true
+
+  build-and-deploy:
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm run install:all
+
+      - name: Build frontend
+        working-directory: ./frontend
+        run: npm run build
+        env:
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL || 'http://localhost:3001' }}
+          NEXT_PUBLIC_APP_NAME: Social Tippster
+
+      - name: Build backend
+        working-directory: ./backend
+        run: npm run build
+
+      - name: Run security audit
+        run: |
+          npm audit --audit-level=high
+          cd frontend && npm audit --audit-level=high
+          cd ../backend && npm audit --audit-level=high
+        continue-on-error: true
+
+      - name: Build Docker images
+        if: success()
+        run: |
+          echo "Building Docker images..."
+          # docker build -t social-tippster-frontend ./frontend
+          # docker build -t social-tippster-backend ./backend
+
+      - name: Deploy to staging/production
+        if: success()
+        run: |
+          echo "🚀 Deployment would happen here"
+          echo "Environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}"
+          # Itt jöhet a tényleges deployment logic
+          # pl. Vercel, Netlify, AWS, stb.
+
+  security-scan:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.27.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
