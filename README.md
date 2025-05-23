@@ -42,7 +42,7 @@ npm install
 cd frontend
 npm install
 
-# Backend setup  
+# Backend setup
 cd ../backend
 npm install
 
@@ -91,7 +91,7 @@ docker-compose up --build
 # Backend environment
 backend/.env              # Copy from .env.example
 
-# Frontend environment  
+# Frontend environment
 frontend/.env.local       # Copy from .env.example
 ```
 
