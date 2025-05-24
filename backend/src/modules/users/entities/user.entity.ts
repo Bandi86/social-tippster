@@ -1,9 +1,9 @@
 import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
+    Column,
+    CreateDateColumn,
+    Entity,
+    PrimaryGeneratedColumn,
+    UpdateDateColumn,
 } from 'typeorm';
 
 export enum Gender {
@@ -86,10 +86,16 @@ export class User {
   is_banned: boolean;
 
   @Column({ type: 'text', nullable: true })
-  ban_reason: string;
+  ban_reason: string | null;
 
   @Column({ type: 'timestamp', nullable: true })
   banned_until: Date;
+
+  @Column({ type: 'timestamp', nullable: true })
+  banned_at: Date | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  verified_at: Date | null;
 
   @Column({ type: 'timestamp', nullable: true })
   last_login: Date;

@@ -9,8 +9,10 @@ Egy modern közösségi platform sportfogadási tippek megosztására, követés
 - **TypeScript** - Type-safe fejlesztés
 - **TypeORM** - Database ORM
 - **PostgreSQL** - Adatbázis
-- **JWT** - Autentikáció
+- **JWT** - Dual token authentication (Access + Refresh)
 - **bcrypt** - Jelszó titkosítás
+- **Passport** - Authentication middleware
+- **Swagger** - API dokumentáció
 
 ### Frontend
 - **Next.js 14** - React framework (App Router)
@@ -79,9 +81,17 @@ DATABASE_USERNAME=postgres
 DATABASE_PASSWORD=your_password
 DATABASE_NAME=tippmix
 
-# JWT
-JWT_SECRET=your-super-secret-jwt-key
-JWT_EXPIRES_IN=7d
+# JWT Access Token (rövid élettartam)
+JWT_ACCESS_SECRET=your-super-secret-access-jwt-key
+JWT_ACCESS_EXPIRES_IN=15m
+
+# JWT Refresh Token (hosszú élettartam)
+JWT_REFRESH_SECRET=your-super-secret-refresh-jwt-key
+JWT_REFRESH_EXPIRES_IN=7d
+
+# Rate Limiting
+THROTTLE_TTL=60000
+THROTTLE_LIMIT=10
 ```
 
 ### Frontend (.env.local)
@@ -119,19 +129,23 @@ npm run start
 
 ## 📊 Adatbázis
 
-### Aktuális entitások
-- **User** - Felhasználók kezelése (teljes CRUD)
+### Aktuális entitások ✅
+- **User** - Felhasználók kezelése (teljes CRUD, validation, authentication)
+- **RefreshToken** - JWT refresh token-ek biztonságos tárolása
 - További entitások fejlesztés alatt...
 
-### Adatbázis séma
+### Adatbázis séma ✅
 A projekt TypeORM-et használ, automatikus tábla generálással development módban.
+Migrations rendszer implementálva a production környezethez.
 
-### Migrációk
+### Migrációk ✅
 ```bash
 cd backend
-npm run migration:generate -- -n CreateUsers
+npm run migration:generate -- -n CreateRefreshTokensTable
 npm run migration:run
 ```
+
+**Aktuális migráció:** RefreshToken tábla létrehozva és alkalmazva.
 
 ## 🧪 Tesztelés
 
@@ -152,16 +166,21 @@ npm run test:e2e
 - [x] Projekt alapstruktúra
 - [x] Backend NestJS setup
 - [x] Database kapcsolat (PostgreSQL + TypeORM)
-- [x] User entity (teljes séma)
+- [x] User entity (teljes séma + migrations)
+- [x] **Authentication System** (JWT dual token + HttpOnly cookies)
+- [x] **Brute Force Protection** (5 attempts + 15 min lockout)
+- [x] **Rate Limiting** (Multi-tier throttling)
+- [x] **Swagger Documentation** (`/api/docs`)
 - [x] CORS konfiguráció
 - [x] Environment változók kezelése
 - [x] Docker setup
+- [x] **User CRUD API endpoints** (teljes implementáció)
 
 ### 🚧 Fejlesztés alatt
-- [ ] Authentication (JWT)
-- [ ] User CRUD API endpoints
-- [ ] Frontend alapstruktúra
+- [ ] Frontend alapstruktúra (Next.js)
 - [ ] Login/Register komponensek
+- [ ] Dashboard UI komponensek
+- [ ] HTTP client setup (token interceptors)
 
 ### 📋 Tervezett funkciók
 - [ ] Post entity és API
@@ -174,38 +193,55 @@ npm run test:e2e
 
 ## 🌐 API Endpointok
 
-### Autentikáció
-- `POST /api/auth/register` - Regisztráció
-- `POST /api/auth/login` - Bejelentkezés
-- `POST /api/auth/logout` - Kijelentkezés
-- `GET /api/auth/me` - Aktuális felhasználó
+### Autentikáció ✅
+- `POST /api/auth/register` - Regisztráció (rate limited: 3/min)
+- `POST /api/auth/login` - Bejelentkezés (rate limited: 5/min + brute force protection)
+- `POST /api/auth/refresh` - Token frissítés (rate limited: 10/min)
+- `POST /api/auth/logout` - Kijelentkezés (protected)
+- `POST /api/auth/logout-all-devices` - Kijelentkezés minden eszközről (protected)
 
-### Felhasználók
-- `GET /api/users` - Felhasználók listája
+### Felhasználók ✅
+- `GET /api/users` - Felhasználók listája (paginated)
 - `GET /api/users/:id` - Felhasználó részletei
-- `PUT /api/users/:id` - Felhasználó frissítése
-- `DELETE /api/users/:id` - Felhasználó törlése
+- `GET /api/users/username/:username` - Felhasználó keresése username alapján
+- `GET /api/users/me` - Aktuális felhasználó (protected)
+- `PATCH /api/users/:id` - Felhasználó frissítése (protected)
+- `PATCH /api/users/:id/change-password` - Jelszó változtatás (protected)
+- `DELETE /api/users/:id` - Felhasználó törlése (protected)
+
+### Admin műveletek ✅ (Protected)
+- `PATCH /api/users/:id/ban` - Felhasználó tiltása
+- `PATCH /api/users/:id/unban` - Tiltás feloldása
+- `PATCH /api/users/:id/verify` - Felhasználó verifikálása
+
+### Dokumentáció ✅
+- `GET /api/docs` - Swagger/OpenAPI dokumentáció
+- `GET /api/docs-json` - OpenAPI JSON séma
 
 ## 🏗️ Projekt struktúra
 
 ```
 social-tippster/
-├── backend/                 # NestJS API
+├── backend/                 # NestJS API ✅ PRODUCTION READY
 │   ├── src/
 │   │   ├── modules/         # Funkcionális modulok
-│   │   │   └── users/       # User modul
-│   │   ├── common/          # Közös komponensek
-│   │   ├── config/          # Konfigurációk
-│   │   └── database/        # DB setup
+│   │   │   ├── auth/        # ✅ Authentication (dual token + security)
+│   │   │   └── users/       # ✅ User management (CRUD + admin)
+│   │   ├── common/          # ✅ Közös komponensek
+│   │   ├── config/          # ✅ Konfigurációk
+│   │   └── database/        # ✅ DB setup + migrations
 │   └── package.json
-├── frontend/                # Next.js alkalmazás
+├── frontend/                # Next.js alkalmazás 🚧 IN PROGRESS
 │   ├── src/
 │   │   ├── app/             # App Router
 │   │   ├── components/      # UI komponensek
 │   │   └── lib/             # Utilities
 │   └── package.json
-├── docker-compose.yml       # Docker services
-└── README.md               # Ez a fájl
+├── docs/                    # ✅ Dokumentáció
+│   ├── AUTHENTICATION.md    # ✅ Teljes auth rendszer leírás
+│   └── BACKEND_PROGRESS.md  # ✅ Backend fejlesztési státusz
+├── docker-compose.yml       # ✅ Docker services
+└── README.md               # ✅ Ez a fájl (frissítve)
 ```
 
 ## 🤝 Hozzájárulás
@@ -230,13 +266,22 @@ Ez a projekt [MIT License](LICENSE) alatt áll.
 
 ## 👥 Fejlesztő csapat
 
-- **Backend Lead** - NestJS, TypeORM, PostgreSQL
-- **Frontend Lead** - Next.js, TypeScript, Tailwind CSS
-- **DevOps** - Docker, CI/CD, deployment
+- **Backend Lead** - NestJS, TypeORM, PostgreSQL ✅ **COMPLETED**
+  - Authentication System (Dual Token + Security)
+  - User Management (CRUD + Admin functions)
+  - API Documentation (Swagger)
+  - Database Design & Migrations
+- **Frontend Lead** - Next.js, TypeScript, Tailwind CSS 🚧 **IN PROGRESS**
+  - UI Components & Authentication flows
+  - State Management & HTTP Client
+  - Responsive Design & User Experience
+- **DevOps** - Docker, CI/CD, deployment 🚧 **PLANNED**
 
 ---
 
-**Státusz:** 🚧 Aktív fejlesztés alatt
+**Státusz:** 🚀 **Backend Production Ready** - Frontend Integration Ready
 
-**Utolsó frissítés:** 2025. május 24.
+**Backend Completeness:** ✅ **95%** (Authentication + User Management teljes)
+
+**Utolsó frissítés:** 2025. május 24. - Authentication System teljes implementáció
 
