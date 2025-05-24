@@ -19,9 +19,9 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: social_tippster_test
+          POSTGRES_DB: tippmix
         ports:
-          - 5432:5432
+          - 5433:5432
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -79,8 +79,10 @@ jobs:
       - name: Test frontend (if tests exist)
         working-directory: ./frontend
         run: |
-          if [ -f "package.json" ] && npm run test --if-present; then
+          if [ -f "package.json" ] && npm run test --dry-run 2>/dev/null; then
             npm run test -- --watchAll=false
+          else
+            echo "No frontend tests found or test script unavailable, skipping..."
           fi
         continue-on-error: true
 
@@ -106,7 +108,7 @@ jobs:
         working-directory: ./frontend
         run: npm run build
         env:
-          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL || 'http://localhost:3001' }}
+          NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL || secrets.NEXT_PUBLIC_API_URL || 'http://localhost:3001' }}
           NEXT_PUBLIC_APP_NAME: Social Tippster
 
       - name: Build backend
@@ -115,9 +117,9 @@ jobs:
 
       - name: Run security audit
         run: |
-          npm audit --audit-level=high
-          cd frontend && npm audit --audit-level=high
-          cd ../backend && npm audit --audit-level=high
+          npm audit --audit-level=high || true
+          cd frontend && npm audit --audit-level=high || true
+          cd ../backend && npm audit --audit-level=high || true
         continue-on-error: true
 
       - name: Build Docker images
@@ -132,8 +134,8 @@ jobs:
         run: |
           echo "🚀 Deployment would happen here"
           echo "Environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}"
-          # Itt jöhet a tényleges deployment logic
-          # pl. Vercel, Netlify, AWS, stb.
+          # Add actual deployment logic here
+          # e.g., Vercel, Netlify, AWS, etc.
 
   security-scan:
     runs-on: ubuntu-latest

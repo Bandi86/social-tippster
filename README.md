@@ -1,179 +1,242 @@
-# 🎯 Social Tippster
+# 🏈 Social Tippster
 
-Modern social platform for betting tips and predictions.
+Egy modern közösségi platform sportfogadási tippek megosztására, követésére és értékelésére.
 
-## 🏗️ Tech Stack
+## 🚀 Technológiák
 
-- **Frontend**: Next.js 15, TypeScript, Tailwind CSS
-- **Backend**: NestJS, TypeScript
-- **Database**: PostgreSQL
-- **DevOps**: Docker, GitHub Actions
-- **Code Quality**: ESLint, Prettier, Husky, Commitlint
+### Backend
+- **NestJS** - Modern Node.js framework
+- **TypeScript** - Type-safe fejlesztés
+- **TypeORM** - Database ORM
+- **PostgreSQL** - Adatbázis
+- **JWT** - Autentikáció
+- **bcrypt** - Jelszó titkosítás
 
-## 🚀 Quick Start
+### Frontend
+- **Next.js 14** - React framework (App Router)
+- **TypeScript** - Type-safe fejlesztés
+- **Tailwind CSS** - Utility-first CSS
+- **Shadcn/ui** - Modern UI komponensek
+- **React Hook Form** - Form kezelés
+- **Zustand** - State management
 
-### Automated Setup (Recommended)
+### DevOps
+- **Docker** - Kontainerizáció
+- **GitHub Actions** - CI/CD
+- **ESLint & Prettier** - Code quality
+
+## 📋 Előfeltételek
+
+- **Node.js** (v18 vagy újabb)
+- **npm** (v9 vagy újabb)
+- **PostgreSQL** (v14 vagy újabb)
+- **Docker** (opcionális)
+
+## 🛠️ Telepítés
+
+### 1. Repository klónozása
 ```bash
-git clone <repo-url>
+git clone https://github.com/yourusername/social-tippster.git
 cd social-tippster
+```
 
-# Create frontend and backend projects first
-npx create-next-app@latest frontend --typescript --tailwind --eslint --app --src-dir --import-alias "@/*" --skip-git
-npx @nestjs/cli new backend --package-manager npm --skip-git
-
-# Run the setup script
+### 2. Automatikus setup (ajánlott)
+```bash
 chmod +x setup.sh
 ./setup.sh
-
-# Copy and configure environment files
-cp backend/.env.example backend/.env
-cp frontend/.env.example frontend/.env.local
-
-# Edit .env files with your values, then:
-npm run dev
 ```
 
-### Manual Setup
-```bash
-# Root dependencies
-npm install
+### 3. Manuális telepítés
 
-# Frontend setup
+#### Backend setup
+```bash
+cd backend
+npm install
+cp .env.example .env
+# Szerkeszd a .env fájlt a valós értékekkel
+```
+
+#### Frontend setup
+```bash
 cd frontend
 npm install
-
-# Backend setup
-cd ../backend
-npm install
-
-# Start development
-npm run dev:frontend    # Terminal 1
-npm run dev:backend     # Terminal 2
+cp .env.example .env.local
+# Szerkeszd a .env.local fájlt a valós értékekkel
 ```
 
-### Docker Setup
+## ⚙️ Konfigurációs fájlok
+
+### Backend (.env)
+```env
+NODE_ENV=development
+PORT=3001
+FRONTEND_URL=http://localhost:3000
+
+# Database
+DATABASE_HOST=localhost
+DATABASE_PORT=5433
+DATABASE_USERNAME=postgres
+DATABASE_PASSWORD=your_password
+DATABASE_NAME=tippmix
+
+# JWT
+JWT_SECRET=your-super-secret-jwt-key
+JWT_EXPIRES_IN=7d
+```
+
+### Frontend (.env.local)
+```env
+NEXT_PUBLIC_API_URL=http://localhost:3001/api
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+## 🚀 Indítás
+
+### Fejlesztői mód
 ```bash
-# Start entire stack with Docker
+# Minden szolgáltatás egyszerre
+npm run dev
+
+# Vagy külön-külön
+npm run dev:backend    # Backend (port 3001)
+npm run dev:frontend   # Frontend (port 3000)
+```
+
+### Docker használata
+```bash
+# Összes szolgáltatás (backend, frontend, database)
 docker-compose up --build
 
-# Access:
-# Frontend: http://localhost:3000
-# Backend: http://localhost:4000
-# Database: localhost:5432
+# Csak adatbázis
+docker-compose up postgres
 ```
 
-## 🛠️ Available Scripts
-
-### Root Level
-- `npm run dev` - Start both frontend & backend
-- `npm run lint` - Lint all code
-- `npm run format` - Format with Prettier
-- `npm run commit` - Commitizen commit
-- `npm run release` - Create new release
-- `npm run prepare` - Setup Husky hooks
-
-### Frontend (`/frontend`)
-- `npm run dev` - Start Next.js dev server (port 3000)
-- `npm run build` - Build for production
-- `npm run start` - Start production server
-- `npm run lint` - Lint frontend code
-
-### Backend (`/backend`)
-- `npm run start:dev` - Start NestJS dev server (port 3001)
-- `npm run build` - Build for production
-- `npm run start:prod` - Start production server
-- `npm run test` - Run tests
-
-## 📝 Environment Setup
-
-### Required Files
+### Production build
 ```bash
-# Backend environment
-backend/.env              # Copy from .env.example
-
-# Frontend environment
-frontend/.env.local       # Copy from .env.example
+npm run build
+npm run start
 ```
 
-### Key Variables
+## 📊 Adatbázis
+
+### Aktuális entitások
+- **User** - Felhasználók kezelése (teljes CRUD)
+- További entitások fejlesztés alatt...
+
+### Adatbázis séma
+A projekt TypeORM-et használ, automatikus tábla generálással development módban.
+
+### Migrációk
 ```bash
-# Backend (.env)
-DATABASE_URL=postgres://user:pass@localhost:5432/social_tippster
-JWT_SECRET=your-super-secret-key
-PORT=3001
-
-# Frontend (.env.local)
-NEXT_PUBLIC_API_URL=http://localhost:3001
-NEXTAUTH_SECRET=your-nextauth-secret
+cd backend
+npm run migration:generate -- -n CreateUsers
+npm run migration:run
 ```
 
-## 📁 Project Structure
+## 🧪 Tesztelés
+
+```bash
+# Backend tesztek
+npm run test:backend
+
+# Frontend tesztek
+npm run test:frontend
+
+# E2E tesztek
+npm run test:e2e
+```
+
+## 📝 Fejlesztési státusz
+
+### ✅ Kész funkciók
+- [x] Projekt alapstruktúra
+- [x] Backend NestJS setup
+- [x] Database kapcsolat (PostgreSQL + TypeORM)
+- [x] User entity (teljes séma)
+- [x] CORS konfiguráció
+- [x] Environment változók kezelése
+- [x] Docker setup
+
+### 🚧 Fejlesztés alatt
+- [ ] Authentication (JWT)
+- [ ] User CRUD API endpoints
+- [ ] Frontend alapstruktúra
+- [ ] Login/Register komponensek
+
+### 📋 Tervezett funkciók
+- [ ] Post entity és API
+- [ ] Comment rendszer
+- [ ] Vote/Rating rendszer
+- [ ] Real-time chat
+- [ ] Notification rendszer
+- [ ] File upload (képek)
+- [ ] Admin panel
+
+## 🌐 API Endpointok
+
+### Autentikáció
+- `POST /api/auth/register` - Regisztráció
+- `POST /api/auth/login` - Bejelentkezés
+- `POST /api/auth/logout` - Kijelentkezés
+- `GET /api/auth/me` - Aktuális felhasználó
+
+### Felhasználók
+- `GET /api/users` - Felhasználók listája
+- `GET /api/users/:id` - Felhasználó részletei
+- `PUT /api/users/:id` - Felhasználó frissítése
+- `DELETE /api/users/:id` - Felhasználó törlése
+
+## 🏗️ Projekt struktúra
 
 ```
 social-tippster/
-├── frontend/             # Next.js 15 application
-│   ├── src/             # Source code
-│   ├── public/          # Static assets
-│   └── .env.local       # Frontend environment
-├── backend/             # NestJS API
-│   ├── src/             # Source code
-│   ├── dist/            # Compiled output
-│   └── .env             # Backend environment
-├── .github/             # GitHub Actions workflows
-├── .husky/              # Git hooks
-├── docs/                # Documentation
-├── docker-compose.yml   # Docker services
-└── setup.sh            # Automated setup script
+├── backend/                 # NestJS API
+│   ├── src/
+│   │   ├── modules/         # Funkcionális modulok
+│   │   │   └── users/       # User modul
+│   │   ├── common/          # Közös komponensek
+│   │   ├── config/          # Konfigurációk
+│   │   └── database/        # DB setup
+│   └── package.json
+├── frontend/                # Next.js alkalmazás
+│   ├── src/
+│   │   ├── app/             # App Router
+│   │   ├── components/      # UI komponensek
+│   │   └── lib/             # Utilities
+│   └── package.json
+├── docker-compose.yml       # Docker services
+└── README.md               # Ez a fájl
 ```
 
-## 🔄 Development Workflow
+## 🤝 Hozzájárulás
 
-### Commits
-```bash
-# Use commitizen for consistent commits
-npm run commit
+1. Fork-old a repository-t
+2. Hozz létre egy feature branch-et (`git checkout -b feature/amazing-feature`)
+3. Commit-old a változásokat (`git commit -m 'Add amazing feature'`)
+4. Push-old a branch-re (`git push origin feature/amazing-feature`)
+5. Nyiss egy Pull Request-et
 
-# Or manual with conventional format
-git commit -m "feat: add user authentication"
-```
+## 🐛 Hibák jelentése
 
-### Releases
-```bash
-# Create new release with changelog
-npm run release
-```
+Ha hibát találsz, kérlek nyiss egy [issue-t](https://github.com/yourusername/social-tippster/issues) a következő információkkal:
+- Hiba leírása
+- Lépések a reprodukáláshoz
+- Várt viselkedés
+- Képernyőképek (ha szükséges)
 
-## 🐳 Docker Development
+## 📄 Licenc
 
-```bash
-# Start all services
-docker-compose up -d
+Ez a projekt [MIT License](LICENSE) alatt áll.
 
-# View logs
-docker-compose logs -f
+## 👥 Fejlesztő csapat
 
-# Stop services
-docker-compose down
-```
+- **Backend Lead** - NestJS, TypeORM, PostgreSQL
+- **Frontend Lead** - Next.js, TypeScript, Tailwind CSS
+- **DevOps** - Docker, CI/CD, deployment
 
-## 🚀 Deployment
+---
 
-### Prerequisites
-Set GitHub repository secrets:
-- `DATABASE_URL`
-- `JWT_SECRET`
-- `NEXTAUTH_SECRET`
+**Státusz:** 🚧 Aktív fejlesztés alatt
 
-### Deploy
-```bash
-git push origin main  # Triggers GitHub Actions
-```
-
-## 📚 Next Steps
-
-1. **Database Setup**: Configure PostgreSQL connection
-2. **Authentication**: Implement NextAuth.js
-3. **API Development**: Create betting tips endpoints
-4. **UI Components**: Build with Tailwind CSS
-5. **Testing**: Add Jest/Cypress tests
+**Utolsó frissítés:** 2025. május 24.
 

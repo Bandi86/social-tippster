@@ -267,10 +267,10 @@ NODE_ENV=development
 
 # Database Configuration
 DATABASE_HOST=localhost
-DATABASE_PORT=5432
+DATABASE_PORT=5433
 DATABASE_USERNAME=postgres
 DATABASE_PASSWORD=your_password
-DATABASE_NAME=social_tippster_dev
+DATABASE_NAME=tippmix
 
 # JWT Configuration
 JWT_SECRET=your-super-secret-jwt-key-here-change-in-production
@@ -391,7 +391,7 @@ services:
     ports:
       - "3001:3001"
     environment:
-      - DATABASE_URL=postgres://postgres:postgres@db:5432/social_tippster
+      - DATABASE_URL=postgres://postgres:postgres@db:5433/tippmix
       - JWT_SECRET=dev-jwt-secret-key
       - FRONTEND_URL=http://localhost:3000
       - PORT=3001
@@ -410,9 +410,9 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: social_tippster
+      POSTGRES_DB: tippmix
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
@@ -532,9 +532,9 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: social_tippster_test
+          POSTGRES_DB: tippmix
         ports:
-          - 5432:5432
+          - 5433:5432
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -578,7 +578,7 @@ jobs:
         working-directory: ./backend
         run: npm run test
         env:
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432/social_tippster_test
+          DATABASE_URL: postgres://postgres:postgres@localhost:5433/tippmix
 
   build-and-deploy:
     needs: lint-and-test

@@ -25,7 +25,7 @@ services:
     ports:
       - "3001:3001"
     environment:
-      - DATABASE_URL=postgres://postgres:postgres@db:5432/social_tippster
+      - DATABASE_URL=postgres://postgres:postgres@db:5433/tippmix
       - JWT_SECRET=dev-jwt-secret-key
       - FRONTEND_URL=http://localhost:3000
       - PORT=3001
@@ -44,9 +44,9 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: social_tippster
+      POSTGRES_DB: tippmix
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
