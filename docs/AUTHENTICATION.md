@@ -5,20 +5,24 @@
 ### 🛡️ Biztonsági Funkciók
 
 1. **Dual Token Strategy** ✅
+
    - **Access Token**: 15 perc élettartam, Bearer token-ként használva
    - **Refresh Token**: 7 nap élettartam, HttpOnly cookie-ban tárolva
 
 2. **Brute Force Protection** ✅
+
    - 5 sikertelen bejelentkezési kísérlet után 15 perces zárolás
    - Memory-alapú tárolás (production-ben Redis ajánlott)
 
 3. **Rate Limiting** ✅
+
    - Login: 5 kísérlet/perc
    - Register: 3 kísérlet/perc
    - Refresh: 10 kísérlet/perc
    - Globális throttling minden endpoint-ra
 
 4. **HttpOnly Cookies** ✅
+
    - CSRF védelem SameSite beállítással
    - Secure flag production környezetben
 
@@ -29,6 +33,7 @@
 ## 🔧 Konfiguráció ✅
 
 ### Environment Változók (.env)
+
 ```env
 # JWT Access Token (rövid élettartam)
 JWT_ACCESS_SECRET=your-super-secret-access-jwt-key
@@ -53,6 +58,7 @@ THROTTLE_LIMIT=10
 ## 🔄 Authentication Flow ✅
 
 ### 1. Registration Process ✅
+
 ```typescript
 POST /api/auth/register
 {
@@ -78,6 +84,7 @@ Response:
 ```
 
 ### 2. Login Process ✅
+
 ```typescript
 POST /api/auth/login
 {
@@ -94,6 +101,7 @@ Response:
 ```
 
 ### 2. Token Refresh ✅
+
 ```typescript
 POST /api/auth/refresh
 // Automatikusan olvassa a refreshToken cookie-t
@@ -106,6 +114,7 @@ Response:
 ```
 
 ### 3. Logout ✅
+
 ```typescript
 POST /api/auth/logout
 Authorization: Bearer <access_token>
@@ -118,6 +127,7 @@ Response:
 ```
 
 ### 4. Logout All Devices ✅
+
 ```typescript
 POST /api/auth/logout-all-devices
 Authorization: Bearer <access_token>
@@ -132,6 +142,7 @@ Response:
 ## 🗄️ Adatbázis Séma ✅
 
 ### refresh_tokens tábla ✅
+
 ```sql
 CREATE TABLE refresh_tokens (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -157,21 +168,25 @@ CREATE INDEX IDX_refresh_tokens_expires_at ON refresh_tokens(expires_at);
 ### Backend Fájlok
 
 1. **AuthService** (`src/modules/auth/auth.service.ts`) ✅
+
    - Token generálás és validálás
    - Brute force protection (5 kísérlet + 15 perc lockout)
    - Refresh token kezelés (DB-alapú)
    - User regisztráció és validálás
 
 2. **AuthController** (`src/modules/auth/auth.controller.ts`) ✅
+
    - Login, logout, refresh, register endpoint-ok
    - Rate limiting dekorátorral (@Throttle)
    - Swagger dokumentáció (@ApiOperation, @ApiResponse)
 
 3. **RefreshToken Entity** (`src/modules/auth/entities/refresh-token.entity.ts`) ✅
+
    - TypeORM entitás a refresh token-ek tárolásához
    - User kapcsolat (@ManyToOne)
 
 4. **AuthModule** (`src/modules/auth/auth.module.ts`) ✅
+
    - Dual token konfigurációval (access + refresh secrets)
    - JwtModule.registerAsync() implementáció
 
@@ -182,23 +197,28 @@ CREATE INDEX IDX_refresh_tokens_expires_at ON refresh_tokens(expires_at);
 ### Biztonsági Komponensek ✅
 
 1. **JWT Strategy** (`src/modules/auth/strategies/jwt.strategy.ts`) ✅
+
    - Access token validálás
    - User payload extraction
 
 2. **JWT Auth Guard** (`src/modules/auth/guards/jwt-auth.guard.ts`) ✅
+
    - Route protection
    - Token validation
 
 3. **CurrentUser Decorator** (`src/modules/auth/decorators/current-user.decorator.ts`) ✅
+
    - @CurrentUser() parameter decorator
    - Request user extraction
 
 4. **Rate Limiting** (`src/modules/auth/auth.controller.ts`) ✅
+
    - @Throttle({ default: { limit: 5, ttl: 60000 } }) - Login védelem
    - @Throttle({ default: { limit: 3, ttl: 60000 } }) - Register védelem
    - @Throttle({ default: { limit: 10, ttl: 60000 } }) - Refresh védelem
 
 5. **Cookie Parser Middleware** (`src/main.ts`) ✅
+
    - HttpOnly cookie kezelés
    - cookie-parser konfigurálva
 
@@ -212,14 +232,17 @@ CREATE INDEX IDX_refresh_tokens_expires_at ON refresh_tokens(expires_at);
 ### Production Optimalizációk
 
 1. **Redis Session Storage**
+
    - Brute force protection Redis-ben
    - Refresh token blacklist
 
 2. **Device Tracking**
+
    - User-Agent és IP alapú device felismerés
    - Gyanús bejelentkezések riasztása
 
 3. **Advanced Security**
+
    - 2FA implementáció
    - CAPTCHA brute force után
    - Email értesítések új eszköz bejelentkezéskor
@@ -232,6 +255,7 @@ CREATE INDEX IDX_refresh_tokens_expires_at ON refresh_tokens(expires_at);
 ## 🧪 Tesztelés ✅
 
 ### Tesztelt Endpointok
+
 - ✅ **POST /api/auth/register**: User regisztráció validációval
 - ✅ **POST /api/auth/login**: Dual token generálás és HttpOnly cookies
 - ✅ **POST /api/auth/refresh**: Token frissítés cookie-ból
@@ -240,11 +264,13 @@ CREATE INDEX IDX_refresh_tokens_expires_at ON refresh_tokens(expires_at);
 - ✅ **GET /api/docs**: Swagger dokumentáció elérhető
 
 ### Rate Limiting Tesztelve
+
 - ✅ **X-RateLimit-Limit**: Headers jelennek meg
 - ✅ **X-RateLimit-Remaining**: Csökkenő számláló
 - ✅ **X-RateLimit-Reset**: Reset időpont
 
 ### Manual Testing
+
 ```bash
 # 1. Register új user
 curl -X POST http://localhost:3001/api/auth/register \
@@ -278,12 +304,14 @@ curl -X POST http://localhost:3001/api/auth/logout \
 ## 📝 Biztonsági Megjegyzések
 
 1. **Production környezetben**:
+
    - Használj erős, egyedi JWT secret-eket
    - HTTPS-t mindig engedélyezd
    - Redis-t használj session tárolásra
    - Regular security audit-ok
 
 2. **Frontend integráció**:
+
    - Access token memory-ban tárolása
    - Automatikus token refresh interceptor
    - Proper error handling 401-es válaszoknál

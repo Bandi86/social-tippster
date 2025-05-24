@@ -90,7 +90,7 @@ export class UsersService {
 
     const [users, total] = await queryBuilder.getManyAndCount();
 
-    const transformedUsers = users.map((user) => plainToInstance(UserResponseDto, user));
+    const transformedUsers = users.map(user => plainToInstance(UserResponseDto, user));
 
     return {
       data: transformedUsers,

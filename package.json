@@ -35,13 +35,22 @@
     "typescript": "^5.8.3"
   },
   "lint-staged": {
-    "frontend/**/*.{js,ts,tsx,jsx,json}": [
+    "frontend/**/*.{js,ts,tsx,jsx}": [
       "prettier --write",
       "eslint --fix"
     ],
-    "backend/**/*.{js,ts,json}": [
+    "frontend/**/*.{json,md}": [
+      "prettier --write"
+    ],
+    "backend/**/*.{js,ts}": [
       "prettier --write",
       "eslint --fix"
+    ],
+    "backend/**/*.{json,md}": [
+      "prettier --write"
+    ],
+    "*.{js,ts,json,md}": [
+      "prettier --write"
     ]
   },
   "config": {
@@ -49,7 +58,5 @@
       "path": "cz-conventional-changelog"
     }
   },
-  "dependencies": {
-  
-  }
+  "dependencies": {}
 }

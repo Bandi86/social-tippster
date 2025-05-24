@@ -1,9 +1,9 @@
 import {
-    Column,
-    CreateDateColumn,
-    Entity,
-    PrimaryGeneratedColumn,
-    UpdateDateColumn,
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 
 export enum Gender {
@@ -19,6 +19,12 @@ export enum BadgeTier {
   GOLD = 'gold',
   PLATINUM = 'platinum',
   DIAMOND = 'diamond',
+}
+
+export enum UserRole {
+  USER = 'user',
+  ADMIN = 'admin',
+  MODERATOR = 'moderator',
 }
 
 @Entity('users')
@@ -166,6 +172,9 @@ export class User {
 
   @Column({ default: 'en' })
   language_preference: string;
+
+  @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
+  role: UserRole;
 
   // FK to User - created by admin/moderator
   @Column({ type: 'uuid', nullable: true })

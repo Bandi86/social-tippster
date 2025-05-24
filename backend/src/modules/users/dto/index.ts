@@ -7,4 +7,3 @@ export { PaginatedUsersResponseDto } from './paginated-users-response.dto';
 export { ResetPasswordDto } from './reset-password.dto';
 export { UpdateUserDto } from './update-user.dto';
 export { UserResponseDto } from './user-response.dto';
-

@@ -14,9 +14,10 @@ import { RefreshToken } from './entities/refresh-token.entity';
 
 export interface JwtPayload {
   sub: string;
-  email: string;
-  username: string;
-  type?: 'access' | 'refresh';
+  type: string;
+  email?: string;
+  username?: string;
+  [key: string]: any;
 }
 
 export interface LoginResponse {
@@ -43,12 +44,14 @@ export class AuthService {
     private readonly refreshTokenRepository: Repository<RefreshToken>,
   ) {}
 
-  private isValidRefreshTokenPayload(payload: any): payload is RefreshTokenPayload {
+  private isValidRefreshTokenPayload(payload: unknown): payload is RefreshTokenPayload {
     return (
       typeof payload === 'object' &&
       payload !== null &&
-      typeof payload.sub === 'string' &&
-      typeof payload.type === 'string'
+      'sub' in payload &&
+      'type' in payload &&
+      typeof (payload as Record<string, unknown>).sub === 'string' &&
+      typeof (payload as Record<string, unknown>).type === 'string'
     );
   }
 
@@ -171,7 +174,7 @@ export class AuthService {
   async refreshToken(refreshTokenValue: string, response?: Response): Promise<RefreshTokenDto> {
     try {
       // Verify refresh token
-      const rawPayload = this.jwtService.verify(refreshTokenValue, {
+      const rawPayload: unknown = this.jwtService.verify(refreshTokenValue, {
         secret: this.configService.get('jwt.refreshSecret'),
       });
 
@@ -278,6 +281,10 @@ export class AuthService {
   }
 
   async validateJwtPayload(payload: JwtPayload): Promise<User> {
+    if (!payload.email) {
+      throw new UnauthorizedException('Érvénytelen token: hiányzó email');
+    }
+
     const user = await this.usersService.findByEmail(payload.email);
 
     if (!user) {

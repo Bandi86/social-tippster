@@ -48,9 +48,120 @@ npx husky install
 npx husky add .husky/pre-commit "npx lint-staged"
 npx husky add .husky/commit-msg 'npx --no -- commitlint --edit "$1"'
 
-# Lint-staged
-npm pkg set lint-staged."frontend/**/*.{js,ts,tsx,jsx,json}"="[\"prettier --write\", \"eslint --fix\"]"
-npm pkg set lint-staged."backend/**/*.{js,ts,json}"="[\"prettier --write\", \"eslint --fix\"]"
+# Lint-staged konfigurációja (fejlett)
+npm pkg set lint-staged."frontend/**/*.{js,ts,tsx,jsx}"="[\"prettier --write\", \"eslint --fix\"]"
+npm pkg set lint-staged."frontend/**/*.{json,md}"="[\"prettier --write\"]"
+npm pkg set lint-staged."backend/**/*.{js,ts}"="[\"prettier --write\", \"eslint --fix\"]"
+npm pkg set lint-staged."backend/**/*.{json,md}"="[\"prettier --write\"]"
+npm pkg set lint-staged."*.{js,ts,json,md}"="[\"prettier --write\"]"
+
+# Root Prettier config (fejlett beállítások)
+cat <<EOT > .prettierrc
+{
+  "semi": true,
+  "singleQuote": true,
+  "trailingComma": "all",
+  "tabWidth": 2,
+  "printWidth": 100,
+  "bracketSpacing": true,
+  "arrowParens": "avoid",
+  "endOfLine": "lf",
+  "useTabs": false,
+  "bracketSameLine": false,
+  "quoteProps": "as-needed",
+  "jsxSingleQuote": true,
+  "insertPragma": false,
+  "requirePragma": false,
+  "proseWrap": "preserve",
+  "htmlWhitespaceSensitivity": "css",
+  "vueIndentScriptAndStyle": false,
+  "embeddedLanguageFormatting": "auto"
+}
+EOT
+
+cat <<EOT > .prettierignore
+node_modules
+dist
+build
+.next
+out
+coverage
+*.log
+.vscode
+.env
+EOT
+
+# .editorconfig (line ending és formázási beállítások)
+cat <<EOT > .editorconfig
+root = true
+
+[*]
+indent_style = space
+indent_size = 2
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[*.md]
+trim_trailing_whitespace = false
+EOT
+
+# VS Code workspace beállítások
+mkdir -p .vscode
+cat <<EOT > .vscode/settings.json
+{
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit",
+    "source.organizeImports": "explicit"
+  },
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "prettier.requireConfig": true,
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "files.eol": "\\n",
+  "prettier.endOfLine": "lf",
+  "files.exclude": {
+    "**/.git": true,
+    "**/node_modules": true,
+    "**/.DS_Store": true,
+    "**/dist": true,
+    "**/.next": true,
+    "**/.vscode": false
+  },
+  "eslint.workingDirectories": ["backend", "frontend"],
+  "prettier.configPath": ".prettierrc"
+}
+EOT
+
+# VS Code ajánlott extensionok
+cat <<EOT > .vscode/extensions.json
+{
+  "recommendations": [
+    "esbenp.prettier-vscode",
+    "ms-vscode.vscode-eslint",
+    "bradlc.vscode-tailwindcss",
+    "ms-vscode.vscode-typescript-next",
+    "formulahendry.auto-rename-tag",
+    "christian-kohler.path-intellisense",
+    "ms-vscode.vscode-json"
+  ]
+}
+EOT
+
+# Git konfigurációk (line ending problémák megoldása)
+git config core.autocrlf false
+git config core.eol lf
 
 # Commitlint config
 cat <<EOT > commitlint.config.js
@@ -90,7 +201,7 @@ touch CHANGELOG.md
 echo "🔧 Frontend (Next.js) konfigurálása..."
 cd frontend
 
-# Prettier config
+# Prettier config (fejlett beállítások frontend-hez)
 cat <<EOT > .prettierrc
 {
   "semi": true,
@@ -98,7 +209,18 @@ cat <<EOT > .prettierrc
   "trailingComma": "all",
   "tabWidth": 2,
   "printWidth": 100,
-  "endOfLine": "lf"
+  "endOfLine": "lf",
+  "useTabs": false,
+  "bracketSpacing": true,
+  "arrowParens": "avoid",
+  "bracketSameLine": false,
+  "quoteProps": "as-needed",
+  "jsxSingleQuote": true,
+  "insertPragma": false,
+  "requirePragma": false,
+  "proseWrap": "preserve",
+  "htmlWhitespaceSensitivity": "css",
+  "embeddedLanguageFormatting": "auto"
 }
 EOT
 
@@ -109,6 +231,9 @@ out
 coverage
 public
 *.log
+.env*
+dist
+build
 EOT
 
 # ESLint config frissítése
@@ -210,7 +335,7 @@ cd ..
 echo "🔧 Backend (NestJS) konfigurálása..."
 cd backend
 
-# Prettier config
+# Prettier config (fejlett beállítások backend-hez)
 cat <<EOT > .prettierrc
 {
   "semi": true,
@@ -218,7 +343,16 @@ cat <<EOT > .prettierrc
   "trailingComma": "all",
   "tabWidth": 2,
   "printWidth": 100,
-  "endOfLine": "lf"
+  "endOfLine": "lf",
+  "useTabs": false,
+  "bracketSpacing": true,
+  "arrowParens": "avoid",
+  "bracketSameLine": false,
+  "quoteProps": "as-needed",
+  "insertPragma": false,
+  "requirePragma": false,
+  "proseWrap": "preserve",
+  "embeddedLanguageFormatting": "auto"
 }
 EOT
 
@@ -227,6 +361,8 @@ node_modules
 dist
 coverage
 *.log
+.env*
+build
 EOT
 
 # ESLint config
@@ -657,5 +793,5 @@ echo ""
 echo "🌐 Elérhetőségek:"
 echo "   Frontend: http://localhost:3000"
 echo "   Backend:  http://localhost:3001"
-echo "   Database: localhost:5432"
+echo "   Database: localhost:5433"
 echo ""
