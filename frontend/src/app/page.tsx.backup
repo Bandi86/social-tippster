@@ -1,28 +1,7 @@
 import BaseLayout from '@/components/layout/base-layout';
 import { Button } from '@/components/ui/button';
-import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-
-export const metadata: Metadata = {
-  title: 'Social Tippster - Share Your Knowledge with the World',
-  description:
-    'Join our community of experts and enthusiasts to share knowledge, learn from others, and connect with like-minded people.',
-  keywords: ['social media', 'tips', 'knowledge sharing', 'community', 'learning'],
-  openGraph: {
-    title: 'Social Tippster - Share Your Knowledge with the World',
-    description:
-      'Join our community of experts and enthusiasts to share knowledge, learn from others, and connect with like-minded people.',
-    type: 'website',
-    url: 'https://social-tippster.com',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Social Tippster - Share Your Knowledge with the World',
-    description:
-      'Join our community of experts and enthusiasts to share knowledge, learn from others, and connect with like-minded people.',
-  },
-};
 
 export default function Home() {
   return (
@@ -75,6 +54,7 @@ export default function Home() {
               Our platform offers a unique space to connect, share, and grow
             </p>
           </div>
+
           <div className='grid md:grid-cols-3 gap-8'>
             <div className='bg-white p-6 rounded-lg shadow-sm'>
               <div className='w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4'>
@@ -98,6 +78,7 @@ export default function Home() {
                 Create posts with your best tips and advice on any topic you're passionate about.
               </p>
             </div>
+
             <div className='bg-white p-6 rounded-lg shadow-sm'>
               <div className='w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4'>
                 <svg
@@ -121,6 +102,7 @@ export default function Home() {
                 you want to learn about.
               </p>
             </div>
+
             <div className='bg-white p-6 rounded-lg shadow-sm'>
               <div className='w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-4'>
                 <svg

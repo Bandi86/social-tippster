@@ -19,7 +19,8 @@ export const metadata: Metadata = {
     template: '%s | Social Tippster',
     default: 'Social Tippster - Share Your Knowledge with the World',
   },
-  description: 'Join our community of experts and enthusiasts to share knowledge, learn from others, and connect with like-minded people.',
+  description:
+    'Join our community of experts and enthusiasts to share knowledge, learn from others, and connect with like-minded people.',
   keywords: ['social media', 'tips', 'knowledge sharing', 'community', 'learning'],
   authors: [{ name: 'Social Tippster Team' }],
   creator: 'Social Tippster',
@@ -29,12 +30,14 @@ export const metadata: Metadata = {
     url: 'https://social-tippster.com',
     siteName: 'Social Tippster',
     title: 'Social Tippster - Share Your Knowledge with the World',
-    description: 'Join our community of experts and enthusiasts to share knowledge, learn from others, and connect with like-minded people.',
+    description:
+      'Join our community of experts and enthusiasts to share knowledge, learn from others, and connect with like-minded people.',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Social Tippster - Share Your Knowledge with the World',
-    description: 'Join our community of experts and enthusiasts to share knowledge, learn from others, and connect with like-minded people.',
+    description:
+      'Join our community of experts and enthusiasts to share knowledge, learn from others, and connect with like-minded people.',
     creator: '@social_tippster',
   },
   robots: {
@@ -52,7 +55,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang='en'>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ErrorBoundary>
           <Providers>{children}</Providers>
