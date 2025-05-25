@@ -49,6 +49,11 @@ export default function Home() {
                   Login
                 </Button>
               </Link>
+              <Link href='/components'>
+                <Button size='lg' variant='secondary' className='w-full sm:w-auto'>
+                  View Components
+                </Button>
+              </Link>
             </div>
           </div>
           <div className='flex justify-center'>

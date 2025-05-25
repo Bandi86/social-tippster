@@ -95,8 +95,26 @@ export class User {
 
 ### Authorization Rules
 
-- Users can only modify their own profiles
-- Users can only modify their own posts
-- Users can only delete their own posts
-- Admins can delete any post (for moderation)
-- Moderators have specific permissions (as defined in controllers)
+- **Users**: Can only modify their own profiles and posts
+- **Users**: Can only delete their own posts
+- **Admins**: Full access to all user management operations via admin panel
+  - Ban/unban users with reason tracking
+  - Verify/unverify user accounts
+  - Change user roles (USER/ADMIN/MODERATOR)
+  - Delete any user account
+  - View comprehensive user statistics
+  - Access to paginated user listings with advanced filtering
+- **Admins**: Can delete any post (for moderation purposes)
+- **Moderators**: Have specific permissions as defined in role-based controllers
+
+### Admin Panel Database Requirements
+
+The admin panel functionality uses the existing `users` table with the `role` column to implement:
+
+- **Role-based Access Control**: Admin endpoints check for ADMIN role
+- **User Management**: All CRUD operations on user accounts
+- **Statistics Tracking**: Real-time user analytics and counts
+- **Audit Trail**: Ban/unban operations with reason tracking
+- **Account Verification**: User verification status management
+
+No additional database migrations are required for admin panel functionality.

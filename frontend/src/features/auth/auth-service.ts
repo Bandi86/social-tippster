@@ -34,8 +34,24 @@ export const AuthService = {
    * @param userData User registration data
    */
   register: async (userData: RegisterFormValues): Promise<RegisterResponse> => {
-    const { confirmPassword, ...registerData } = userData;
-    const response = await api.post<RegisterResponse>('/auth/register', registerData);
+    const { confirmPassword, name, ...registerData } = userData;
+
+    // Split the name into first and last name (simple approach)
+    const nameParts = name.trim().split(' ');
+    const first_name = nameParts[0] || '';
+    const last_name = nameParts.slice(1).join(' ') || '';
+
+    // Generate a username from email (before @ symbol)
+    const username = registerData.email.split('@')[0];
+
+    const payload = {
+      ...registerData,
+      username,
+      first_name,
+      last_name,
+    };
+
+    const response = await api.post<RegisterResponse>('/auth/register', payload);
     return response.data;
   },
 

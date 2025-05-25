@@ -53,7 +53,7 @@ Egy modern közösségi platform sportfogadási tippek megosztására, követés
 ### 1. Repository klónozása
 
 ```bash
-git clone https://github.com/yourusername/social-tippster.git
+git clone https://github.com/Bandi86/social-tippster.git
 cd social-tippster
 ```
 
@@ -77,6 +77,11 @@ cp .env.example .env
 
 #### Frontend setup
 
+```bash
+cd frontend
+npm install
+cp .env.example .env.local
+# Szerkeszd a .env.local fájlt a valós értékekkel
 ```bash
 cd frontend
 npm install

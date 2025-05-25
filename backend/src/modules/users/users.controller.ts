@@ -29,7 +29,7 @@ import { GetUsersQueryDto } from './dto/get-users-query.dto';
 import { PaginatedUsersResponseDto } from './dto/paginated-users-response.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
-import { User } from './entities/user.entity';
+import { User, UserRole } from './entities/user.entity';
 import { UsersService } from './users.service';
 
 @ApiTags('users')
@@ -180,9 +180,8 @@ export class UsersController {
     @CurrentUser() currentUser: User,
     @Body('reason') reason?: string,
   ): Promise<UserResponseDto> {
-    // TODO: Implement admin role check when admin system is ready
-    // For now, only verified users can ban others (placeholder)
-    if (!currentUser.is_verified) {
+    // Admin role check - only admins can ban users
+    if (currentUser.role !== UserRole.ADMIN) {
       throw new ForbiddenException('Admin jogosultság szükséges a felhasználó kitiltásához');
     }
     return this.usersService.banUser(id, reason);
@@ -201,8 +200,8 @@ export class UsersController {
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() currentUser: User,
   ): Promise<UserResponseDto> {
-    // TODO: Implement admin role check when admin system is ready
-    if (!currentUser.is_verified) {
+    // Admin role check - only admins can unban users
+    if (currentUser.role !== UserRole.ADMIN) {
       throw new ForbiddenException('Admin jogosultság szükséges a tiltás feloldásához');
     }
     return this.usersService.unbanUser(id);
@@ -221,8 +220,8 @@ export class UsersController {
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() currentUser: User,
   ): Promise<UserResponseDto> {
-    // TODO: Implement admin role check when admin system is ready
-    if (!currentUser.is_verified) {
+    // Admin role check - only admins can verify users
+    if (currentUser.role !== UserRole.ADMIN) {
       throw new ForbiddenException('Admin jogosultság szükséges a felhasználó verifikálásához');
     }
     return this.usersService.verifyUser(id);

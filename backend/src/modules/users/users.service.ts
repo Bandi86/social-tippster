@@ -14,7 +14,7 @@ import { GetUsersQueryDto } from './dto/get-users-query.dto';
 import { PaginatedUsersResponseDto } from './dto/paginated-users-response.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
-import { User } from './entities/user.entity';
+import { User, UserRole } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
@@ -243,6 +243,46 @@ export class UsersService {
     return plainToInstance(UserResponseDto, savedUser);
   }
 
+  async unverifyUser(id: string): Promise<UserResponseDto> {
+    const user = await this.userRepository.findOne({ where: { user_id: id } });
+
+    if (!user) {
+      throw new NotFoundException('Felhasználó nem található');
+    }
+
+    user.is_verified = false;
+    user.verified_at = null;
+    user.updated_at = new Date();
+
+    const savedUser = await this.userRepository.save(user);
+    return plainToInstance(UserResponseDto, savedUser);
+  }
+
+  async changeUserRole(id: string, role: UserRole): Promise<UserResponseDto> {
+    const user = await this.userRepository.findOne({ where: { user_id: id } });
+
+    if (!user) {
+      throw new NotFoundException('Felhasználó nem található');
+    }
+
+    // Prevent changing the role of the current user if they are the only admin
+    if (user.role === UserRole.ADMIN && role !== UserRole.ADMIN) {
+      const adminCount = await this.userRepository.count({
+        where: { role: UserRole.ADMIN },
+      });
+
+      if (adminCount <= 1) {
+        throw new BadRequestException('Nem lehet eltávolítani az egyetlen admin jogosultságot');
+      }
+    }
+
+    user.role = role;
+    user.updated_at = new Date();
+
+    const savedUser = await this.userRepository.save(user);
+    return plainToInstance(UserResponseDto, savedUser);
+  }
+
   async validateUser(email: string, password: string): Promise<User | null> {
     const user = await this.userRepository.findOne({ where: { email } });
 
@@ -296,5 +336,52 @@ export class UsersService {
 
     user.updated_at = new Date();
     await this.userRepository.save(user);
+  }
+
+  // Admin-specific methods
+  async getAdminStats(): Promise<{
+    total: number;
+    active: number;
+    banned: number;
+    unverified: number;
+    admins: number;
+    recentRegistrations: number;
+  }> {
+    const total = await this.userRepository.count();
+
+    const active = await this.userRepository.count({
+      where: { is_active: true },
+    });
+
+    const banned = await this.userRepository.count({
+      where: { is_banned: true },
+    });
+
+    const unverified = await this.userRepository.count({
+      where: { is_verified: false },
+    });
+
+    const admins = await this.userRepository.count({
+      where: { role: UserRole.ADMIN },
+    });
+
+    // Get new users this month
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const recentRegistrations = await this.userRepository
+      .createQueryBuilder('user')
+      .where('user.created_at >= :startDate', { startDate: startOfMonth })
+      .getCount();
+
+    return {
+      total,
+      active,
+      banned,
+      unverified,
+      admins,
+      recentRegistrations,
+    };
   }
 }

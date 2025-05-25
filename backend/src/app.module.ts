@@ -7,6 +7,7 @@ import { AppService } from './app.service';
 import configuration from './config/configuration';
 import { ThrottlerConfig } from './config/throttler.config';
 import { DatabaseModule } from './database/db.module';
+import { AdminModule } from './modules/admin/admin.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { PostsModule } from './modules/posts/posts.module';
 import { UsersModule } from './modules/users/users.module';
@@ -22,6 +23,7 @@ import { UsersModule } from './modules/users/users.module';
     UsersModule,
     AuthModule,
     PostsModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [
