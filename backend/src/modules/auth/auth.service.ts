@@ -302,12 +302,27 @@ export class AuthService {
     return user;
   }
 
-  async register(registerDto: RegisterDto): Promise<{ message: string; user: UserResponseDto }> {
+  async register(
+    registerDto: RegisterDto,
+  ): Promise<{ message: string; user: UserResponseDto; accessToken: string }> {
     const user = await this.usersService.create(registerDto);
+
+    // Generate access token for the new user
+    const payload: JwtPayload = {
+      sub: user.user_id,
+      type: 'access',
+      email: user.email,
+      username: user.username,
+    };
+
+    const accessToken = this.jwtService.sign(payload, {
+      expiresIn: this.configService.get<string>('JWT_ACCESS_EXPIRATION') || '15m',
+    });
 
     return {
       message: 'Sikeres regisztráció',
       user: user,
+      accessToken: accessToken,
     };
   }
 }

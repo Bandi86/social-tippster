@@ -1,61 +1,89 @@
 import { AuthService } from '@/features/auth/auth-service';
 import { useAuthStore } from '@/store/auth';
 import { useQuery } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 /**
  * Custom hook to check if the user is authenticated
  * and fetch the current user data if they are
  */
-export const useAuth = () => {
-  const { user, isAuthenticated, isLoading, setUser, setAuthenticated, setLoading, logout } =
-    useAuthStore();
+export const useAuth = (options: { skipInitialization?: boolean } = {}) => {
+  const { user, isAuthenticated, setUser, setAuthenticated, logout } = useAuthStore();
+  const [isInitialized, setIsInitialized] = useState(options.skipInitialization || false);
+  const [isLoading, setIsLoading] = useState(!options.skipInitialization);
+  const initializationRef = useRef(false);
 
-  const { data, isLoading: isUserLoading } = useQuery({
+  // Memoize the logout function to prevent unnecessary re-renders
+  const memoizedLogout = useCallback(() => {
+    logout();
+  }, [logout]);
+
+  // Only fetch user data if authenticated and we don't have user data
+  const { data: userData, isLoading: isUserLoading } = useQuery({
     queryKey: ['currentUser'],
     queryFn: AuthService.getCurrentUser,
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && !user && !options.skipInitialization && isInitialized,
     retry: false,
-    onError: () => {
-      // If there's an error fetching the user, log them out
-      logout();
-      setLoading(false);
-    },
-    onSuccess: userData => {
-      setUser(userData);
-      setAuthenticated(true);
-      setLoading(false);
-    },
+    refetchOnWindowFocus: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
+  // Set user data when query succeeds
   useEffect(() => {
-    // If we already have user data or we're not authenticated, return
-    if (user || !isAuthenticated) {
-      setLoading(false);
+    if (userData && isAuthenticated) {
+      setUser(userData);
+    }
+  }, [userData, isAuthenticated, setUser]);
+
+  // Initialize auth state on mount - only run once
+  useEffect(() => {
+    // Skip if already initialized or should skip initialization
+    if (initializationRef.current || options.skipInitialization) {
+      if (options.skipInitialization) {
+        setIsInitialized(true);
+        setIsLoading(false);
+      }
       return;
     }
 
-    // Check if the user has a valid session or refresh token
-    const checkAuth = async () => {
+    initializationRef.current = true;
+
+    const initializeAuth = async () => {
+      setIsLoading(true);
+
+      // If we already have a user, we're authenticated
+      if (user) {
+        setAuthenticated(true);
+        setIsLoading(false);
+        setIsInitialized(true);
+        return;
+      }
+
+      // Try to refresh token to check if user is still authenticated
       try {
-        // Try to refresh the token
         await AuthService.refreshToken();
-        // If successful, the query will run to fetch the user data
         setAuthenticated(true);
       } catch (error) {
-        // If refreshing fails, the user is not authenticated
+        // Refresh failed, user is not authenticated
         setAuthenticated(false);
-        setLoading(false);
+        memoizedLogout();
+      } finally {
+        setIsLoading(false);
+        setIsInitialized(true);
       }
     };
 
-    checkAuth();
-  }, [isAuthenticated, setAuthenticated, setLoading, setUser, user]);
+    initializeAuth();
+  }, []); // Empty dependency array - only run once on mount
+
+  // Return loading true only if we're actually loading and not initialized yet
+  const finalIsLoading =
+    (!isInitialized && isLoading) || (!options.skipInitialization && isUserLoading);
 
   return {
     user,
     isAuthenticated,
-    isLoading: isLoading || isUserLoading,
-    logout,
+    isLoading: finalIsLoading,
+    logout: memoizedLogout,
   };
 };

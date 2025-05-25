@@ -11,10 +11,20 @@ export interface PaginatedUsers {
 }
 
 class AdminUsersAPI {
-  private baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  private baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
-    const token = localStorage.getItem('token');
+    // get token from headers if present and if headers is a plain object
+    let token = '';
+    if (options.headers && typeof options.headers === 'object' && !Array.isArray(options.headers)) {
+      const headersObj = options.headers as Record<string, string>;
+      if (headersObj['Authorization']) {
+        token = headersObj['Authorization'].replace('Bearer ', '');
+      }
+    }
+    if (!token) {
+      throw new Error('Authorization token is required');
+    }
 
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       headers: {
@@ -47,19 +57,19 @@ class AdminUsersAPI {
     if (filters.limit) params.append('limit', filters.limit.toString());
 
     const queryString = params.toString();
-    const endpoint = `/api/admin/users${queryString ? `?${queryString}` : ''}`;
+    const endpoint = `/admin/users${queryString ? `?${queryString}` : ''}`;
 
     return this.request<PaginatedUsers>(endpoint);
   }
 
   // Get single user by ID
   async getUser(userId: string): Promise<ApiResponse<User>> {
-    return this.request<User>(`/api/admin/users/${userId}`);
+    return this.request<User>(`/admin/users/${userId}`);
   }
 
   // Ban user
   async banUser(userId: string, reason?: string): Promise<ApiResponse<User>> {
-    return this.request<User>(`/api/admin/users/${userId}/ban`, {
+    return this.request<User>(`/admin/users/${userId}/ban`, {
       method: 'POST',
       body: JSON.stringify({ reason }),
     });
@@ -67,28 +77,28 @@ class AdminUsersAPI {
 
   // Unban user
   async unbanUser(userId: string): Promise<ApiResponse<User>> {
-    return this.request<User>(`/api/admin/users/${userId}/unban`, {
+    return this.request<User>(`/admin/users/${userId}/unban`, {
       method: 'POST',
     });
   }
 
   // Verify user
   async verifyUser(userId: string): Promise<ApiResponse<User>> {
-    return this.request<User>(`/api/admin/users/${userId}/verify`, {
+    return this.request<User>(`/admin/users/${userId}/verify`, {
       method: 'POST',
     });
   }
 
   // Unverify user
   async unverifyUser(userId: string): Promise<ApiResponse<User>> {
-    return this.request<User>(`/api/admin/users/${userId}/unverify`, {
+    return this.request<User>(`/admin/users/${userId}/unverify`, {
       method: 'POST',
     });
   }
 
   // Change user role
   async changeUserRole(userId: string, role: 'user' | 'admin'): Promise<ApiResponse<User>> {
-    return this.request<User>(`/api/admin/users/${userId}/role`, {
+    return this.request<User>(`/admin/users/${userId}/role`, {
       method: 'PUT',
       body: JSON.stringify({ role }),
     });
@@ -96,7 +106,7 @@ class AdminUsersAPI {
 
   // Delete user
   async deleteUser(userId: string): Promise<ApiResponse<{ message: string }>> {
-    return this.request<{ message: string }>(`/api/admin/users/${userId}`, {
+    return this.request<{ message: string }>(`/admin/users/${userId}`, {
       method: 'DELETE',
     });
   }
@@ -112,7 +122,7 @@ class AdminUsersAPI {
       recentRegistrations: number;
     }>
   > {
-    return this.request('/api/admin/users/stats');
+    return this.request('/admin/users/stats');
   }
 }
 

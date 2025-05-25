@@ -34,33 +34,62 @@ export const AuthService = {
    * @param userData User registration data
    */
   register: async (userData: RegisterFormValues): Promise<RegisterResponse> => {
-    const { confirmPassword, name, ...registerData } = userData;
-
-    // Split the name into first and last name (simple approach)
-    const nameParts = name.trim().split(' ');
+    // Extract only the needed fields and transform them
+    const nameParts = userData.name.trim().split(' ');
     const first_name = nameParts[0] || '';
     const last_name = nameParts.slice(1).join(' ') || '';
 
     // Generate a username from email (before @ symbol)
-    const username = registerData.email.split('@')[0];
+    const username = userData.email.split('@')[0];
 
+    // Create the exact payload the backend expects
     const payload = {
-      ...registerData,
       username,
+      email: userData.email,
+      password: userData.password,
       first_name,
       last_name,
     };
 
-    const response = await api.post<RegisterResponse>('/auth/register', payload);
-    return response.data;
+    const response = await api.post('/auth/register', payload);
+
+    // Map backend response to frontend format
+    const backendUser = response.data.user;
+    const frontendUser: User = {
+      id: backendUser.user_id,
+      email: backendUser.email,
+     username:
+        `${backendUser.first_name || ''} ${backendUser.last_name || ''}`.trim() ||
+        backendUser.username,
+      role: backendUser.role || 'user',
+      createdAt: backendUser.created_at,
+      updatedAt: backendUser.updated_at,
+    };
+
+    return {
+      user: frontendUser,
+      accessToken: response.data.accessToken,
+    };
   },
 
   /**
    * Get the current user
    */
   getCurrentUser: async (): Promise<User> => {
-    const response = await api.get<User>('/users/me');
-    return response.data;
+    const response = await api.get('/users/me');
+    const backendUser = response.data;
+
+    // Map backend response to frontend format
+    return {
+      id: backendUser.user_id,
+      email: backendUser.email,
+      username:
+        `${backendUser.first_name || ''} ${backendUser.last_name || ''}`.trim() ||
+        backendUser.username,
+      role: backendUser.role || 'user',
+      createdAt: backendUser.created_at,
+      updatedAt: backendUser.updated_at,
+    };
   },
 
   /**

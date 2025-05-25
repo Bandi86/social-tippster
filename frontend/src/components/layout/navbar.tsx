@@ -9,7 +9,12 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 export default function Navbar() {
-  const { user, isAuthenticated, logout: logoutStore } = useAuth();
+  const {
+    user,
+    isAuthenticated,
+    isLoading,
+    logout: logoutStore,
+  } = useAuth({ skipInitialization: true });
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const router = useRouter();
@@ -29,6 +34,11 @@ export default function Navbar() {
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
+
+  // Don't render navigation items while loading to prevent flicker
+  const showAuthItems = !isLoading;
+
+
 
   return (
     <nav className='bg-white shadow-sm'>
@@ -90,7 +100,7 @@ export default function Navbar() {
           <div className='hidden sm:ml-6 sm:flex sm:items-center'>
             {isAuthenticated ? (
               <div className='flex items-center gap-4'>
-                <span className='text-sm text-gray-700'>Hello, {user?.name}</span>
+                <span className='text-sm text-gray-700'>Hello, {user?.username}</span>
                 <Button
                   variant='outline'
                   onClick={handleLogout}
@@ -204,7 +214,7 @@ export default function Navbar() {
           {isAuthenticated ? (
             <div className='space-y-2'>
               <div className='px-4'>
-                <div className='text-base font-medium text-gray-800'>{user?.name}</div>
+                <div className='text-base font-medium text-gray-800'>{user?.username}</div>
                 <div className='text-sm font-medium text-gray-500'>{user?.email}</div>
               </div>
               <div className='mt-3 space-y-1'>
