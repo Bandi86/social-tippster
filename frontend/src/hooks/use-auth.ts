@@ -8,7 +8,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
  * and fetch the current user data if they are
  */
 export const useAuth = (options: { skipInitialization?: boolean } = {}) => {
-  const { user, isAuthenticated, setUser, setAuthenticated, logout } = useAuthStore();
+  const { user, isAuthenticated, accessToken, setUser, setAuthenticated, setAccessToken, logout } =
+    useAuthStore();
   const [isInitialized, setIsInitialized] = useState(options.skipInitialization || false);
   const [isLoading, setIsLoading] = useState(!options.skipInitialization);
   const initializationRef = useRef(false);
@@ -61,7 +62,8 @@ export const useAuth = (options: { skipInitialization?: boolean } = {}) => {
 
       // Try to refresh token to check if user is still authenticated
       try {
-        await AuthService.refreshToken();
+        const refreshResponse = await AuthService.refreshToken();
+        setAccessToken(refreshResponse.accessToken);
         setAuthenticated(true);
       } catch (error) {
         // Refresh failed, user is not authenticated

@@ -25,8 +25,27 @@ export const AuthService = {
    * @param credentials User credentials
    */
   login: async (credentials: LoginFormValues): Promise<LoginResponse> => {
-    const response = await api.post<LoginResponse>('/auth/login', credentials);
-    return response.data;
+    const response = await api.post('/auth/login', credentials);
+
+    // Map backend response to frontend format
+    const backendData = response.data;
+    const backendUser = backendData.user;
+
+    const frontendUser: User = {
+      id: backendUser.user_id,
+      email: backendUser.email,
+      username:
+        backendUser.username ||
+        `${backendUser.first_name || ''} ${backendUser.last_name || ''}`.trim(),
+      role: backendUser.role || 'user',
+      createdAt: backendUser.created_at,
+      updatedAt: backendUser.updated_at,
+    };
+
+    return {
+      user: frontendUser,
+      accessToken: backendData.access_token, // Map access_token to accessToken
+    };
   },
 
   /**
@@ -58,7 +77,7 @@ export const AuthService = {
     const frontendUser: User = {
       id: backendUser.user_id,
       email: backendUser.email,
-     username:
+      username:
         `${backendUser.first_name || ''} ${backendUser.last_name || ''}`.trim() ||
         backendUser.username,
       role: backendUser.role || 'user',

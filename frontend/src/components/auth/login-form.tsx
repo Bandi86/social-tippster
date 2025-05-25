@@ -15,7 +15,7 @@ import { useForm } from 'react-hook-form';
 export default function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-  const { setUser, setAuthenticated } = useAuthStore();
+  const { setUser, setAuthenticated, setAccessToken } = useAuthStore();
 
   const {
     register,
@@ -34,6 +34,7 @@ export default function LoginForm() {
     onSuccess: data => {
       setUser(data.user);
       setAuthenticated(true);
+      setAccessToken(data.accessToken);
       router.push('/dashboard');
     },
     onError: (error: any) => {

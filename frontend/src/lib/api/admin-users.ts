@@ -1,4 +1,5 @@
 // Admin API service for user management
+import { useAuthStore } from '@/store/auth';
 import { ApiResponse, User, UserFilters } from '@/types';
 
 export interface PaginatedUsers {
@@ -14,24 +15,16 @@ class AdminUsersAPI {
   private baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
-    // get token from headers if present and if headers is a plain object
-    let token = '';
-    if (options.headers && typeof options.headers === 'object' && !Array.isArray(options.headers)) {
-      const headersObj = options.headers as Record<string, string>;
-      if (headersObj['Authorization']) {
-        token = headersObj['Authorization'].replace('Bearer ', '');
-      }
-    }
-    if (!token) {
-      throw new Error('Authorization token is required');
-    }
+    // Get the access token from the auth store
+    const accessToken = useAuthStore.getState().accessToken;
 
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       headers: {
         'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` }),
+        ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
         ...options.headers,
       },
+      credentials: 'include', // Important for sending/receiving cookies with requests
       ...options,
     });
 
