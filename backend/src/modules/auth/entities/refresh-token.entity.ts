@@ -1,10 +1,10 @@
 import {
-  Entity,
-  PrimaryGeneratedColumn,
   Column,
-  ManyToOne,
-  JoinColumn,
   CreateDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
@@ -14,7 +14,7 @@ export class RefreshToken {
   id: string;
 
   @Column({ type: 'text' })
-  token: string;
+  token_hash: string;
 
   @Column({ type: 'uuid' })
   user_id: string;

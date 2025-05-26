@@ -6,9 +6,13 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { JwtStrategy } from './strategies/jwt.strategy';
 import { RefreshToken } from './entities/refresh-token.entity';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { LocalAuthGuard } from './guards/local-auth.guard';
+import { RefreshTokenGuard } from './guards/refresh-token.guard';
+import { JwtStrategy } from './strategies/jwt.strategy';
+import { LocalStrategy } from './strategies/local.strategy';
+import { RefreshTokenStrategy } from './strategies/refresh-token.strategy';
 
 @Module({
   imports: [
@@ -27,7 +31,15 @@ import { RefreshToken } from './entities/refresh-token.entity';
     UsersModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, JwtAuthGuard],
-  exports: [AuthService, JwtAuthGuard],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    LocalStrategy,
+    RefreshTokenStrategy,
+    JwtAuthGuard,
+    LocalAuthGuard,
+    RefreshTokenGuard,
+  ],
+  exports: [AuthService, JwtAuthGuard, LocalAuthGuard, RefreshTokenGuard],
 })
 export class AuthModule {}

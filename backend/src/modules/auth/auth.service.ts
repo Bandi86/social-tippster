@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
+import * as bcrypt from 'bcrypt';
 import { Response } from 'express';
 import { Repository } from 'typeorm';
 import { LoginDto } from '../users/dto/login.dto';
@@ -11,6 +12,7 @@ import { UsersService } from '../users/users.service';
 import { LogoutAllDevicesDto, LogoutDto, RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
 import { RefreshToken } from './entities/refresh-token.entity';
+import { RefreshTokenPayload } from './strategies/refresh-token.strategy';
 
 export interface JwtPayload {
   sub: string;
@@ -25,13 +27,6 @@ export interface LoginResponse {
   user: UserResponseDto;
 }
 
-interface RefreshTokenPayload {
-  sub: string;
-  type: string;
-  iat?: number;
-  exp?: number;
-}
-
 @Injectable()
 export class AuthService {
   private readonly failedAttempts = new Map<string, { count: number; lastAttempt: Date }>();
@@ -44,15 +39,55 @@ export class AuthService {
     private readonly refreshTokenRepository: Repository<RefreshToken>,
   ) {}
 
-  private isValidRefreshTokenPayload(payload: unknown): payload is RefreshTokenPayload {
-    return (
-      typeof payload === 'object' &&
-      payload !== null &&
-      'sub' in payload &&
-      'type' in payload &&
-      typeof (payload as Record<string, unknown>).sub === 'string' &&
-      typeof (payload as Record<string, unknown>).type === 'string'
-    );
+  /**
+   * Validate refresh token for refresh token strategy
+   */
+  async validateRefreshToken(
+    refreshTokenValue: string,
+    payload: RefreshTokenPayload,
+  ): Promise<User> {
+    // Get all non-revoked tokens for this user
+    const storedTokens = await this.refreshTokenRepository.find({
+      where: { user_id: payload.sub, is_revoked: false },
+      relations: ['user'],
+    });
+
+    if (!storedTokens.length) {
+      throw new UnauthorizedException('Érvénytelen refresh token');
+    }
+
+    // Check if any of the stored hashed tokens match
+    let validToken: RefreshToken | null = null;
+    for (const token of storedTokens) {
+      const isValid = await bcrypt.compare(refreshTokenValue, token.token_hash);
+      if (isValid) {
+        validToken = token;
+        break;
+      }
+    }
+
+    if (!validToken) {
+      throw new UnauthorizedException('Érvénytelen refresh token');
+    }
+
+    // Check if token expired
+    if (validToken.expires_at < new Date()) {
+      await this.refreshTokenRepository.update(validToken.id, { is_revoked: true });
+      throw new UnauthorizedException('A refresh token lejárt');
+    }
+
+    const user = validToken.user;
+
+    // Check user status
+    if (user.is_banned) {
+      throw new UnauthorizedException('A fiók tiltva van');
+    }
+
+    if (!user.is_active) {
+      throw new UnauthorizedException('A fiók inaktív');
+    }
+
+    return user;
   }
 
   async validateUser(email: string, password: string): Promise<User | null> {
@@ -97,34 +132,35 @@ export class AuthService {
     return user;
   }
 
-  async login(loginDto: LoginDto, response?: Response): Promise<LoginResponse> {
-    const user = await this.validateUser(loginDto.email, loginDto.password);
+  async login(loginDto: LoginDto, response?: Response, user?: User): Promise<LoginResponse> {
+    // If user is provided (from LocalStrategy), use it. Otherwise validate credentials.
+    const authenticatedUser = user || (await this.validateUser(loginDto.email, loginDto.password));
 
-    if (!user) {
+    if (!authenticatedUser) {
       throw new UnauthorizedException('Hibás email vagy jelszó');
     }
 
     // Generate access token (short-lived)
-    const accessToken = this.generateAccessToken(user);
+    const accessToken = this.generateAccessToken(authenticatedUser);
 
     // Generate refresh token (long-lived)
-    const refreshTokenValue = this.generateRefreshToken(user);
+    const refreshTokenValue = this.generateRefreshToken(authenticatedUser);
 
     // Save refresh token to database
-    await this.saveRefreshToken(user.user_id, refreshTokenValue);
+    await this.saveRefreshToken(authenticatedUser.user_id, refreshTokenValue);
 
     // Set refresh token as HttpOnly cookie if response object is provided
     if (response) {
-      response.cookie('refreshToken', refreshTokenValue, {
+      response.cookie('refresh_token', refreshTokenValue, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-        path: '/',
+        path: '/auth/refresh',
+        maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
       });
     }
 
-    const userResponse = await this.usersService.findOne(user.user_id);
+    const userResponse = await this.usersService.findOne(authenticatedUser.user_id);
 
     return {
       access_token: accessToken,
@@ -159,12 +195,16 @@ export class AuthService {
   }
 
   private async saveRefreshToken(userId: string, token: string): Promise<void> {
+    // Hash the refresh token before storing
+    const saltRounds = 12;
+    const hashedToken = await bcrypt.hash(token, saltRounds);
+
     // Remove old refresh tokens for this user (optional - for single device login)
     // await this.refreshTokenRepository.delete({ user_id: userId });
 
     const refreshToken = this.refreshTokenRepository.create({
       user_id: userId,
-      token,
+      token_hash: hashedToken,
       expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
     });
 
@@ -188,22 +228,37 @@ export class AuthService {
       }
 
       // Check if refresh token exists in database and not revoked
-      const storedToken = await this.refreshTokenRepository.findOne({
-        where: { token: refreshTokenValue, is_revoked: false },
+      // Note: We need to check against the hashed token, not the raw token
+      const storedTokens = await this.refreshTokenRepository.find({
+        where: { user_id: rawPayload.sub, is_revoked: false },
         relations: ['user'],
       });
 
-      if (!storedToken) {
+      if (!storedTokens.length) {
+        throw new UnauthorizedException('Érvénytelen refresh token');
+      }
+
+      // Check if any of the stored hashed tokens match
+      let validToken: RefreshToken | null = null;
+      for (const token of storedTokens) {
+        const isValid = await bcrypt.compare(refreshTokenValue, token.token_hash);
+        if (isValid) {
+          validToken = token;
+          break;
+        }
+      }
+
+      if (!validToken) {
         throw new UnauthorizedException('Érvénytelen refresh token');
       }
 
       // Check if token expired
-      if (storedToken.expires_at < new Date()) {
-        await this.refreshTokenRepository.update(storedToken.id, { is_revoked: true });
+      if (validToken.expires_at < new Date()) {
+        await this.refreshTokenRepository.update(validToken.id, { is_revoked: true });
         throw new UnauthorizedException('A refresh token lejárt');
       }
 
-      const user = storedToken.user;
+      const user = validToken.user;
 
       // Check user status
       if (user.is_banned) {
@@ -215,27 +270,27 @@ export class AuthService {
       }
 
       // Update token usage
-      await this.refreshTokenRepository.update(storedToken.id, { used_at: new Date() });
+      await this.refreshTokenRepository.update(validToken.id, { used_at: new Date() });
 
       // Generate new access token
       const newAccessToken = this.generateAccessToken(user);
 
-      // Optionally generate new refresh token and update cookie
+      // Optionally generate new refresh token and update cookie (token rotation)
       const newRefreshToken = this.generateRefreshToken(user);
       await this.saveRefreshToken(user.user_id, newRefreshToken);
 
       if (response) {
-        response.cookie('refreshToken', newRefreshToken, {
+        response.cookie('refresh_token', newRefreshToken, {
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
           sameSite: 'strict',
-          maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-          path: '/',
+          path: '/auth/refresh',
+          maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
         });
       }
 
       // Revoke old refresh token
-      await this.refreshTokenRepository.update(storedToken.id, { is_revoked: true });
+      await this.refreshTokenRepository.update(validToken.id, { is_revoked: true });
 
       return {
         access_token: newAccessToken,
@@ -243,6 +298,17 @@ export class AuthService {
     } catch {
       throw new UnauthorizedException('Érvénytelen refresh token');
     }
+  }
+
+  private isValidRefreshTokenPayload(payload: unknown): payload is RefreshTokenPayload {
+    return (
+      typeof payload === 'object' &&
+      payload !== null &&
+      'sub' in payload &&
+      'type' in payload &&
+      typeof (payload as Record<string, unknown>).sub === 'string' &&
+      typeof (payload as Record<string, unknown>).type === 'string'
+    );
   }
 
   async logout(userId: string, response?: Response): Promise<LogoutDto> {
@@ -254,7 +320,8 @@ export class AuthService {
 
     // Clear refresh token cookie
     if (response) {
-      response.clearCookie('refreshToken', { path: '/' });
+      response.clearCookie('refresh_token', { path: '/auth/refresh' });
+      response.clearCookie('refreshToken', { path: '/' }); // Clear old cookie name for compatibility
     }
 
     return {

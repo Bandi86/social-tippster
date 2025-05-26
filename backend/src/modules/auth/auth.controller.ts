@@ -29,6 +29,8 @@ import { CurrentUser } from './decorators/current-user.decorator';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { LocalAuthGuard } from './guards/local-auth.guard';
+import { RefreshTokenGuard } from './guards/refresh-token.guard';
 import { LoginResponse } from './interfaces/login-response.interface';
 
 @ApiTags('auth')
@@ -74,6 +76,7 @@ export class AuthController {
   }
 
   @Post('login')
+  @UseGuards(LocalAuthGuard)
   @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5 login attempt per minute
   @ApiOperation({
     summary: 'Bejelentkezés',
@@ -103,17 +106,20 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async login(
     @Body() loginDto: LoginDto,
+    @CurrentUser() user: User,
     @Res({ passthrough: true }) response: Response,
   ): Promise<LoginResponse> {
-    return this.authService.login(loginDto, response);
+    return this.authService.login(loginDto, response, user);
   }
 
   @Post('refresh')
+  @UseGuards(RefreshTokenGuard)
+  @Throttle({ default: { limit: 10, ttl: 60000 } }) // 10 refresh attempts per minute
   @ApiOperation({
     summary: 'Token frissítés',
     description: 'Access token frissítése refresh token használatával',
   })
-  @ApiCookieAuth('refreshToken')
+  @ApiCookieAuth('refresh_token')
   @ApiResponse({
     status: 200,
     description: 'Token sikeresen frissítve',
@@ -130,7 +136,7 @@ export class AuthController {
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ): Promise<{ access_token: string }> {
-    const refreshToken = request.cookies?.refreshToken as string;
+    const refreshToken = request.cookies?.refresh_token as string;
 
     if (!refreshToken) {
       throw new UnauthorizedException('Refresh token hiányzik');
