@@ -1,9 +1,10 @@
+import AdminLayout from '@/components/admin/admin-layout';
 import { AdminGuard } from '@/components/auth/AdminGuard';
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default function AdminLayoutPage({ children }: { children: React.ReactNode }) {
   return (
     <AdminGuard>
-      <div className='min-h-screen bg-black'>{children}</div>
+      <AdminLayout>{children}</AdminLayout>
     </AdminGuard>
   );
 }

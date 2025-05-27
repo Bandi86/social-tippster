@@ -79,6 +79,7 @@ export const useAuthStore = create<AuthStore>()(
             headers: {
               'Content-Type': 'application/json',
             },
+            credentials: 'include', // Enable sending/receiving cookies
             body: JSON.stringify(credentials),
           });
 
@@ -153,6 +154,7 @@ export const useAuthStore = create<AuthStore>()(
             headers: {
               'Content-Type': 'application/json',
             },
+            credentials: 'include', // Enable sending/receiving cookies
             body: JSON.stringify(data),
           });
 

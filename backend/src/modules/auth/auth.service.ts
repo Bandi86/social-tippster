@@ -151,12 +151,15 @@ export class AuthService {
 
     // Set refresh token as HttpOnly cookie if response object is provided
     if (response) {
+      const isProduction = process.env.NODE_ENV === 'production';
+
       response.cookie('refresh_token', refreshTokenValue, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        path: '/auth/refresh',
+        secure: isProduction,
+        sameSite: isProduction ? 'strict' : 'lax',
+        path: '/', // Make cookie available for all paths
         maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+        domain: isProduction ? undefined : 'localhost', // Allow cross-port access in development
       });
     }
 
@@ -280,12 +283,15 @@ export class AuthService {
       await this.saveRefreshToken(user.user_id, newRefreshToken);
 
       if (response) {
+        const isProduction = process.env.NODE_ENV === 'production';
+
         response.cookie('refresh_token', newRefreshToken, {
           httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'strict',
-          path: '/auth/refresh',
+          secure: isProduction,
+          sameSite: isProduction ? 'strict' : 'lax',
+          path: '/', // Make cookie available for all paths
           maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+          domain: isProduction ? undefined : 'localhost', // Allow cross-port access in development
         });
       }
 
@@ -320,7 +326,11 @@ export class AuthService {
 
     // Clear refresh token cookie
     if (response) {
-      response.clearCookie('refresh_token', { path: '/auth/refresh' });
+      const isProduction = process.env.NODE_ENV === 'production';
+      response.clearCookie('refresh_token', {
+        path: '/',
+        domain: isProduction ? undefined : 'localhost',
+      });
       response.clearCookie('refreshToken', { path: '/' }); // Clear old cookie name for compatibility
     }
 

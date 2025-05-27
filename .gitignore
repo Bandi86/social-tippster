@@ -46,5 +46,31 @@ docker-compose.override.yml
 # Uploads
 uploads/
 
-temp
-.prompt.md
+temp/
+
+# Ignore .github folder except prompt.md
+.github/
+!.github/prompt.md
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
+# Do not ignore test, debug, or doc files, but keep them out of root
+!docs/
+!docs/debug/
+!tests/
+!tests/images/
+!CLEANUP_SUMMARY.md
+!cookies.txt
+!debug-*.png
+!check-admin-status.js
+
+# Never ignore or delete cookies.txt, but it must be in docs/
+# Never ignore or delete CLEANUP_SUMMARY.md, but it must be in docs/
+# Never ignore or delete debug PNGs or debug scripts, but they must be in docs/debug/
+# Never ignore or delete test files, but they must be in tests/
+# Never ignore or delete documentation files, but they must be in docs/
+# Keep the root directory clean: no test, image, debug, or documentation files should be present in the root.
