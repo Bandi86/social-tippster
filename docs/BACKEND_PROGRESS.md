@@ -140,27 +140,42 @@
   - Service and controller dependencies resolved
   - Integrated with main AppModule
 
-### 7. Admin Panel System ✅ **TELJES IMPLEMENTÁCIÓ**
+### 7. Admin Panel System ✅ **TELJES IMPLEMENTÁCIÓ + REFACTORED**
 
 - ✅ **Admin Controller**: Complete admin API endpoints
 
-  - User management operations (ban, unban, verify, unverify)
+  - User management operations (ban, unban, verify, unverify) - **CENTRALIZED**
   - User role management (promote/demote admin privileges)
-  - User statistics and analytics
+  - User and comment statistics via AnalyticsService
   - Comprehensive user search and filtering
   - Admin-only data access controls
 
-- ✅ **Enhanced Users Service**: Admin-specific methods
+- ✅ **Analytics Service Integration**: Centralized analytics
 
-  - `getAdminStats()`: Return comprehensive admin statistics (AdminStatsDto)
-  - `unverifyUser()`: Remove user email verification
-  - `changeUserRole()`: Secure role management with admin protection
-  - Ban/unban operations with reason tracking
-  - Advanced user queries with admin-level access
+  - **Consolidated Statistics**: All admin stats moved to AnalyticsService
+  - `getAdminUserStats()`: User statistics for dashboard (moved from UsersService)
+  - `getAdminCommentStats()`: Comment statistics for dashboard (moved from CommentsService)
+  - `getAdminPostStats()`: Post statistics for dashboard
+  - **Removed Duplicate Code**: Eliminated duplicate getAdminStats methods
 
-- ✅ **Admin Module Integration**: Full NestJS integration
+- ✅ **Enhanced Users Service**: Core business logic focused
 
-  - AdminModule properly configured and imported
+  - **Removed Admin Stats**: `getAdminStats()` moved to AnalyticsService
+  - `changePassword()`: Password change with bcrypt verification
+  - `incrementFollowerCount()` / `decrementFollowerCount()`: Follower management
+  - **Clean Separation**: Admin logic moved to AdminController
+  - **Core CRUD Operations**: Focused on user business logic
+
+- ✅ **Deprecated Legacy Endpoints**: Proper API evolution
+
+  - **Removed**: `PATCH /users/:id/ban` (use `POST /admin/users/:id/ban`)
+  - **Removed**: `PATCH /users/:id/unban` (use `POST /admin/users/:id/unban`)
+  - **Removed**: `PATCH /users/:id/verify` (use `POST /admin/users/:id/verify`)
+  - **Centralized Admin Operations**: All admin functions in AdminController
+
+- ✅ **Admin Module Integration**: Full NestJS integration with analytics
+
+  - AdminModule includes AnalyticsModule for statistics
   - Integrated with main AppModule
   - JWT authentication and admin role authorization
   - All dependencies resolved and tested
@@ -168,6 +183,7 @@
 - ✅ **Admin DTOs**: Type-safe data transfer objects
 
   - AdminStatsDto: User statistics for dashboard
+  - **NEW**: CommentStatsDto: Comment-specific statistics
   - Comprehensive validation for admin operations
   - Role-based access control validation
   - Error handling with Hungarian messages
@@ -178,6 +194,7 @@
   - Admin role validation on all operations
   - Protection against removing last admin user
   - Audit trail ready for admin actions
+  - **Hungarian Localization**: Consistent error messages
 
 ## 🎯 CURRENT STATUS: PRODUCTION READY
 
@@ -189,9 +206,10 @@ A backend teljes mértékben funkcionális és készen áll a frontend integrác
 
 - **🔐 Secure Authentication**: Dual token + HttpOnly cookies + JWT guards
 - **🛡️ Complete Authorization**: User-specific data access controls
-- **👑 Admin Panel Backend**: Complete admin API with user management capabilities
-- **📊 Admin Statistics**: Real-time user statistics and analytics dashboard
+- **👑 Admin Panel Backend**: Centralized admin API with consolidated analytics
+- **📊 Admin Statistics**: Centralized analytics service with comprehensive tracking
 - **🔧 User Management**: Ban, unban, verify, role management (admin-only)
+- **🏗️ Separation of Concerns**: Clean architecture with proper module boundaries
 - **📚 Swagger Documentation**: Interactive API docs with Bearer token support
 - **⚡ Rate Limiting**: Multi-tier throttling (login, register, refresh)
 - **🚫 Brute Force Protection**: 5 attempts + 15min lockout
@@ -579,3 +597,24 @@ backend/src/
 - **Code Quality**: Type-safe TypeScript, comprehensive DTOs, error handling
 
 **Utolsó frissítés:** 2025. május 28. - Frontend integráció javítások és API kompatibilitás ✅
+
+## [2025-05-28] Comments Module Refactor & Admin Compatibility
+
+### What Changed
+
+- Fixed 35+ TypeScript errors in CommentsService and CommentsController.
+- All controller endpoints and service methods now type-safe and return correct DTOs.
+- Added missing admin endpoints: `findAllForAdmin`, `bulkAction` to CommentsService.
+- Strict formatting, destructuring, and type issues resolved in CommentsService.
+- Confirmed compatibility with AdminController and admin panel bulk actions.
+- All backend and admin panel builds now pass with zero errors.
+
+### Implementation Details
+
+- Refactored CommentsService to match DTO/entity structure and strict TypeScript rules.
+- Added explicit type narrowing for admin query params.
+- Implemented admin comment listing and bulk moderation logic.
+- Updated mapToResponseDto for null/undefined safety and DTO compliance.
+- Verified with full build and lint: no errors remain.
+
+---

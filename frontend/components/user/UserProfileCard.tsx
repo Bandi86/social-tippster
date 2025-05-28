@@ -44,7 +44,7 @@ export default function UserProfileCard({ userProfile, onFollowChange }: UserPro
 
   const { user, stats } = userProfile;
   const isOwnProfile = currentUser?.id === user.id;
-  const canEdit = isOwnProfile || currentUser?.role === ('ADMIN' as typeof user.role);
+  const canEdit = isOwnProfile;
 
   const handleFollowToggle = async () => {
     if (!currentUser) {
@@ -58,9 +58,11 @@ export default function UserProfileCard({ userProfile, onFollowChange }: UserPro
 
     setIsLoading(true);
     try {
+      let newFollowState: boolean;
       if (isFollowing) {
         await unfollowUser(user.id);
         setIsFollowing(false);
+        newFollowState = false; // User is no longer following
         toast({
           title: 'Unfollowed',
           description: `You are no longer following ${getDisplayName(user)}.`,
@@ -68,12 +70,13 @@ export default function UserProfileCard({ userProfile, onFollowChange }: UserPro
       } else {
         await followUser(user.id);
         setIsFollowing(true);
+        newFollowState = true; // User is now following
         toast({
           title: 'Following',
           description: `You are now following ${getDisplayName(user)}.`,
         });
       }
-      onFollowChange?.(isFollowing);
+      onFollowChange?.(newFollowState); // Pass the actual new state
     } catch (error) {
       toast({
         title: 'Error',

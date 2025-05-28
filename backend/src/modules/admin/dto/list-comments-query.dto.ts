@@ -1,9 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
-import { UserRole } from '../../users/entities/user.entity';
 
-export class GetUsersQueryDto {
+export class ListCommentsQueryDto {
   @ApiProperty({ description: 'Oldal száma', required: false, default: 1 })
   @IsOptional()
   @Type(() => Number)
@@ -27,30 +26,30 @@ export class GetUsersQueryDto {
   @ApiProperty({
     description: 'Státusz szűrő',
     required: false,
-    enum: ['all', 'active', 'banned', 'unverified'],
+    enum: ['all', 'flagged', 'reported', 'active'],
   })
   @IsOptional()
   @IsString()
-  @IsIn(['all', 'active', 'banned', 'unverified'])
+  @IsIn(['all', 'flagged', 'reported', 'active'])
   status?: string;
 
-  @ApiProperty({
-    description: 'Szerepkör szűrő',
-    required: false,
-    enum: UserRole,
-  })
+  @ApiProperty({ description: 'Bejegyzés ID szűrő', required: false })
   @IsOptional()
   @IsString()
-  @IsIn(Object.values(UserRole))
-  role?: UserRole;
+  postId?: string;
+
+  @ApiProperty({ description: 'Szerző ID szűrő', required: false })
+  @IsOptional()
+  @IsString()
+  authorId?: string;
 
   @ApiProperty({
     description: 'Rendezési mód',
     required: false,
-    enum: ['newest', 'oldest', 'username'],
+    enum: ['newest', 'oldest', 'most_reported'],
   })
   @IsOptional()
   @IsString()
-  @IsIn(['newest', 'oldest', 'username'])
+  @IsIn(['newest', 'oldest', 'most_reported'])
   sortBy?: string;
 }

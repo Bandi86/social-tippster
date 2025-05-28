@@ -61,4 +61,10 @@ export class Comment {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
+
+  @Column({ type: 'timestamp', nullable: true })
+  flaggedAt: Date | null;
+
+  @Column({ type: 'uuid', nullable: true })
+  flaggedBy: string | null;
 }

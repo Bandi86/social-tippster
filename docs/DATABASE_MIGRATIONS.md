@@ -1,120 +1,54 @@
-# Database Migration Status
+# Database Migrations
 
-## Applied Migrations
+This document tracks database migrations and schema changes for the Social Tippster application.
 
-| Date       | Migration                              | Description                                                                | Status     |
-| ---------- | -------------------------------------- | -------------------------------------------------------------------------- | ---------- |
-| 2024-01-10 | 1733826267000-CreateRefreshTokensTable | Created refresh tokens table for secure JWT authentication                 | ✅ Applied |
-| 2025-05-24 | 1737738000000-AddUserRoleField         | Added role column to users table with enum values (USER, ADMIN, MODERATOR) | ✅ Applied |
+## Latest Migrations
 
-## Migration Details
+### 1733580000000-CreateAnalyticsEntities
+
+**Date: May 28, 2025**
+
+Created analytics entities for tracking user activity and platform metrics:
+
+- `user_logins`: Tracks each user login with device information
+- `daily_stats`: Daily aggregated statistics for users, posts, and comments
+- `monthly_stats`: Monthly aggregated statistics for users, posts, and comments
+- `system_metrics`: System-level performance and usage metrics
 
 ### 1733826267000-CreateRefreshTokensTable
 
-Created the `refresh_tokens` table to store and manage refresh tokens for the JWT authentication system:
+**Date: May 28, 2025**
 
-```sql
-CREATE TABLE refresh_tokens (
-  token_id UUID PRIMARY KEY,
-  user_id UUID NOT NULL REFERENCES users(user_id),
-  token TEXT UNIQUE NOT NULL,
-  expires_at TIMESTAMP NOT NULL,
-  is_revoked BOOLEAN DEFAULT FALSE,
-  revoked_at TIMESTAMP,
-  device_info TEXT,
-  ip_address VARCHAR,
-  user_agent TEXT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+Fixed migration to safely handle existing refresh token tables and constraints:
 
-CREATE INDEX idx_refresh_tokens_user ON refresh_tokens(user_id);
-CREATE INDEX idx_refresh_tokens_token ON refresh_tokens(token);
-```
+- Added proper checks for existing constraints
+- Prevents duplicate constraint errors during deployment
+- Ensures safe rollbacks with IF EXISTS clauses
 
-### 1737738000000-AddUserRoleField
+## Running Migrations
 
-Added the `role` column to the `users` table to implement role-based access control:
-
-```sql
-ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'user' NOT NULL;
-UPDATE users SET role = 'user' WHERE role IS NULL;
-```
-
-## Pending Migrations
-
-Currently, there are no pending migrations.
-
-## Migration Commands
-
-To run migrations:
+To run all pending migrations:
 
 ```bash
-cd backend
 npm run migration:run
 ```
 
-To create a new migration:
+To revert the most recent migration:
 
 ```bash
-cd backend
-npm run migration:generate -- --name=MigrationName
-```
-
-To revert the last migration:
-
-```bash
-cd backend
 npm run migration:revert
 ```
 
-## Entity Structure After Migrations
+To generate a new migration after entity changes:
 
-### User Entity
-
-```typescript
-export enum UserRole {
-  USER = 'user',
-  ADMIN = 'admin',
-  MODERATOR = 'moderator',
-}
-
-@Entity('users')
-export class User {
-  @PrimaryGeneratedColumn('uuid')
-  user_id: string;
-
-  // ...other fields
-
-  @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
-  role: UserRole;
-
-  // ...timestamps and relationships
-}
+```bash
+npm run migration:generate -- src/database/migrations/MigrationName
 ```
 
-### Authorization Rules
+## Troubleshooting
 
-- **Users**: Can only modify their own profiles and posts
-- **Users**: Can only delete their own posts
-- **Admins**: Full access to all user management operations via admin panel
-  - Ban/unban users with reason tracking
-  - Verify/unverify user accounts
-  - Change user roles (USER/ADMIN/MODERATOR)
-  - Delete any user account
-  - View comprehensive user statistics
-  - Access to paginated user listings with advanced filtering
-- **Admins**: Can delete any post (for moderation purposes)
-- **Moderators**: Have specific permissions as defined in role-based controllers
+If you encounter constraint errors during migration:
 
-### Admin Panel Database Requirements
-
-The admin panel functionality uses the existing `users` table with the `role` column to implement:
-
-- **Role-based Access Control**: Admin endpoints check for ADMIN role
-- **User Management**: All CRUD operations on user accounts
-- **Statistics Tracking**: Real-time user analytics and counts
-- **Audit Trail**: Ban/unban operations with reason tracking
-- **Account Verification**: User verification status management
-
-No additional database migrations are required for admin panel functionality.
+1. Check if the constraint already exists in the database
+2. Use the `checkConstraintExists` helper method in your migration
+3. Add IF EXISTS clauses to DROP statements in down() methods

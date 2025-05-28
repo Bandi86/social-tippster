@@ -6,8 +6,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PostList from '@/components/user/PostList';
 import UserProfileCard from '@/components/user/UserProfileCard';
-import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import { fetchUserPosts, Post } from '@/lib/api/posts';
 import { fetchUserProfile, UserProfile } from '@/lib/api/users';
 import { ArrowLeft, MessageCircle, Users } from 'lucide-react';
@@ -236,7 +236,7 @@ export default function ProfilePage() {
               </div>
             ) : userPosts.length > 0 ? (
               <PostList
-                posts={userPosts}
+                initialPosts={userPosts}
                 onPostUpdate={handlePostUpdate}
                 onPostDelete={handlePostDelete}
               />

@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -11,7 +12,6 @@ import { Repository } from 'typeorm';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { GetUsersQueryDto } from './dto/get-users-query.dto';
-import { PaginatedUsersResponseDto } from './dto/paginated-users-response.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 import { User, UserRole } from './entities/user.entity';
@@ -68,7 +68,10 @@ export class UsersService {
     return plainToInstance(UserResponseDto, savedUser);
   }
 
-  async findAll(queryDto: GetUsersQueryDto): Promise<PaginatedUsersResponseDto> {
+  async findAll(queryDto: GetUsersQueryDto): Promise<{
+    users: UserResponseDto[];
+    meta: { total: number; page: number; limit: number; totalPages: number };
+  }> {
     const { page = 1, limit = 10, search, sortBy = 'created_at', sortOrder = 'DESC' } = queryDto;
     const skip = (page - 1) * limit;
 
@@ -93,14 +96,12 @@ export class UsersService {
     const transformedUsers = users.map(user => plainToInstance(UserResponseDto, user));
 
     return {
-      data: transformedUsers,
+      users: transformedUsers,
       meta: {
         total,
         page,
         limit,
         totalPages: Math.ceil(total / limit),
-        hasNextPage: page < Math.ceil(total / limit),
-        hasPreviousPage: page > 1,
       },
     };
   }
@@ -155,34 +156,28 @@ export class UsersService {
   }
 
   async changePassword(id: string, changePasswordDto: ChangePasswordDto): Promise<void> {
-    const { currentPassword, newPassword, confirmPassword } = changePasswordDto;
-
-    // Validate password confirmation
-    if (newPassword !== confirmPassword) {
-      throw new BadRequestException('Az új jelszó és a megerősítés nem egyezik');
-    }
-
-    const user = await this.userRepository.findOne({ where: { user_id: id } });
+    const user = await this.userRepository.findOne({
+      where: { user_id: id },
+    });
 
     if (!user) {
       throw new NotFoundException('Felhasználó nem található');
     }
 
     // Verify current password
-    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password_hash);
-
+    const isCurrentPasswordValid = await bcrypt.compare(
+      changePasswordDto.currentPassword,
+      user.password_hash,
+    );
     if (!isCurrentPasswordValid) {
-      throw new BadRequestException('A jelenlegi jelszó helytelen');
+      throw new ForbiddenException('Jelenlegi jelszó helytelen');
     }
 
     // Hash new password
     const saltRounds = 12;
-    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+    const hashedNewPassword = await bcrypt.hash(changePasswordDto.newPassword, saltRounds);
 
-    // Update password
-    user.password_hash = hashedPassword;
-    user.updated_at = new Date();
-
+    user.password_hash = hashedNewPassword;
     await this.userRepository.save(user);
   }
 
@@ -294,19 +289,11 @@ export class UsersService {
   }
 
   async incrementFollowerCount(id: string): Promise<void> {
-    await this.userRepository.increment({ user_id: id }, 'follower_count', 1);
+    await this.userRepository.increment({ user_id: id }, 'followers_count', 1);
   }
 
   async decrementFollowerCount(id: string): Promise<void> {
-    await this.userRepository.decrement({ user_id: id }, 'follower_count', 1);
-  }
-
-  async incrementFollowingCount(id: string): Promise<void> {
-    await this.userRepository.increment({ user_id: id }, 'following_count', 1);
-  }
-
-  async decrementFollowingCount(id: string): Promise<void> {
-    await this.userRepository.decrement({ user_id: id }, 'following_count', 1);
+    await this.userRepository.decrement({ user_id: id }, 'followers_count', 1);
   }
 
   async updateTipStats(id: string, isSuccessful: boolean, profit?: number): Promise<void> {
@@ -338,50 +325,8 @@ export class UsersService {
     await this.userRepository.save(user);
   }
 
-  // Admin-specific methods
-  async getAdminStats(): Promise<{
-    total: number;
-    active: number;
-    banned: number;
-    unverified: number;
-    admins: number;
-    recentRegistrations: number;
-  }> {
-    const total = await this.userRepository.count();
-
-    const active = await this.userRepository.count({
-      where: { is_active: true },
-    });
-
-    const banned = await this.userRepository.count({
-      where: { is_banned: true },
-    });
-
-    const unverified = await this.userRepository.count({
-      where: { is_verified: false },
-    });
-
-    const admins = await this.userRepository.count({
-      where: { role: UserRole.ADMIN },
-    });
-
-    // Get new users this month
-    const startOfMonth = new Date();
-    startOfMonth.setDate(1);
-    startOfMonth.setHours(0, 0, 0, 0);
-
-    const recentRegistrations = await this.userRepository
-      .createQueryBuilder('user')
-      .where('user.created_at >= :startDate', { startDate: startOfMonth })
-      .getCount();
-
-    return {
-      total,
-      active,
-      banned,
-      unverified,
-      admins,
-      recentRegistrations,
-    };
+  // Make mapToResponseDto public for use in controller
+  mapToResponseDto(user: User): UserResponseDto {
+    return plainToInstance(UserResponseDto, user);
   }
 }

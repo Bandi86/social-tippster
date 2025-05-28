@@ -1,6 +1,9 @@
 import { applyDecorators } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 
+// Re-export Throttle for direct use
+export { Throttle } from '@nestjs/throttler';
+
 export const AuthThrottle = () =>
   applyDecorators(
     Throttle({

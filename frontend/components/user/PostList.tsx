@@ -20,7 +20,13 @@ import { Post, PostsResponse, fetchPosts } from '@/lib/api/posts';
 import { useAuthStore } from '@/store/auth';
 import PostCard from './PostCard';
 
-interface PostListProps {
+export interface PostListProps {
+  posts: Post[];
+  onPostUpdate: (updatedPost: Post) => void;
+  onPostDelete: (postId: string) => void;
+}
+
+interface Props {
   initialPosts?: Post[];
   showCreateButton?: boolean;
   showFilters?: boolean;
@@ -28,6 +34,8 @@ interface PostListProps {
   typeFilter?: string;
   featuredOnly?: boolean;
   compact?: boolean;
+  onPostUpdate?: (updatedPost: Post) => void;
+  onPostDelete?: (postId: string) => void;
 }
 
 export default function PostList({
@@ -38,7 +46,9 @@ export default function PostList({
   typeFilter,
   featuredOnly = false,
   compact = false,
-}: PostListProps) {
+  onPostUpdate,
+  onPostDelete,
+}: Props) {
   const [posts, setPosts] = useState<Post[]>(initialPosts || []);
   const [loading, setLoading] = useState(!initialPosts);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -119,6 +129,12 @@ export default function PostList({
 
   const handlePostUpdate = (postId: string, updates: Partial<Post>) => {
     setPosts(prev => prev.map(post => (post.id === postId ? { ...post, ...updates } : post)));
+    if (onPostUpdate) {
+      const updatedPost = posts.find(post => post.id === postId);
+      if (updatedPost) {
+        onPostUpdate({ ...updatedPost, ...updates });
+      }
+    }
   };
 
   const handleLoadMore = () => {

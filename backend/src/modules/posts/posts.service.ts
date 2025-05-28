@@ -71,5 +71,5 @@ export class PostsService {
 
   // TODO: Implement service methods for post interactions (vote, bookmark, share, view)
   // TODO: Implement service methods for comment system
-  // TODO: Implement service methods for post statistics and analytics
+
 }

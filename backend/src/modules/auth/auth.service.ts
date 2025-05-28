@@ -5,6 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { Response } from 'express';
 import { Repository } from 'typeorm';
+import { AnalyticsService } from '../admin/analytics-dashboard/analytics.service';
 import { LoginDto } from '../users/dto/login.dto';
 import { UserResponseDto } from '../users/dto/user-response.dto';
 import { User } from '../users/entities/user.entity';
@@ -27,6 +28,12 @@ export interface LoginResponse {
   user: UserResponseDto;
 }
 
+// Add missing interface
+export interface LoginResponseDto {
+  access_token: string;
+  user: UserResponseDto;
+}
+
 @Injectable()
 export class AuthService {
   private readonly failedAttempts = new Map<string, { count: number; lastAttempt: Date }>();
@@ -37,6 +44,7 @@ export class AuthService {
     private readonly configService: ConfigService,
     @InjectRepository(RefreshToken)
     private readonly refreshTokenRepository: Repository<RefreshToken>,
+    private readonly analyticsService: AnalyticsService,
   ) {}
 
   /**
@@ -132,9 +140,9 @@ export class AuthService {
     return user;
   }
 
-  async login(loginDto: LoginDto, response?: Response, user?: User): Promise<LoginResponse> {
-    // If user is provided (from LocalStrategy), use it. Otherwise validate credentials.
-    const authenticatedUser = user || (await this.validateUser(loginDto.email, loginDto.password));
+  async login(loginDto: LoginDto, request?: any, response?: Response): Promise<LoginResponseDto> {
+    // Validate credentials
+    const authenticatedUser = await this.validateUser(loginDto.email, loginDto.password);
 
     if (!authenticatedUser) {
       throw new UnauthorizedException('Hibás email vagy jelszó');
@@ -164,6 +172,31 @@ export class AuthService {
     }
 
     const userResponse = await this.usersService.findOne(authenticatedUser.user_id);
+
+    // Track login after successful authentication
+    if (authenticatedUser && request) {
+      try {
+        // Safely extract IP address
+        let ip: string | undefined;
+        if (typeof request === 'object' && request !== null) {
+          if (typeof request.ip === 'string') {
+            ip = request.ip;
+          } else if (request.connection && typeof request.connection.remoteAddress === 'string') {
+            ip = request.connection.remoteAddress;
+          }
+        }
+        await this.analyticsService.trackUserLogin(
+          authenticatedUser.user_id,
+          ip,
+          request.headers?.['user-agent'],
+          this.getDeviceType(request.headers?.['user-agent']),
+          this.getBrowser(request.headers?.['user-agent']),
+        );
+      } catch (error) {
+        // Don't fail login if analytics tracking fails
+        console.error('Failed to track user login:', error);
+      }
+    }
 
     return {
       access_token: accessToken,
@@ -401,5 +434,21 @@ export class AuthService {
       user: user,
       accessToken: accessToken,
     };
+  }
+
+  private getDeviceType(userAgent?: string): string {
+    if (!userAgent) return 'unknown';
+    if (/mobile/i.test(userAgent)) return 'mobile';
+    if (/tablet/i.test(userAgent)) return 'tablet';
+    return 'desktop';
+  }
+
+  private getBrowser(userAgent?: string): string {
+    if (!userAgent) return 'unknown';
+    if (/chrome/i.test(userAgent)) return 'Chrome';
+    if (/firefox/i.test(userAgent)) return 'Firefox';
+    if (/safari/i.test(userAgent)) return 'Safari';
+    if (/edge/i.test(userAgent)) return 'Edge';
+    return 'other';
   }
 }

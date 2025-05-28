@@ -8,6 +8,7 @@ import configuration from './config/configuration';
 import { ThrottlerConfig } from './config/throttler.config';
 import { DatabaseModule } from './database/db.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { AnalyticsModule } from './modules/admin/analytics-dashboard/analytics.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CsrfProtectionMiddleware } from './modules/auth/middleware/csrf-protection.middleware';
 import { CommentsModule } from './modules/comments/comments.module';
@@ -27,6 +28,7 @@ import { UsersModule } from './modules/users/users.module';
     PostsModule,
     CommentsModule,
     AdminModule,
+    AnalyticsModule,
   ],
   controllers: [AppController],
   providers: [

@@ -22,8 +22,10 @@ Egy modern közösségi platform sportfogadási tippek megosztására, követés
 - 👥 **User Management** - Complete CRUD with admin functions
 - 📝 **Posts System** - Multi-type posts (tips, discussions, news, analysis)
 - 💬 **Comment System** - Nested comments with voting
-- 📊 **Analytics** - Comprehensive tracking and statistics
+- 📊 **Analytics** - Centralized analytics service with comprehensive tracking
+- 🛡️ **Admin Panel** - Centralized admin operations with proper separation of concerns
 - 🔒 **Security** - Type-safe, validated, and protected endpoints
+- 🌐 **Hungarian Localization** - Consistent Hungarian language support
 - 📚 **Documentation** - Complete Swagger/OpenAPI docs
 
 ### Frontend

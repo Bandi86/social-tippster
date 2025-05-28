@@ -148,7 +148,7 @@ export class CommentsController {
   })
   @ApiResponse({ status: 404, description: 'Comment not found' })
   async getReplies(@Param('id', ParseUUIDPipe) id: string, @Query() query: ListCommentsQueryDto) {
-    return this.commentsService.getReplies(id, query);
+    return await this.commentsService.getReplies(id, query);
   }
 
   @Patch(':id')
@@ -236,7 +236,7 @@ export class CommentsController {
       commentId: id,
       value: voteData.value as 1 | -1,
     };
-    return this.commentsService.vote(commentVoteDto, user);
+    return await this.commentsService.vote(commentVoteDto, user);
   }
 
   @Post(':id/report')
@@ -282,7 +282,7 @@ export class CommentsController {
       commentId: id,
       reason: reportData.reason,
     };
-    return this.commentsService.report(reportCommentDto, user);
+    return await this.commentsService.report(reportCommentDto, user);
   }
 
   @Post(':id/flag')

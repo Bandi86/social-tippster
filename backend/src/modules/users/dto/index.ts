@@ -3,7 +3,7 @@ export { CreateUserDto } from './create-user.dto';
 export { ForgotPasswordDto } from './forgot-password.dto';
 export { GetUsersQueryDto } from './get-users-query.dto';
 export { LoginDto } from './login.dto';
-export { PaginatedUsersResponseDto } from './paginated-users-response.dto';
+export { UserListPaginatedResponseDto } from './paginated-users-response.dto';
 export { ResetPasswordDto } from './reset-password.dto';
 export { UpdateUserDto } from './update-user.dto';
 export { UserResponseDto } from './user-response.dto';

@@ -1,178 +1,102 @@
 import {
-  BadRequestException,
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
   Req,
   Res,
-  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
-import {
-  ApiBadRequestResponse,
-  ApiBearerAuth,
-  ApiBody,
-  ApiCookieAuth,
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-  ApiTooManyRequestsResponse,
-  ApiUnauthorizedResponse,
-} from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
+import { AuthThrottle, Throttle } from '../auth/decorators/throttle.decorator';
 import { User } from '../users/entities/user.entity';
 import { AuthService } from './auth.service';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { LoginDto } from './dto/login.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
-import { LoginResponse } from './interfaces/login-response.interface';
 
-@ApiTags('auth')
 @Controller('auth')
+@ApiTags('Authentication')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
-  @ApiOperation({
-    summary: 'Felhasználó regisztráció',
-    description: 'Új felhasználó létrehozása az alkalmazásban',
-  })
+  @AuthThrottle() // 5 requests per minute
+  @ApiOperation({ summary: 'Register a new user' })
   @ApiBody({ type: RegisterDto })
-  @ApiResponse({
-    status: 201,
-    description: 'Sikeres regisztráció',
-    schema: {
-      type: 'object',
-      properties: {
-        message: { type: 'string', example: 'Sikeres regisztráció' },
-        user: {
-          type: 'object',
-          properties: {
-            user_id: { type: 'string' },
-            username: { type: 'string' },
-            email: { type: 'string' },
-          },
-        },
-      },
-    },
-  })
-  @ApiBadRequestResponse({ description: 'Hibás adatok' })
-  @HttpCode(HttpStatus.CREATED)
-  async register(@Body() registerDto: RegisterDto): Promise<any> {
-    try {
-      return await this.authService.register(registerDto);
-    } catch (error) {
-      if (error instanceof Error) {
-        throw new BadRequestException(error.message);
-      }
-      throw new BadRequestException('Regisztráció sikertelen');
-    }
+  @ApiResponse({ status: 201, description: 'User successfully registered' })
+  @ApiResponse({ status: 400, description: 'Bad Request - validation failed' })
+  @ApiResponse({ status: 409, description: 'Conflict - user already exists' })
+  async register(@Body() registerDto: RegisterDto) {
+    return await this.authService.register(registerDto);
   }
 
-  @Post('login')
   @UseGuards(LocalAuthGuard)
-  @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5 login attempt per minute
-  @ApiOperation({
-    summary: 'Bejelentkezés',
-    description: 'Felhasználó bejelentkezés email és jelszó használatával',
-  })
-  @ApiBody({ type: LoginDto })
-  @ApiResponse({
-    status: 200,
-    description: 'Sikeres bejelentkezés',
-    schema: {
-      type: 'object',
-      properties: {
-        access_token: { type: 'string', description: 'JWT access token' },
-        user: {
-          type: 'object',
-          properties: {
-            user_id: { type: 'string' },
-            username: { type: 'string' },
-            email: { type: 'string' },
-          },
-        },
-      },
-    },
-  })
-  @ApiUnauthorizedResponse({ description: 'Hibás email vagy jelszó' })
-  @ApiTooManyRequestsResponse({ description: 'Túl sok bejelentkezési kísérlet' })
+  @Post('login')
   @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 10, ttl: 60000 } }) // 10 requests per minute
+  @ApiOperation({ summary: 'Login user' })
+  @ApiBody({ type: LoginDto })
+  @ApiResponse({ status: 200, description: 'User successfully logged in' })
+  @ApiResponse({ status: 401, description: 'Unauthorized - invalid credentials' })
   async login(
     @Body() loginDto: LoginDto,
-    @CurrentUser() user: User,
-    @Res({ passthrough: true }) response: Response,
-  ): Promise<LoginResponse> {
-    return this.authService.login(loginDto, response, user);
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return await this.authService.login(loginDto, req, res);
   }
 
-  @Post('refresh')
   @UseGuards(RefreshTokenGuard)
-  @Throttle({ default: { limit: 10, ttl: 60000 } }) // 10 refresh attempts per minute
-  @ApiOperation({
-    summary: 'Token frissítés',
-    description: 'Access token frissítése refresh token használatával',
-  })
-  @ApiCookieAuth('refresh_token')
-  @ApiResponse({
-    status: 200,
-    description: 'Token sikeresen frissítve',
-    schema: {
-      type: 'object',
-      properties: {
-        access_token: { type: 'string', description: 'Új JWT access token' },
-      },
-    },
-  })
-  @ApiUnauthorizedResponse({ description: 'Érvénytelen refresh token' })
+  @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  async refresh(
-    @Req() request: Request,
-    @Res({ passthrough: true }) response: Response,
-  ): Promise<{ access_token: string }> {
-    const refreshToken = request.cookies?.refresh_token as string;
-
-    if (!refreshToken) {
-      throw new UnauthorizedException('Refresh token hiányzik');
-    }
-
-    return this.authService.refreshToken(refreshToken, response);
+  @ApiOperation({ summary: 'Refresh access token' })
+  @ApiResponse({ status: 200, description: 'Token successfully refreshed' })
+  @ApiResponse({ status: 401, description: 'Unauthorized - invalid refresh token' })
+  async refreshToken(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<RefreshTokenDto> {
+    const refreshToken = (req.cookies?.refresh_token as string) || '';
+    return await this.authService.refreshToken(refreshToken, res);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('logout')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({
-    summary: 'Kijelentkezés',
-    description: 'Jelenlegi eszközről való kijelentkezés',
-  })
-  @ApiResponse({ status: 200, description: 'Sikeres kijelentkezés' })
-  @ApiUnauthorizedResponse({ description: 'Nem authentikált felhasználó' })
   @HttpCode(HttpStatus.OK)
-  async logout(
-    @CurrentUser() user: User,
-    @Res({ passthrough: true }) response: Response,
-  ): Promise<{ message: string }> {
-    return this.authService.logout(user.user_id, response);
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Logout user' })
+  @ApiResponse({ status: 200, description: 'User successfully logged out' })
+  @ApiResponse({ status: 401, description: 'Unauthorized - JWT token required' })
+  async logout(@CurrentUser() user: User, @Res({ passthrough: true }) res: Response) {
+    return await this.authService.logout(user.user_id, res);
   }
 
-  @Post('logout-all-devices')
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({
-    summary: 'Kijelentkezés minden eszközről',
-    description: 'Összes eszközről való kijelentkezés (minden refresh token invalidálása)',
-  })
-  @ApiResponse({ status: 200, description: 'Sikeres kijelentkezés minden eszközről' })
-  @ApiUnauthorizedResponse({ description: 'Nem authentikált felhasználó' })
+  @Post('logout-all')
   @HttpCode(HttpStatus.OK)
-  async logoutAllDevices(@CurrentUser() user: User): Promise<{ message: string }> {
-    return this.authService.logoutAllDevices(user.user_id);
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Logout user from all devices' })
+  @ApiResponse({ status: 200, description: 'User successfully logged out from all devices' })
+  @ApiResponse({ status: 401, description: 'Unauthorized - JWT token required' })
+  async logoutAllDevices(@CurrentUser() user: User) {
+    return await this.authService.logoutAllDevices(user.user_id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('me')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Get current user profile' })
+  @ApiResponse({ status: 200, description: 'Current user profile retrieved' })
+  @ApiResponse({ status: 401, description: 'Unauthorized - JWT token required' })
+  getProfile(@CurrentUser() user: User) {
+    return user;
   }
 }

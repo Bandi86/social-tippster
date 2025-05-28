@@ -1,6 +1,6 @@
 import { UserResponseDto } from './user-response.dto';
 
-export class PaginatedUsersResponseDto {
+export class UserListPaginatedResponseDto {
   data: UserResponseDto[];
 
   meta: {

@@ -1,8 +1,9 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AnalyticsModule } from '../admin/analytics-dashboard/analytics.module';
 import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
@@ -16,30 +17,29 @@ import { RefreshTokenStrategy } from './strategies/refresh-token.strategy';
 
 @Module({
   imports: [
-    PassportModule,
     TypeOrmModule.forFeature([RefreshToken]),
+    PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('jwt.accessSecret'),
-        signOptions: {
-          expiresIn: configService.get<string>('jwt.accessExpiresIn', '15m'),
-        },
+        secret: configService.get<string>('JWT_SECRET'),
+        signOptions: { expiresIn: configService.get<string>('JWT_EXPIRATION') || '15m' },
       }),
       inject: [ConfigService],
     }),
-    UsersModule,
+    forwardRef(() => UsersModule),
+    forwardRef(() => AnalyticsModule), // Import AnalyticsModule with forwardRef to avoid circular dependency
   ],
   controllers: [AuthController],
   providers: [
     AuthService,
-    JwtStrategy,
     LocalStrategy,
+    JwtStrategy,
     RefreshTokenStrategy,
     JwtAuthGuard,
     LocalAuthGuard,
     RefreshTokenGuard,
   ],
-  exports: [AuthService, JwtAuthGuard, LocalAuthGuard, RefreshTokenGuard],
+  exports: [AuthService, JwtModule],
 })
 export class AuthModule {}

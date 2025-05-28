@@ -5,6 +5,7 @@ export { AdminStatsDto } from './admin-stats.dto';
 export { BanUserDto } from './ban-user.dto';
 export { BulkCommentActionDto } from './bulk-comment-action.dto';
 export { ChangeUserRoleDto } from './change-user-role.dto';
+export { CommentStatsDto } from './comment-stats.dto';
 export { GetUsersQueryDto } from './get-users-query.dto';
 export { PaginatedUsersResponseDto } from './paginated-users-response.dto';
 export { UserResponseDto } from './user-response.dto';

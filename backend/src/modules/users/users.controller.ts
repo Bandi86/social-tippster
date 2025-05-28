@@ -6,6 +6,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  NotFoundException,
   Param,
   ParseUUIDPipe,
   Patch,
@@ -23,13 +24,13 @@ import {
 } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { UserListPaginatedResponseDto } from './dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { GetUsersQueryDto } from './dto/get-users-query.dto';
-import { PaginatedUsersResponseDto } from './dto/paginated-users-response.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
-import { User, UserRole } from './entities/user.entity';
+import { User } from './entities/user.entity';
 import { UsersService } from './users.service';
 
 @ApiTags('users')
@@ -51,10 +52,16 @@ export class UsersController {
   @ApiResponse({
     status: 200,
     description: 'Users retrieved successfully',
-    type: PaginatedUsersResponseDto,
+    type: UserListPaginatedResponseDto,
   })
-  async findAll(@Query() queryDto: GetUsersQueryDto): Promise<PaginatedUsersResponseDto> {
-    return this.usersService.findAll(queryDto);
+  async findAll(@Query() queryDto: GetUsersQueryDto): Promise<UserListPaginatedResponseDto> {
+    const result = await this.usersService.findAll(queryDto);
+    return new UserListPaginatedResponseDto(
+      result.users,
+      result.meta.total,
+      result.meta.page,
+      result.meta.limit,
+    );
   }
 
   // IMPORTANT: /me endpoint must be before /:id to avoid routing conflicts
@@ -83,7 +90,11 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'User found', type: UserResponseDto })
   @ApiResponse({ status: 404, description: 'User not found' })
   async findByUsername(@Param('username') username: string): Promise<UserResponseDto> {
-    return this.usersService.findByUsername(username);
+    const user = await this.usersService.findByUsername(username);
+    if (!user) {
+      throw new NotFoundException('Felhasználó nem található');
+    }
+    return user;
   }
 
   @Patch(':id')
@@ -138,7 +149,7 @@ export class UsersController {
     if (currentUser.user_id !== id) {
       throw new ForbiddenException('Csak a saját jelszavadat változtathatod meg');
     }
-    return this.usersService.changePassword(id, changePasswordDto);
+    return await this.usersService.changePassword(id, changePasswordDto);
   }
 
   @Delete(':id')
@@ -163,68 +174,6 @@ export class UsersController {
       throw new ForbiddenException('Csak a saját fiókodat törölheted');
     }
     return this.usersService.remove(id);
-  }
-
-  @Patch(':id/ban')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Ban user (admin only)' })
-  @ApiParam({ name: 'id', description: 'User UUID' })
-  @ApiBody({ schema: { type: 'object', properties: { reason: { type: 'string' } } } })
-  @ApiResponse({ status: 200, description: 'User banned successfully', type: UserResponseDto })
-  @ApiResponse({ status: 401, description: 'Unauthorized - JWT token required' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Admin rights required' })
-  @ApiResponse({ status: 404, description: 'User not found' })
-  async banUser(
-    @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() currentUser: User,
-    @Body('reason') reason?: string,
-  ): Promise<UserResponseDto> {
-    // Admin role check - only admins can ban users
-    if (currentUser.role !== UserRole.ADMIN) {
-      throw new ForbiddenException('Admin jogosultság szükséges a felhasználó kitiltásához');
-    }
-    return this.usersService.banUser(id, reason);
-  }
-
-  @Patch(':id/unban')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Unban user (admin only)' })
-  @ApiParam({ name: 'id', description: 'User UUID' })
-  @ApiResponse({ status: 200, description: 'User unbanned successfully', type: UserResponseDto })
-  @ApiResponse({ status: 401, description: 'Unauthorized - JWT token required' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Admin rights required' })
-  @ApiResponse({ status: 404, description: 'User not found' })
-  async unbanUser(
-    @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() currentUser: User,
-  ): Promise<UserResponseDto> {
-    // Admin role check - only admins can unban users
-    if (currentUser.role !== UserRole.ADMIN) {
-      throw new ForbiddenException('Admin jogosultság szükséges a tiltás feloldásához');
-    }
-    return this.usersService.unbanUser(id);
-  }
-
-  @Patch(':id/verify')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Verify user (admin only)' })
-  @ApiParam({ name: 'id', description: 'User UUID' })
-  @ApiResponse({ status: 200, description: 'User verified successfully', type: UserResponseDto })
-  @ApiResponse({ status: 401, description: 'Unauthorized - JWT token required' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Admin rights required' })
-  @ApiResponse({ status: 404, description: 'User not found' })
-  async verifyUser(
-    @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() currentUser: User,
-  ): Promise<UserResponseDto> {
-    // Admin role check - only admins can verify users
-    if (currentUser.role !== UserRole.ADMIN) {
-      throw new ForbiddenException('Admin jogosultság szükséges a felhasználó verifikálásához');
-    }
-    return this.usersService.verifyUser(id);
   }
 
   @Patch(':id/follow')

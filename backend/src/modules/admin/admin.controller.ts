@@ -28,12 +28,14 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CommentsService } from '../comments/comments.service';
 import { User, UserRole } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
+import { AnalyticsService } from './analytics-dashboard/analytics.service';
 import {
   AdminStatsDto,
   BanUserDto,
   BulkCommentActionDto,
   ChangeUserRoleDto,
   CommentResponseDto,
+  CommentStatsDto,
   FlagCommentDto,
   GetUsersQueryDto,
   ListCommentsQueryDto,
@@ -50,6 +52,7 @@ export class AdminController {
   constructor(
     private readonly usersService: UsersService,
     private readonly commentsService: CommentsService,
+    private readonly analyticsService: AnalyticsService,
   ) {}
 
   // Admin jogosultság ellenőrzése
@@ -87,7 +90,7 @@ export class AdminController {
   @ApiResponse({ status: 403, description: 'Tiltott - Admin jogosultság szükséges' })
   async getUserStats(@CurrentUser() currentUser: User): Promise<AdminStatsDto> {
     this.checkAdminRole(currentUser); // Admin jogosultság ellenőrzése
-    return await this.usersService.getAdminStats();
+    return (await this.analyticsService.getAdminUserStats()) as AdminStatsDto;
   }
 
   @Get('users/:id')
@@ -281,19 +284,10 @@ export class AdminController {
 
   @Get('comments/stats')
   @ApiOperation({ summary: 'Komment statisztikák lekérése (csak admin)' })
-  @ApiResponse({ status: 200, description: 'Komment statisztikák', type: AdminStatsDto })
-  async getCommentsStats(@CurrentUser() currentUser: User): Promise<AdminStatsDto> {
+  @ApiResponse({ status: 200, description: 'Komment statisztikák', type: CommentStatsDto })
+  async getCommentsStats(@CurrentUser() currentUser: User): Promise<CommentStatsDto> {
     this.checkAdminRole(currentUser); // Admin jogosultság ellenőrzése
-    // Teljes AdminStatsDto összeállítása az összes kötelező mezővel, hiányzókat 0-val kitöltve
-    const stats = await this.commentsService.getAdminStats();
-    return {
-      total: stats.total,
-      active: stats.active,
-      banned: 0, // Nem elérhető a commentsService-ből
-      unverified: 0, // Nem elérhető a commentsService-ből
-      admins: 0, // Nem elérhető a commentsService-ből
-      recentRegistrations: 0, // Nem elérhető a commentsService-ből
-    };
+    return await this.analyticsService.getAdminCommentStats();
   }
 
   @Post('comments/:id/flag')
