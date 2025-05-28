@@ -330,7 +330,7 @@ export class CommentsService {
       downvotes: comment.downvotes,
       userVote: null, // This would need the current user context to determine
       replyCount,
-      flagReason: comment.flagReason ?? undefined,
+      flagReason: typeof comment.flagReason === 'string' ? comment.flagReason : undefined,
       createdAt: comment.createdAt,
       updatedAt: comment.updatedAt,
     };
@@ -349,5 +349,184 @@ export class CommentsService {
     comment.downvotes = downvotes;
 
     await this.commentRepository.save(comment);
+  }
+
+  // Admin-specific methods
+  async findAllForAdmin(query: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    status?: string;
+    postId?: string;
+    authorId?: string;
+    sortBy?: string;
+  }): Promise<{
+    comments: CommentResponseDto[];
+    meta: {
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    };
+  }> {
+    const {
+      page = 1,
+      limit = 20,
+      search,
+      status = 'all',
+      postId,
+      authorId,
+      sortBy = 'newest',
+    } = query;
+    const skip = (page - 1) * limit;
+
+    const queryBuilder = this.commentRepository
+      .createQueryBuilder('comment')
+      .leftJoinAndSelect('comment.user', 'user')
+      .leftJoinAndSelect('comment.votes', 'votes')
+      .leftJoinAndSelect('comment.reports', 'reports');
+
+    // Admin can see all comments, including flagged ones
+    if (status === 'flagged') {
+      queryBuilder.where('comment.flagReason IS NOT NULL');
+    } else if (status === 'reported') {
+      queryBuilder.where('reports.id IS NOT NULL');
+    } else if (status === 'active') {
+      queryBuilder.where('comment.flagReason IS NULL');
+    }
+    // 'all' status shows everything, no additional filter
+
+    if (search) {
+      queryBuilder.andWhere('comment.content ILIKE :search', { search: `%${search}%` });
+    }
+
+    if (postId) {
+      queryBuilder.andWhere('comment.postId = :postId', { postId });
+    }
+
+    if (authorId) {
+      queryBuilder.andWhere('comment.userId = :authorId', { authorId });
+    }
+
+    // Sorting
+    switch (sortBy) {
+      case 'oldest':
+        queryBuilder.orderBy('comment.createdAt', 'ASC');
+        break;
+      case 'most_reported':
+        queryBuilder
+          .addSelect('COUNT(reports.id)', 'reportCount')
+          .groupBy('comment.id, user.user_id')
+          .orderBy('reportCount', 'DESC');
+        break;
+      case 'newest':
+      default:
+        queryBuilder.orderBy('comment.createdAt', 'DESC');
+        break;
+    }
+
+    queryBuilder.skip(skip).take(limit);
+
+    const [comments, total] = await queryBuilder.getManyAndCount();
+
+    const commentDtos = await Promise.all(comments.map(comment => this.mapToResponseDto(comment)));
+
+    return {
+      comments: commentDtos,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  async getAdminStats(): Promise<{
+    total: number;
+    active: number;
+    flagged: number;
+    reported: number;
+    totalReports: number;
+    recentComments: number;
+  }> {
+    const total = await this.commentRepository.count();
+
+    const active = await this.commentRepository.count({
+      where: { flagReason: null },
+    });
+
+    const flagged = await this.commentRepository
+      .createQueryBuilder('comment')
+      .where('comment.flagReason IS NOT NULL')
+      .getCount();
+
+    // Count comments that have at least one report
+    const reported = await this.commentRepository
+      .createQueryBuilder('comment')
+      .leftJoin('comment.reports', 'reports')
+      .where('reports.id IS NOT NULL')
+      .getCount();
+
+    const totalReports = await this.commentReportRepository.count();
+
+    // Get recent comments (last 7 days)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const recentComments = await this.commentRepository
+      .createQueryBuilder('comment')
+      .where('comment.createdAt >= :sevenDaysAgo', { sevenDaysAgo })
+      .getCount();
+
+    return {
+      total,
+      active,
+      flagged,
+      reported,
+      totalReports,
+      recentComments,
+    };
+  }
+
+  async bulkAction(
+    commentIds: string[],
+    action: string,
+    user: User,
+    reason?: string,
+  ): Promise<{ message: string; processed: number }> {
+    let processed = 0;
+
+    for (const commentId of commentIds) {
+      try {
+        switch (action) {
+          case 'delete':
+            await this.remove(commentId, user);
+            processed++;
+            break;
+          case 'flag':
+            if (!reason) {
+              throw new BadRequestException('Reason is required for flagging');
+            }
+            await this.flag(commentId, reason, user);
+            processed++;
+            break;
+          case 'unflag':
+            await this.unflag(commentId, user);
+            processed++;
+            break;
+          default:
+            throw new BadRequestException(`Unknown action: ${action}`);
+        }
+      } catch (error) {
+        // Continue processing other comments even if one fails
+        console.error(`Failed to ${action} comment ${commentId}:`, error);
+      }
+    }
+
+    return {
+      message: `Successfully ${action}ed ${processed} of ${commentIds.length} comments`,
+      processed,
+    };
   }
 }

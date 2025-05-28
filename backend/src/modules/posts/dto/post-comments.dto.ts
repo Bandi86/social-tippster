@@ -10,6 +10,7 @@ import {
   Min,
   MinLength,
 } from 'class-validator';
+import { CommentResponseDto } from '../../comments/dto/comment-response.dto';
 
 export class CreateCommentDto {
   @IsUUID('4', { message: 'Érvényes post ID szükséges' })
@@ -90,47 +91,6 @@ export class GetCommentsQueryDto {
   @Transform(({ value }) => value === 'true' || value === true)
   @IsBoolean()
   onlyTopLevel?: boolean = false; // Only root comments, no replies
-}
-
-export class CommentResponseDto {
-  id: string;
-  content: string;
-  postId: string;
-  parentCommentId?: string;
-
-  // Author info
-  author: {
-    id: string;
-    username: string;
-    avatar?: string;
-    isVerified: boolean;
-  };
-
-  // Metadata
-  createdAt: Date;
-  updatedAt: Date;
-  isEdited: boolean;
-
-  // Statistics
-  likesCount: number;
-  dislikesCount: number;
-  repliesCount: number;
-
-  // User interactions (for authenticated users)
-  userVote?: 'like' | 'dislike' | null;
-
-  // Mentions
-  mentionedUsers?: Array<{
-    id: string;
-    username: string;
-  }>;
-
-  // Nested replies (if included)
-  replies?: CommentResponseDto[];
-
-  // Moderation
-  isDeleted: boolean;
-  deletedAt?: Date;
 }
 
 export class GetCommentsResponseDto {

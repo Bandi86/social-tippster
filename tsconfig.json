@@ -24,6 +24,6 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["frontend/**/*", "backend/**/*", "*.ts", "eslint.config.js"],
+  "include": ["frontend/**/*", "backend/**/*", "*.ts", "eslint.config.js", "tests/update-admin-role.js", "tests/update-user-role.js"],
   "exclude": ["node_modules", "dist", "**/*.test.ts"]
 }

@@ -4,7 +4,6 @@ export { CreatePostDto, PostStatus, PostType, PostVisibility } from './create-po
 export { GetPostByIdDto } from './get-post-by-id.dto';
 export { GetPostsQueryDto, PostSortBy, SortOrder } from './get-posts-query.dto';
 export {
-  CommentResponseDto,
   CommentSortBy,
   CommentSortOrder,
   CreateCommentDto,
@@ -14,6 +13,7 @@ export {
   UpdateCommentDto,
   VoteCommentDto,
 } from './post-comments.dto';
+export { CommentResponseDto } from '../../comments/dto/comment-response.dto';
 export {
   BookmarkPostDto,
   SharePostDto,

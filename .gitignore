@@ -48,10 +48,6 @@ uploads/
 
 temp/
 
-# Ignore .github folder except prompt.md
-.github/
-!.github/prompt.md
-
 # Playwright
 /test-results/
 /playwright-report/
