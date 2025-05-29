@@ -1,3 +1,28 @@
+# Zustand Store API Refactor (2025-05-29)
+
+## Summary
+
+- All API logic for posts, comments, and users is now handled by Zustand stores in `frontend/store`.
+- Types are unified and imported from `frontend/types/index.ts`.
+- All custom hooks in `frontend/hooks` use only Zustand stores for state and API actions.
+- The old API files in `frontend/lib/api` are deprecated (see `frontend/lib/api/README.md`).
+- All components should use hooks from `frontend/hooks` for state and API actions.
+
+## Implementation Details
+
+- Posts, comments, and users stores encapsulate all API logic, including authentication and error handling.
+- Hooks provide a unified interface for components.
+- Documentation and changelogs updated.
+
+## Next Steps
+
+- Remove deprecated API files after migration is fully verified.
+- Continue to update documentation as new features are added.
+
+---
+
+_Last updated: 2025-05-29_
+
 # Social Tippster Frontend Progress
 
 ## Overview
@@ -209,122 +234,47 @@ import BaseLayout from '@/components/layout/base-layout';
 - **Token Management**: Proper JWT handling and user state management
 - **Route Protection**: Authentication guards working correctly
 
-## 🧪 Testing Results for Authentication Fixes
+### ✅ Reddit-Like Homepage Layout **NEW - May 29, 2025**
 
-### ✅ Complete Authentication Flow Testing
-
-#### Registration Testing
-
-- ✅ Frontend form submission working
-- ✅ Data mapping to backend DTO format correct
-- ✅ Backend registration endpoint successful
-- ✅ Token response properly handled
-- ✅ User state updated correctly
-- ✅ Navigation to dashboard functional
-
-#### Loading State Testing
-
-- ✅ No infinite loading spinners
-- ✅ Proper authentication state initialization
-- ✅ Smooth page transitions
-- ✅ Loading states resolve correctly
-
-#### Server Communication Testing
-
-- ✅ Backend running on port 3001 (`http://localhost:3001/api`)
-- ✅ Frontend running on port 3002 (`http://localhost:3002`)
-- ✅ API calls reaching backend successfully
-- ✅ CORS configuration working
-- ✅ Environment variables properly set
-
-### Backend Endpoint Verification
-
-```bash
-# Registration endpoint test - SUCCESS ✅
-curl -X POST http://localhost:3001/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "username": "testuser123",
-    "email": "test123@example.com",
-    "password": "password123",
-    "first_name": "Test",
-    "last_name": "User"
-  }'
-
-# Response:
-{
-  "message": "Sikeres regisztráció",
-  "accessToken": "eyJhbGciOiJIUzI1NiIs...",
-  "user": { ... }
-}
-```
-
-## 📋 Files Modified for Authentication Fixes
-
-### Frontend Files
-
-1. **`src/hooks/use-auth.ts`** - Fixed infinite loading with useRef and useCallback
-2. **`src/features/auth/auth-service.ts`** - Fixed registration data mapping
-3. **`src/components/auth/register-form.tsx`** - Verified form functionality
-4. **`src/components/layout/base-layout.tsx`** - Verified loading states
-5. **`src/components/auth/auth-guard.tsx`** - Verified route protection
-
-### Backend Files Verified
-
-1. **`src/modules/auth/dto/register.dto.ts`** - Confirmed field requirements
-2. **`src/modules/auth/auth.service.ts`** - Verified registration logic
-3. **`src/modules/auth/auth.controller.ts`** - Confirmed API responses
-
-## 🎯 Current Status: AUTHENTICATION FULLY FUNCTIONAL ✅
-
-All critical frontend authentication issues have been successfully resolved:
-
-- ✅ **Infinite Loading Issue**: Fixed with proper useAuth hook implementation
-- ✅ **Registration Data Format**: Corrected with backend DTO compliance
-- ✅ **Server Communication**: Working with proper port configuration
-- ✅ **Authentication Flow**: Complete end-to-end functionality implemented
-- ✅ **User State Management**: Working correctly with proper token handling
-- ✅ **Route Protection**: Authentication guards functioning properly
-
-## 🔧 Latest Updates (2025-05-28): Profile System Integration ✅
-
-### ✅ Profile Edit System Compilation Fixes
-
-- **Import Path Resolution**: Fixed auth store imports from `@/store/auth-store` to `@/store/auth`
-- **API Function Signatures**: Corrected parameter passing for `updateUserProfile()` and `changeUserPassword()`
-- **Auth Hook Integration**: Fixed `refreshUser()` to `refreshUserData()` function calls
-- **Icon Library Compatibility**: Resolved `BookmarkFilled` import by replacing with `BookmarkCheck`
-
-### ✅ Frontend-Backend API Integration
-
-- **User Profile Updates**: Working profile edit functionality with backend validation
-- **Password Change System**: Secure password update with proper error handling
-- **Form Validation**: Comprehensive client-side and server-side validation
-- **Error Messaging**: User-friendly error notifications with toast system
-
-### ✅ Component Integration Status
-
-- **Dashboard Page**: Fixed auth store imports, now rendering without errors
-- **PostList Component**: Updated auth integration for user-specific content
-- **PostCard Component**: Fixed icon imports and user interaction features
-- **Profile Edit Page**: Fully functional with backend API communication
-
-### 📊 Development Server Status (2025-05-28)
-
-- **Frontend**: ✅ Running on localhost:3000 without compilation errors
-- **Backend**: ✅ Running on localhost:3001 with all API endpoints active
-- **Database**: ✅ PostgreSQL connected with all migrations applied
-- **API Documentation**: ✅ Available at localhost:3001/api/docs
-
-### 🔗 API Integration Completed
-
-- **Authentication APIs**: Full integration maintained and working
-- **User Management**: Profile CRUD operations fully functional
-- **Posts System**: Backend communication ready for expansion
-- **Error Handling**: Consistent error responses and user feedback
-
-**The Social Tippster application now has fully functional authentication AND profile management systems with seamless frontend-backend integration.**
+- **Modern 3-Column Layout**: Implemented comprehensive Reddit-style homepage with left sidebar (navigation), middle content (post feed), and right sidebar (widgets)
+- **Always-Visible Post Creation**: Added Reddit-style post creation prompt that's always accessible in the middle content area
+- **Enhanced Navigation Sidebar**: Comprehensive navigation with user profile quick view, navigation menu, quick actions, and community stats
+- **Live Dashboard Widgets**: Trending topics with badges, live sports matches, top contributors leaderboard, recent activity feed, and daily statistics
+- **Improved User Experience**: Separate experiences for authenticated and non-authenticated users with proper call-to-actions
+- **Visual Design Enhancement**: Consistent dark theme with amber accents, gradient backgrounds, hover effects, and modern typography
+- **Responsive Design**: Mobile-first approach that works seamlessly across all device sizes
+- **Component Integration**: Fixed CreatePostForm integration and resolved User type issues
 
 ---
 
-**Last Updated**: May 28, 2025 - Profile Edit System Integration Complete ✅
+### ✅ Non-Authenticated User Experience Update (2025-05-29)
+
+- **Read-Only Interactions**: Non-authenticated users can view all posts, comments, and statistics, but cannot create posts, vote, comment, bookmark, or share. All interactive elements are replaced with static counters.
+- **Guest Banners & CTAs**: Prominent guest user banner at the top of the homepage, feature preview in the sidebar, and login/register prompts at key interaction points.
+- **Consistent Styling**: All guest prompts and static elements use the amber theme for clarity and consistency.
+- **Mobile Responsiveness**: Verified and improved mobile layout for new guest banners and static UI elements.
+- **Component Integration**: Updated `PostCard`, homepage, and created reusable `UnauthenticatedNotice` component.
+
+### ✅ Complete Profile Management System (2025-05-29)
+
+- **Profile Page Functionality**: Fixed critical bug in profile posts loading by correcting API parameter from user ID to username
+- **Password Change System**: Resolved missing `confirmPassword` parameter issue in password change API calls
+- **Email Update Capability**: Enhanced `UpdateUserData` interface to support email field updates
+- **Profile Navigation**: Verified all profile action links work correctly (settings, password change, email change)
+- **User Profile Display**: Complete profile viewing with avatar, username, role, email, registration date, online status, and last login
+- **Account Management**: Full account settings management with dedicated pages for security and profile updates
+- **TypeScript Compliance**: All profile-related TypeScript compilation errors resolved
+- **Server Integration**: Profile management system fully integrated with backend API endpoints
+
+**Last Updated**: May 29, 2025 - Complete Profile Management System ✅
+
+# Zustand API Migration & Cleanup (2025-05-29)
+
+- All API logic for posts, comments, and users is now handled by Zustand stores using the shared axios instance (`frontend/lib/api/axios.ts`).
+- The only file that should remain in `frontend/lib/api` is `axios.ts` (and this README).
+- The `admin-apis/` directory is still used for admin panel features and is not affected by this migration.
+- All components and hooks should use Zustand stores for posts, comments, and users API calls.
+
+**No further deletions are needed unless admin-apis is migrated.**
+
+_Last reviewed: 2025-05-29_

@@ -1,5 +1,5 @@
-import { IsEmail, IsNotEmpty, MinLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { IsEmail, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
 
 export class LoginDto {
   @ApiProperty({
@@ -19,4 +19,22 @@ export class LoginDto {
   @IsNotEmpty({ message: 'A jelszó megadása kötelező' })
   @MinLength(6, { message: 'A jelszónak legalább 6 karakter hosszúnak kell lennie' })
   password: string;
+
+  @ApiProperty({
+    description: 'Felhasználó időzónája',
+    example: 'Europe/Budapest',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  timezone?: string;
+
+  @ApiProperty({
+    description: 'Felhasználó nyelvi preferenciája',
+    example: 'hu',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  language_preference?: string;
 }

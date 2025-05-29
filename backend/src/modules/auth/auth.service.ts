@@ -3,13 +3,14 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { Repository } from 'typeorm';
 import { AnalyticsService } from '../admin/analytics-dashboard/analytics.service';
-import { LoginDto } from '../users/dto/login.dto';
+import { UpdateUserDto } from '../users/dto/update-user.dto';
 import { UserResponseDto } from '../users/dto/user-response.dto';
 import { User } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
+import { LoginDto } from './dto/login.dto';
 import { LogoutAllDevicesDto, LogoutDto, RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
 import { RefreshToken } from './entities/refresh-token.entity';
@@ -20,7 +21,7 @@ export interface JwtPayload {
   type: string;
   email?: string;
   username?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface LoginResponse {
@@ -28,11 +29,22 @@ export interface LoginResponse {
   user: UserResponseDto;
 }
 
-// Add missing interface
 export interface LoginResponseDto {
   access_token: string;
   user: UserResponseDto;
 }
+
+// Enhanced request interface for better type safety
+/* interface AuthRequest extends Request {
+  headers: {
+    'user-agent'?: string;
+    'x-forwarded-for'?: string;
+    'x-real-ip'?: string;
+    'x-timezone'?: string;
+    timezone?: string;
+    [key: string]: string | string[] | undefined;
+  };
+} */
 
 @Injectable()
 export class AuthService {
@@ -140,13 +152,36 @@ export class AuthService {
     return user;
   }
 
-  async login(loginDto: LoginDto, request?: any, response?: Response): Promise<LoginResponseDto> {
+  async login(
+    loginDto: LoginDto,
+    request?: Request,
+    response?: Response,
+  ): Promise<LoginResponseDto> {
     // Validate credentials
     const authenticatedUser = await this.validateUser(loginDto.email, loginDto.password);
 
     if (!authenticatedUser) {
       throw new UnauthorizedException('Hibás email vagy jelszó');
     }
+
+    // Update last_login, timezone, and language_preference
+    const updateData: Partial<UpdateUserDto> = {
+      // last_login: new Date().toISOString(), // Removed because it's not in UpdateUserDto
+    };
+
+    // Set timezone if provided, otherwise detect from request or use default
+    if (loginDto.timezone) {
+      updateData.timezone = loginDto.timezone;
+    } else {
+      // Try to detect timezone from request headers or use default
+      updateData.timezone = this.extractTimezone(request) || 'Europe/Budapest';
+    }
+
+    // Set language preference, default to Hungarian
+    updateData.language_preference = loginDto.language_preference || 'hu';
+
+    // Update user in database using the update method
+    await this.usersService.update(authenticatedUser.user_id, updateData);
 
     // Generate access token (short-lived)
     const accessToken = this.generateAccessToken(authenticatedUser);
@@ -171,26 +206,23 @@ export class AuthService {
       });
     }
 
+    // Get updated user data
     const userResponse = await this.usersService.findOne(authenticatedUser.user_id);
 
     // Track login after successful authentication
     if (authenticatedUser && request) {
       try {
-        // Safely extract IP address
-        let ip: string | undefined;
-        if (typeof request === 'object' && request !== null) {
-          if (typeof request.ip === 'string') {
-            ip = request.ip;
-          } else if (request.connection && typeof request.connection.remoteAddress === 'string') {
-            ip = request.connection.remoteAddress;
-          }
-        }
+        // Extract IP address safely
+        const ip: string | undefined = this.extractIpAddress(request);
+
+        // Safely access user-agent header
+        const userAgent: string | undefined = this.extractUserAgent(request);
         await this.analyticsService.trackUserLogin(
           authenticatedUser.user_id,
           ip,
-          request.headers?.['user-agent'],
-          this.getDeviceType(request.headers?.['user-agent']),
-          this.getBrowser(request.headers?.['user-agent']),
+          userAgent,
+          this.getDeviceType(userAgent),
+          this.getBrowser(userAgent),
         );
       } catch (error) {
         // Don't fail login if analytics tracking fails
@@ -213,20 +245,20 @@ export class AuthService {
     };
 
     return this.jwtService.sign(payload, {
-      secret: this.configService.get('jwt.accessSecret'),
-      expiresIn: this.configService.get('jwt.accessExpiresIn'),
+      secret: this.configService.get<string>('jwt.accessSecret'),
+      expiresIn: this.configService.get<string>('jwt.accessExpiresIn'),
     });
   }
 
   private generateRefreshToken(user: User): string {
-    const payload = {
+    const payload: Partial<JwtPayload> = {
       sub: user.user_id,
       type: 'refresh',
     };
 
     return this.jwtService.sign(payload, {
-      secret: this.configService.get('jwt.refreshSecret'),
-      expiresIn: this.configService.get('jwt.refreshExpiresIn'),
+      secret: this.configService.get<string>('jwt.refreshSecret'),
+      expiresIn: this.configService.get<string>('jwt.refreshExpiresIn'),
     });
   }
 
@@ -251,7 +283,7 @@ export class AuthService {
     try {
       // Verify refresh token
       const rawPayload: unknown = this.jwtService.verify(refreshTokenValue, {
-        secret: this.configService.get('jwt.refreshSecret'),
+        secret: this.configService.get<string>('jwt.refreshSecret'),
       });
 
       // Type guard for payload
@@ -264,7 +296,6 @@ export class AuthService {
       }
 
       // Check if refresh token exists in database and not revoked
-      // Note: We need to check against the hashed token, not the raw token
       const storedTokens = await this.refreshTokenRepository.find({
         where: { user_id: rawPayload.sub, is_revoked: false },
         relations: ['user'],
@@ -415,6 +446,16 @@ export class AuthService {
   async register(
     registerDto: RegisterDto,
   ): Promise<{ message: string; user: UserResponseDto; accessToken: string }> {
+    // Set default language_preference to 'hu' if not provided
+    if (!registerDto.language_preference) {
+      registerDto.language_preference = 'hu';
+    }
+
+    // Set default timezone if not provided
+    if (!registerDto.timezone) {
+      registerDto.timezone = 'Europe/Budapest';
+    }
+
     const user = await this.usersService.create(registerDto);
 
     // Generate access token for the new user
@@ -426,7 +467,8 @@ export class AuthService {
     };
 
     const accessToken = this.jwtService.sign(payload, {
-      expiresIn: this.configService.get<string>('JWT_ACCESS_EXPIRATION') || '15m',
+      secret: this.configService.get<string>('jwt.accessSecret'),
+      expiresIn: this.configService.get<string>('jwt.accessExpiresIn'),
     });
 
     return {
@@ -450,5 +492,89 @@ export class AuthService {
     if (/safari/i.test(userAgent)) return 'Safari';
     if (/edge/i.test(userAgent)) return 'Edge';
     return 'other';
+  }
+
+  /**
+   * Extract timezone from request headers or client data
+   */
+  private extractTimezone(request?: Request): string | undefined {
+    if (!request) {
+      return undefined;
+    }
+
+    // Check if timezone is in request headers
+    const headers = request.headers as Record<string, string | string[] | undefined>;
+    const timezoneHeader = headers['x-timezone'] || headers['timezone'];
+    if (typeof timezoneHeader === 'string') {
+      return timezoneHeader;
+    }
+
+    // Check if timezone is in request body
+    if (request.body && typeof request.body === 'object') {
+      const body = request.body as Record<string, unknown>;
+      if ('timezone' in body && typeof body.timezone === 'string') {
+        return body.timezone;
+      }
+    }
+
+    return undefined;
+  }
+
+  /**
+   * Safely extract IP address from request object
+   */
+  private extractIpAddress(request?: Request): string | undefined {
+    if (!request) {
+      return undefined;
+    }
+
+    // Try to get IP from request.ip first
+    if (request.ip) {
+      return request.ip;
+    }
+
+    // Check connection.remoteAddress
+    if (request.connection && 'remoteAddress' in request.connection) {
+      const connection = request.connection as { remoteAddress?: string };
+      if (connection.remoteAddress) {
+        return connection.remoteAddress;
+      }
+    }
+
+    // Check socket.remoteAddress
+    if (request.socket && 'remoteAddress' in request.socket) {
+      const socket = request.socket as { remoteAddress?: string };
+      if (socket.remoteAddress) {
+        return socket.remoteAddress;
+      }
+    }
+
+    // Check for forwarded headers
+    const headers = request.headers as Record<string, string | string[] | undefined>;
+    const forwardedFor = headers['x-forwarded-for'];
+    if (typeof forwardedFor === 'string') {
+      // Take the first IP if there are multiple
+      const firstIp = forwardedFor.split(',')[0]?.trim();
+      return firstIp;
+    }
+
+    const realIp = headers['x-real-ip'];
+    if (typeof realIp === 'string') {
+      return realIp;
+    }
+
+    return undefined;
+  }
+
+  /**
+   * Safely extract user agent from request object
+   */
+  private extractUserAgent(request?: Request): string | undefined {
+    if (!request) {
+      return undefined;
+    }
+
+    const userAgent = request.headers['user-agent'];
+    return typeof userAgent === 'string' ? userAgent : undefined;
   }
 }

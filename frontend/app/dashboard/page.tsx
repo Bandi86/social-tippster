@@ -17,13 +17,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PostList from '@/components/user/PostList';
-import { fetchFeaturedPosts, fetchPosts, Post } from '@/lib/api/posts';
-import { useAuthStore } from '@/store/auth';
+import { useAuth } from '@/hooks/useAuth';
+import { usePosts } from '@/hooks/usePosts';
 import Link from 'next/link';
 
 const DashboardPage = () => {
-  const { user, isAuthenticated } = useAuthStore();
-  const [featuredPosts, setFeaturedPosts] = useState<Post[]>([]);
+  const { user, isAuthenticated } = useAuth();
+  const { fetchPosts, fetchFeaturedPosts, featuredPosts, totalPosts } = usePosts();
   const [stats, setStats] = useState({
     totalPosts: 0,
     totalUsers: 0,
@@ -36,10 +36,16 @@ const DashboardPage = () => {
     loadDashboardStats();
   }, []);
 
+  useEffect(() => {
+    setStats(prev => ({
+      ...prev,
+      totalPosts: totalPosts,
+    }));
+  }, [totalPosts]);
+
   const loadFeaturedPosts = async () => {
     try {
-      const posts = await fetchFeaturedPosts(3);
-      setFeaturedPosts(posts);
+      await fetchFeaturedPosts();
     } catch (error) {
       console.error('Failed to load featured posts:', error);
     }
@@ -48,11 +54,7 @@ const DashboardPage = () => {
   const loadDashboardStats = async () => {
     try {
       // Load stats from posts API - this would be better as a dedicated stats endpoint
-      const response = await fetchPosts({ limit: 1 });
-      setStats(prev => ({
-        ...prev,
-        totalPosts: response.total,
-      }));
+      await fetchPosts({ limit: 1 });
     } catch (error) {
       console.error('Failed to load stats:', error);
     }

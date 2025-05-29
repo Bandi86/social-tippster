@@ -41,7 +41,7 @@ After completing any task, **always update**:
 
 1. Main `README.md` in root directory
 2. Relevant files in `/docs` directory related to changes
-3. create change logs  with type of changed task and time like this: `UI_CHANGE_LOG_202505028.md`
+3. create change logs  with type of changed task and time like this: `CHANGE_LOG_202505028.md`
 4. When u update doc files, always read them first and fill them out logically, don't overwrite the whole thing with new data, but structure them appropriately.
 
 ### Specialized Documentation (when applicable)

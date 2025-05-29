@@ -32,34 +32,133 @@ export type ChangePasswordFormData = {
 // USER TYPES
 // =============================================================================
 
+export type Gender = 'male' | 'female' | 'other' | 'prefer_not_to_say';
+export type BadgeTier = 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond';
 export type UserRole = 'user' | 'admin' | 'moderator';
 
 export interface User {
-  id: string;
-  email: string;
+  user_id: string;
+  id: string; // Alias for user_id for compatibility
   username: string;
-  first_name: string;
-  last_name: string;
-  role: UserRole;
-  is_active: boolean;
-  is_banned: boolean;
-  is_verified: boolean;
+  email: string;
+  password_hash: string;
+  first_name?: string;
+  last_name?: string;
+  phone_number?: string;
+  date_of_birth?: string; // ISO format
+  gender?: Gender;
   created_at: string;
   updated_at: string;
+  favorite_team?: string;
   profile_image?: string;
-  last_login?: string;
-}
-
-export interface UserProfile extends Omit<User, 'is_banned' | 'role'> {
+  cover_image?: string;
   bio?: string;
   location?: string;
   website?: string;
-  social_links?: {
-    twitter?: string;
-    linkedin?: string;
-    github?: string;
-  };
+  is_active: boolean;
+  is_verified: boolean;
+  is_banned: boolean;
+  ban_reason?: string;
+  banned_until?: string;
+  last_login?: string;
+  login_count: number;
+  is_premium: boolean;
+  premium_expiration?: string;
+  referral_code?: string;
+  referred_by?: string;
+  referral_count: number;
+  follower_count: number;
+  following_count: number;
+  post_count: number;
+  reputation_score: number;
+  badge_count: number;
+  highest_badge_tier?: BadgeTier;
+  total_tips: number;
+  successful_tips: number;
+  tip_success_rate: number;
+  total_profit: number;
+  current_streak: number;
+  best_streak: number;
+  email_verified_at?: string;
+  two_factor_enabled: boolean;
+  timezone?: string;
+  language_preference: string;
+  role: UserRole;
+  created_by?: string;
+  updated_by?: string;
 }
+
+// =============================================================================
+// POST TYPES
+export type PostCategory = 'tip' | 'discussion' | 'question' | 'news' | 'analysis';
+export type SportType = 'football' | 'basketball' | 'tennis' | 'baseball' | 'other'; // bővíthető
+export type PostStatus = 'active' | 'archived' | 'deleted' | 'pending_review';
+export type PostVisibility = 'public' | 'private' | 'followers_only' | 'premium_only';
+
+// =============================================================================
+// LEGACY POST TYPES (for backward compatibility)
+// =============================================================================
+
+export interface LegacyPost {
+  post_id: string;
+  user_id: string;
+  title?: string;
+  content: string;
+  summary?: string;
+  category: PostCategory;
+  subcategory?: string;
+  sport_type?: SportType;
+  match_id?: string;
+  odds?: number;
+  stake_amount?: number;
+  potential_payout?: number;
+  confidence_level?: number; // 1-10
+  created_at: string;
+  updated_at: string;
+  published_at?: string;
+  expires_at?: string;
+  is_published: boolean;
+  is_featured: boolean;
+  is_pinned: boolean;
+  view_count: number;
+  like_count: number;
+  dislike_count: number;
+  comment_count: number;
+  share_count: number;
+  bookmark_count: number;
+  status: PostStatus;
+  visibility: PostVisibility;
+  slug?: string;
+  meta_title?: string;
+  meta_description?: string;
+  reading_time?: number;
+  created_by?: string;
+  updated_by?: string;
+}
+
+// =============================================================================
+
+// =============================================================================
+// COMMENT TYPES
+export interface Comment {
+  comment_id: string;
+  post_id: string;
+  user_id: string;
+  parent_comment_id?: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+  is_edited: boolean;
+  edit_count: number;
+  like_count: number;
+  dislike_count: number;
+  reply_count: number;
+  is_approved: boolean;
+  is_flagged: boolean;
+  flag_reason?: string;
+}
+
+// =============================================================================
 
 // =============================================================================
 // AUTHENTICATION TOKENS
@@ -350,3 +449,96 @@ export const isTokenExpired = (token: string): boolean => {
     return true;
   }
 };
+
+// POSTS
+export interface PostsResponse {
+  posts: LegacyPost[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface CreatePostData {
+  title: string;
+  content: string;
+}
+
+export interface UpdatePostData {
+  title?: string;
+  content?: string;
+}
+
+export interface FetchPostsParams {
+  page?: number;
+  limit?: number;
+  type?: string;
+  search?: string;
+  author?: string;
+  featured?: boolean;
+}
+
+// COMMENTS
+export interface CommentsResponse {
+  comments: Comment[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface CreateCommentData {
+  content: string;
+  postId: string;
+  parentCommentId?: string;
+}
+
+export interface UpdateCommentData {
+  content: string;
+}
+
+export interface FetchCommentsParams {
+  postId?: string;
+  parentCommentId?: string;
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
+// USERS
+export interface UserStats {
+  posts: number;
+  comments: number;
+  likes: number;
+  followers: number;
+  following: number;
+}
+
+export interface UpdateProfileData {
+  username?: string;
+  email?: string;
+  first_name?: string;
+  last_name?: string;
+}
+
+export interface ChangePasswordData {
+  oldPassword: string;
+  newPassword: string;
+}
+
+export interface UsersResponse {
+  users: User[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface FetchUsersParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  role?: string;
+  status?: string;
+}

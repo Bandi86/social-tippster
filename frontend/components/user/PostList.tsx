@@ -2,7 +2,7 @@
 
 import { Filter, Loader2, Plus, Search } from 'lucide-react';
 import Link from 'next/link';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -15,9 +15,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { toast } from '@/hooks/use-toast';
-import { Post, PostsResponse, fetchPosts } from '@/lib/api/posts';
-import { useAuthStore } from '@/store/auth';
+import { useAuth } from '@/hooks/useAuth';
+import { usePosts } from '@/hooks/usePosts';
+import { Post } from '@/store/posts';
 import PostCard from './PostCard';
 
 export interface PostListProps {
@@ -49,117 +49,108 @@ export default function PostList({
   onPostUpdate,
   onPostDelete,
 }: Props) {
-  const [posts, setPosts] = useState<Post[]>(initialPosts || []);
-  const [loading, setLoading] = useState(!initialPosts);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedType, setSelectedType] = useState<string>(typeFilter || 'all');
-  const [meta, setMeta] = useState<{ total: number; totalPages: number } | null>(null);
+  const { isAuthenticated } = useAuth();
+  const {
+    posts,
+    currentPage,
+    hasMore,
+    isLoading,
+    isLoadingMore,
+    error,
+    searchQuery,
+    selectedType,
+    fetchPosts,
+    setSearchQuery,
+    setSelectedType,
+    updatePostLocally,
+    removePostLocally,
+  } = usePosts();
 
-  const { isAuthenticated } = useAuthStore();
+  const [localSearchQuery, setLocalSearchQuery] = useState('');
+  const [localSelectedType, setLocalSelectedType] = useState<string>(typeFilter || 'all');
 
-  const loadPosts = useCallback(
-    async (page: number = 1, append: boolean = false) => {
-      if (append) {
-        setLoadingMore(true);
-      } else {
-        setLoading(true);
-      }
-
-      try {
-        const params: any = {
-          page,
-          limit: 10,
-        };
-
-        if (searchQuery) params.search = searchQuery;
-        if (selectedType !== 'all') params.type = selectedType;
-        if (authorFilter) params.author = authorFilter;
-        if (featuredOnly) params.featured = true;
-
-        const response: PostsResponse = await fetchPosts(params);
-
-        if (append) {
-          setPosts(prev => [...prev, ...response.posts]);
-        } else {
-          setPosts(response.posts);
-        }
-
-        setMeta({
-          total: response.total,
-          totalPages: response.totalPages,
-        });
-
-        setHasMore(page < response.totalPages);
-        setCurrentPage(page);
-      } catch (error) {
-        console.error('Failed to load posts:', error);
-        toast({
-          title: 'Hiba',
-          description: 'A posztok betöltése sikertelen',
-          variant: 'destructive',
-        });
-      } finally {
-        setLoading(false);
-        setLoadingMore(false);
-      }
-    },
-    [searchQuery, selectedType, authorFilter, featuredOnly],
-  );
-
-  // Load posts on mount and when filters change
+  // Initialize posts if provided
   useEffect(() => {
-    if (!initialPosts) {
-      loadPosts(1, false);
+    if (initialPosts && initialPosts.length > 0) {
+      // If we have initial posts, we don't need to fetch
+      return;
     }
-  }, [loadPosts, initialPosts]);
+
+    // Load posts with filters
+    const params = {
+      page: 1,
+      limit: 10,
+      search: localSearchQuery || undefined,
+      type: localSelectedType !== 'all' ? localSelectedType : undefined,
+      author: authorFilter || undefined,
+      featured: featuredOnly || undefined,
+    };
+
+    fetchPosts(params, false);
+  }, [initialPosts, localSearchQuery, localSelectedType, authorFilter, featuredOnly, fetchPosts]);
 
   // Handle search with debounce
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      if (!initialPosts) {
-        loadPosts(1, false);
-      }
+      setSearchQuery(localSearchQuery);
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [searchQuery, selectedType]);
+  }, [localSearchQuery, setSearchQuery]);
+
+  // Update store filters when local filters change
+  useEffect(() => {
+    setSelectedType(localSelectedType);
+  }, [localSelectedType, setSelectedType]);
 
   const handlePostUpdate = (postId: string, updates: Partial<Post>) => {
-    setPosts(prev => prev.map(post => (post.id === postId ? { ...post, ...updates } : post)));
+    updatePostLocally(postId, updates);
     if (onPostUpdate) {
-      const updatedPost = posts.find(post => post.id === postId);
+      const currentPosts = initialPosts || posts;
+      const updatedPost = currentPosts.find(post => post.id === postId);
       if (updatedPost) {
         onPostUpdate({ ...updatedPost, ...updates });
       }
     }
   };
 
+  const handlePostDelete = (postId: string) => {
+    removePostLocally(postId);
+    if (onPostDelete) {
+      onPostDelete(postId);
+    }
+  };
+
   const handleLoadMore = () => {
-    if (!loadingMore && hasMore) {
-      loadPosts(currentPage + 1, true);
+    if (!isLoadingMore && hasMore) {
+      const params = {
+        page: currentPage + 1,
+        limit: 10,
+        search: searchQuery || undefined,
+        type: selectedType !== 'all' ? selectedType : undefined,
+        author: authorFilter || undefined,
+        featured: featuredOnly || undefined,
+      };
+      fetchPosts(params, true); // append = true
     }
   };
 
   const handleSearch = (value: string) => {
-    setSearchQuery(value);
-    setCurrentPage(1);
+    setLocalSearchQuery(value);
   };
 
-  const handleTypeFilter = (value: string) => {
-    setSelectedType(value);
-    setCurrentPage(1);
+  const handleTypeChange = (value: string) => {
+    setLocalSelectedType(value);
   };
+
+  // Use initial posts if provided, otherwise use store posts
+  const postsToDisplay = initialPosts || posts;
 
   const getPostTypeCount = (type: string) => {
-    if (!meta) return 0;
-    // This would ideally come from the API
-    return posts.filter(post => post.type === type).length;
+    return postsToDisplay.filter(post => post.type === type).length;
   };
 
-  if (loading && !posts.length) {
+  if (isLoading && postsToDisplay.length === 0) {
     return (
       <div className='flex items-center justify-center py-12'>
         <Loader2 className='h-8 w-8 animate-spin text-amber-400' />
@@ -181,14 +172,14 @@ export default function PostList({
                   <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400' />
                   <Input
                     placeholder='Keresés posztokban...'
-                    value={searchQuery}
+                    value={localSearchQuery}
                     onChange={e => handleSearch(e.target.value)}
                     className='pl-10 bg-gray-800 border-gray-600 text-white'
                   />
                 </div>
 
                 {/* Type filter */}
-                <Select value={selectedType} onValueChange={handleTypeFilter}>
+                <Select value={localSelectedType} onValueChange={handleTypeChange}>
                   <SelectTrigger className='w-[180px] bg-gray-800 border-gray-600 text-white'>
                     <Filter className='h-4 w-4 mr-2' />
                     <SelectValue placeholder='Típus' />
@@ -219,14 +210,14 @@ export default function PostList({
             </div>
 
             {/* Results info */}
-            {meta && (
+            {postsToDisplay.length > 0 && (
               <div className='flex items-center justify-between mt-4 pt-4 border-t border-gray-700'>
                 <div className='text-sm text-gray-400'>
-                  {meta.total} poszt találat
-                  {searchQuery && (
+                  {postsToDisplay.length} poszt találat
+                  {localSearchQuery && (
                     <span>
                       {' '}
-                      a "<span className='text-white'>{searchQuery}</span>" keresésre
+                      a "<span className='text-white'>{localSearchQuery}</span>" keresésre
                     </span>
                   )}
                 </div>
@@ -243,14 +234,14 @@ export default function PostList({
       )}
 
       {/* Posts grid */}
-      {posts.length === 0 && !loading ? (
+      {postsToDisplay.length === 0 && !isLoading ? (
         <Card className='bg-gradient-to-br from-gray-900 to-gray-800 border-gray-700'>
           <CardContent className='p-8 text-center'>
             <div className='text-gray-400 mb-4'>
-              {searchQuery ? (
+              {localSearchQuery ? (
                 <>
                   <Search className='h-12 w-12 mx-auto mb-3' />
-                  <p>Nincs találat a keresésre: "{searchQuery}"</p>
+                  <p>Nincs találat a keresésre: "{localSearchQuery}"</p>
                 </>
               ) : (
                 <>
@@ -271,7 +262,7 @@ export default function PostList({
         </Card>
       ) : (
         <div className='space-y-6'>
-          {posts.map(post => (
+          {postsToDisplay.map(post => (
             <PostCard
               key={post.id}
               post={post}
@@ -283,15 +274,15 @@ export default function PostList({
       )}
 
       {/* Load more button */}
-      {hasMore && posts.length > 0 && (
+      {hasMore && postsToDisplay.length > 0 && (
         <div className='flex justify-center'>
           <Button
             variant='outline'
             onClick={handleLoadMore}
-            disabled={loadingMore}
+            disabled={isLoadingMore}
             className='border-amber-600 text-amber-400 hover:bg-amber-900/50'
           >
-            {loadingMore ? (
+            {isLoadingMore ? (
               <>
                 <Loader2 className='h-4 w-4 mr-2 animate-spin' />
                 Betöltés...

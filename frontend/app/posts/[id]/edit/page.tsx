@@ -21,8 +21,9 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
-import { CreatePostData, fetchPostById, Post, updatePost } from '@/lib/api/posts';
-import { useAuthStore } from '@/store/auth-store';
+import { useAuth } from '@/hooks/useAuth';
+import { usePosts } from '@/hooks/usePosts';
+import { CreatePostData } from '@/store/posts';
 
 const postSchema = z.object({
   title: z.string().min(1, 'A cím kötelező').max(255, 'A cím túl hosszú'),
@@ -43,11 +44,10 @@ type PostFormData = z.infer<typeof postSchema>;
 export default function EditPostPage() {
   const router = useRouter();
   const params = useParams();
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated } = useAuth();
+  const { currentPost: post, isLoading: loading, fetchPostById, updatePost } = usePosts();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [preview, setPreview] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [post, setPost] = useState<Post | null>(null);
 
   const postId = params.id as string;
 
@@ -82,11 +82,13 @@ export default function EditPostPage() {
 
   const loadPost = async () => {
     try {
-      setLoading(true);
-      const postData = await fetchPostById(postId);
+      await fetchPostById(postId);
+
+      // The post is now in the store as currentPost
+      if (!post) return;
 
       // Check if user owns this post
-      if (!user || postData.author_id !== user.user_id) {
+      if (!user || post.author_id !== user.user_id) {
         toast({
           title: 'Hozzáférés megtagadva',
           description: 'Csak a saját posztjait szerkesztheti',
@@ -96,19 +98,17 @@ export default function EditPostPage() {
         return;
       }
 
-      setPost(postData);
-
       // Pre-populate form with existing data
       reset({
-        title: postData.title,
-        content: postData.content,
-        type: postData.type as any,
-        odds: postData.odds || undefined,
-        stake: postData.stake || undefined,
-        confidence: postData.confidence || undefined,
-        betting_market: postData.betting_market || '',
-        is_premium: postData.is_premium || false,
-        tags: postData.tags || [],
+        title: post.title,
+        content: post.content,
+        type: post.type as any,
+        odds: post.odds || undefined,
+        stake: post.stake || undefined,
+        confidence: post.confidence || undefined,
+        betting_market: post.betting_market || '',
+        is_premium: post.is_premium || false,
+        tags: [], // tags property doesn't exist in our Post interface
       });
     } catch (error) {
       console.error('Failed to load post:', error);
@@ -118,8 +118,6 @@ export default function EditPostPage() {
         variant: 'destructive',
       });
       router.push('/dashboard');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -141,7 +139,6 @@ export default function EditPostPage() {
         content: data.content,
         type: data.type,
         is_premium: data.is_premium,
-        tags: data.tags,
       };
 
       // Add tip-specific fields if type is tip
@@ -404,7 +401,7 @@ export default function EditPostPage() {
                   <Input
                     id='tags'
                     placeholder='Címkék vesszővel elválasztva (pl. futball, premier league, tipp)'
-                    defaultValue={post.tags?.join(', ') || ''}
+                    defaultValue={''}
                     onChange={e => handleTagsChange(e.target.value)}
                     className='bg-gray-800 border-gray-600 text-white'
                   />

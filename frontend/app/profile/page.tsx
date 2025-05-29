@@ -1,17 +1,26 @@
+// Saját profil oldal - refaktorált moduláris komponensekkel
+// Current user profile page - refactored with modular components
 'use client';
 
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PostList from '@/components/user/PostList';
 import UserProfileCard from '@/components/user/UserProfileCard';
+import { ProfileContent, ProfileSkeleton, ProfileTabs } from '@/components/user/profile';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { fetchUserPosts, Post } from '@/lib/api/posts';
 import { fetchUserProfile, UserProfile } from '@/lib/api/users';
-import { ArrowLeft, Edit3, MessageCircle, Settings, Users } from 'lucide-react';
+import {
+  ArrowLeft,
+  BarChart2,
+  DollarSign,
+  Edit3,
+  MessageCircle,
+  Percent,
+  Settings,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -68,7 +77,7 @@ export default function CurrentUserProfilePage() {
 
     try {
       setPostsLoading(true);
-      const posts = await fetchUserPosts(userProfile.user.id);
+      const posts = await fetchUserPosts(userProfile.user.username);
       setUserPosts(posts.posts || []);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to load your posts';
@@ -86,25 +95,18 @@ export default function CurrentUserProfilePage() {
     router.push('/profile/edit');
   };
 
+  // Betöltési állapot ellenőrzése - Loading state check
   if (authLoading || !isAuthenticated) {
     return (
       <AuthGuard>
-        <div className='min-h-screen bg-background'>
-          <div className='container max-w-6xl mx-auto px-4 py-8'>
-            <div className='space-y-6'>
-              <Skeleton className='h-8 w-64' />
-              <Skeleton className='h-64 w-full' />
-              <Skeleton className='h-32 w-full' />
-            </div>
-          </div>
-        </div>
+        <ProfileSkeleton />
       </AuthGuard>
     );
   }
 
   return (
     <AuthGuard>
-      <div className='min-h-screen bg-background'>
+      <div className='min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white'>
         <div className='container max-w-6xl mx-auto px-4 py-8'>
           {/* Header */}
           <div className='flex items-center justify-between mb-8'>
@@ -113,14 +115,14 @@ export default function CurrentUserProfilePage() {
                 variant='ghost'
                 size='sm'
                 onClick={() => router.back()}
-                className='flex items-center space-x-2'
+                className='flex items-center space-x-2 text-gray-300 hover:text-amber-400 hover:bg-gray-700/50'
               >
                 <ArrowLeft className='w-4 h-4' />
-                <span>Back</span>
+                <span>Vissza</span>
               </Button>
               <div>
-                <h1 className='text-2xl font-bold'>My Profile</h1>
-                <p className='text-muted-foreground'>Manage your profile and view your activity</p>
+                <h1 className='text-2xl font-bold text-white'>Saját Profilom</h1>
+                <p className='text-gray-400'>Kezeld a profilodat és tekintsd meg aktivitásaidat</p>
               </div>
             </div>
             <div className='flex items-center space-x-2'>
@@ -128,47 +130,38 @@ export default function CurrentUserProfilePage() {
                 variant='outline'
                 size='sm'
                 onClick={handleEditProfile}
-                className='flex items-center space-x-2'
+                className='flex items-center space-x-2 border-amber-600 text-amber-400 hover:bg-amber-900/20 hover:text-amber-300'
               >
                 <Edit3 className='w-4 h-4' />
-                <span>Edit Profile</span>
+                <span>Profil szerkesztése</span>
               </Button>
             </div>
           </div>
 
           {/* Error State */}
           {error && (
-            <Card className='mb-6'>
+            <Card className='mb-6 bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700'>
               <CardContent className='pt-6'>
                 <div className='text-center py-8'>
-                  <p className='text-destructive mb-4'>{error}</p>
-                  <Button onClick={loadCurrentUserProfile}>Try Again</Button>
+                  <p className='text-red-500 mb-4'>{error}</p>
+                  <Button
+                    onClick={loadCurrentUserProfile}
+                    className='bg-amber-600 hover:bg-amber-700 text-white'
+                  >
+                    Próbáld újra
+                  </Button>
                 </div>
               </CardContent>
             </Card>
           )}
 
           {/* Loading State */}
-          {isLoading && !error && (
-            <div className='space-y-6'>
-              <Skeleton className='h-64 w-full' />
-              <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
-                <div className='lg:col-span-2 space-y-4'>
-                  <Skeleton className='h-12 w-full' />
-                  <Skeleton className='h-32 w-full' />
-                  <Skeleton className='h-32 w-full' />
-                </div>
-                <div className='space-y-4'>
-                  <Skeleton className='h-48 w-full' />
-                </div>
-              </div>
-            </div>
-          )}
+          {isLoading && !error && <ProfileSkeleton />}
 
           {/* Content */}
           {!isLoading && !error && userProfile && (
             <div className='space-y-6'>
-              {/* User Profile Card */}
+              {/* User Profile Card - modular component használata */}
               <UserProfileCard
                 userProfile={userProfile}
                 onFollowChange={() => {
@@ -176,193 +169,179 @@ export default function CurrentUserProfilePage() {
                 }}
               />
 
-              {/* Content Tabs */}
+              {/* Content Tabs - modular components használata */}
               <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
                 <div className='lg:col-span-2'>
-                  <Tabs value={activeTab} onValueChange={setActiveTab}>
-                    <TabsList className='grid w-full grid-cols-4'>
-                      <TabsTrigger value='posts' className='flex items-center space-x-2'>
-                        <MessageCircle className='w-4 h-4' />
-                        <span>Posts</span>
-                      </TabsTrigger>
-                      <TabsTrigger value='tips' className='flex items-center space-x-2'>
-                        <span>📊</span>
-                        <span>Tips</span>
-                      </TabsTrigger>
-                      <TabsTrigger value='followers' className='flex items-center space-x-2'>
-                        <Users className='w-4 h-4' />
-                        <span>Followers</span>
-                      </TabsTrigger>
-                      <TabsTrigger value='following' className='flex items-center space-x-2'>
-                        <Users className='w-4 h-4' />
-                        <span>Following</span>
-                      </TabsTrigger>
-                    </TabsList>
+                  {/* ProfileTabs komponens használata */}
+                  <ProfileTabs
+                    activeTab={activeTab}
+                    onTabChange={setActiveTab}
+                    showFollowTabs={true} // Saját profil - követők/követett tabok láthatók
+                    counts={{
+                      posts: userProfile.stats.posts_count,
+                      followers: userProfile.stats.followers_count,
+                      following: userProfile.stats.following_count,
+                    }}
+                  />
 
-                    <TabsContent value='posts' className='space-y-4'>
-                      {postsLoading ? (
-                        <div className='space-y-4'>
-                          <Skeleton className='h-32 w-full' />
-                          <Skeleton className='h-32 w-full' />
-                          <Skeleton className='h-32 w-full' />
-                        </div>
-                      ) : userPosts.length > 0 ? (
-                        <PostList
-                          initialPosts={userPosts}
-                          showCreateButton={false}
-                          showFilters={false}
-                          authorFilter={userProfile.user.id}
-                        />
-                      ) : (
-                        <Card>
-                          <CardContent className='pt-6'>
-                            <div className='text-center py-8'>
-                              <MessageCircle className='w-12 h-12 text-muted-foreground mx-auto mb-4' />
-                              <h3 className='text-lg font-semibold mb-2'>No posts yet</h3>
-                              <p className='text-muted-foreground mb-4'>
-                                You haven't posted anything yet. Share your first post!
-                              </p>
-                              <Button asChild>
-                                <Link href='/posts/create'>Create Post</Link>
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      )}
-                    </TabsContent>
+                  {/* Tab tartalmak - ProfileContent komponenssel */}
+                  <div className='mt-4 space-y-4'>
+                    {/* Posztok tab */}
+                    {activeTab === 'posts' && (
+                      <ProfileContent
+                        isLoading={postsLoading}
+                        isEmpty={!postsLoading && userPosts.length === 0}
+                        emptyIcon={<MessageCircle className='w-12 h-12 text-gray-500 mx-auto' />}
+                        emptyTitle='Nincsenek még posztjaid'
+                        emptyDescription='Még nem osztottál meg semmit. Oszd meg az első posztodat!'
+                        emptyAction={{
+                          label: 'Poszt létrehozása',
+                          href: '/posts/create',
+                        }}
+                      >
+                        {userPosts.length > 0 && (
+                          <PostList
+                            initialPosts={userPosts}
+                            showCreateButton={false}
+                            showFilters={false}
+                            authorFilter={userProfile.user.id}
+                          />
+                        )}
+                      </ProfileContent>
+                    )}
 
-                    <TabsContent value='tips'>
-                      <Card>
-                        <CardHeader>
-                          <CardTitle>Betting Tips</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className='text-center py-8'>
-                            <p className='text-muted-foreground'>
-                              Tips functionality coming soon...
-                            </p>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </TabsContent>
+                    {/* Tippek tab */}
+                    {activeTab === 'tips' && (
+                      <ProfileContent
+                        title='Fogadási Tippek'
+                        isEmpty={true}
+                        emptyDescription='A tippek funkció hamarosan érkezik...'
+                      />
+                    )}
 
-                    <TabsContent value='followers'>
-                      <Card>
-                        <CardHeader>
-                          <CardTitle>Followers</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className='text-center py-8'>
-                            <p className='text-muted-foreground'>Followers list coming soon...</p>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </TabsContent>
+                    {/* Követők tab */}
+                    {activeTab === 'followers' && (
+                      <ProfileContent
+                        title='Követők'
+                        isEmpty={true}
+                        emptyDescription='A követők listája hamarosan érkezik...'
+                      />
+                    )}
 
-                    <TabsContent value='following'>
-                      <Card>
-                        <CardHeader>
-                          <CardTitle>Following</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className='text-center py-8'>
-                            <p className='text-muted-foreground'>Following list coming soon...</p>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </TabsContent>
-                  </Tabs>
+                    {/* Követettek tab */}
+                    {activeTab === 'following' && (
+                      <ProfileContent
+                        title='Követettek'
+                        isEmpty={true}
+                        emptyDescription='A követett felhasználók listája hamarosan érkezik...'
+                      />
+                    )}
+                  </div>
                 </div>
 
                 {/* Sidebar */}
                 <div className='space-y-6'>
                   {/* Quick Actions */}
-                  <Card>
+                  <Card className='bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700'>
                     <CardHeader>
-                      <CardTitle className='flex items-center space-x-2'>
+                      <CardTitle className='flex items-center space-x-2 text-white'>
                         <Settings className='w-5 h-5' />
-                        <span>Quick Actions</span>
+                        <span>Gyors Műveletek</span>
                       </CardTitle>
                     </CardHeader>
                     <CardContent className='space-y-3'>
                       <Button
                         variant='outline'
-                        className='w-full justify-start'
+                        className='w-full justify-start border-gray-600 text-gray-300 hover:border-amber-500 hover:text-amber-400 hover:bg-gray-700/50'
                         onClick={handleEditProfile}
                       >
                         <Edit3 className='w-4 h-4 mr-2' />
-                        Edit Profile
+                        Profil szerkesztése
                       </Button>
-                      <Button variant='outline' className='w-full justify-start' asChild>
+                      <Button
+                        variant='outline'
+                        className='w-full justify-start border-gray-600 text-gray-300 hover:border-amber-500 hover:text-amber-400 hover:bg-gray-700/50'
+                        asChild
+                      >
                         <Link href='/posts/create'>
                           <MessageCircle className='w-4 h-4 mr-2' />
-                          Create Post
+                          Poszt létrehozása
                         </Link>
                       </Button>
-                      <Button variant='outline' className='w-full justify-start' disabled>
-                        <span className='w-4 h-4 mr-2'>📊</span>
-                        View Statistics
+                      <Button
+                        variant='outline'
+                        className='w-full justify-start border-gray-600 text-gray-300 hover:border-amber-500 hover:text-amber-400 hover:bg-gray-700/50'
+                        disabled
+                      >
+                        <BarChart2 className='w-4 h-4 mr-2' />
+                        Statisztikák megtekintése
                       </Button>
                     </CardContent>
                   </Card>
 
                   {/* Profile Stats */}
                   {userProfile.stats && (
-                    <Card>
+                    <Card className='bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700'>
                       <CardHeader>
-                        <CardTitle>Your Statistics</CardTitle>
+                        <CardTitle className='text-white'>Statisztikáid</CardTitle>
                       </CardHeader>
                       <CardContent className='space-y-4'>
                         <div className='grid grid-cols-2 gap-4 text-sm'>
-                          <div className='text-center'>
-                            <div className='font-semibold text-lg'>
+                          <div className='text-center p-3 bg-gray-800/50 rounded-md'>
+                            <div className='font-semibold text-lg text-white'>
                               {userProfile.stats.posts_count}
                             </div>
-                            <div className='text-muted-foreground'>Posts</div>
+                            <div className='text-gray-400'>Posztok</div>
                           </div>
-                          <div className='text-center'>
-                            <div className='font-semibold text-lg'>
+                          <div className='text-center p-3 bg-gray-800/50 rounded-md'>
+                            <div className='font-semibold text-lg text-white'>
                               {userProfile.stats.tips_count}
                             </div>
-                            <div className='text-muted-foreground'>Tips</div>
+                            <div className='text-gray-400'>Tippek</div>
                           </div>
-                          <div className='text-center'>
-                            <div className='font-semibold text-lg'>
+                          <div className='text-center p-3 bg-gray-800/50 rounded-md'>
+                            <div className='font-semibold text-lg text-white'>
                               {userProfile.stats.followers_count}
                             </div>
-                            <div className='text-muted-foreground'>Followers</div>
+                            <div className='text-gray-400'>Követők</div>
                           </div>
-                          <div className='text-center'>
-                            <div className='font-semibold text-lg'>
+                          <div className='text-center p-3 bg-gray-800/50 rounded-md'>
+                            <div className='font-semibold text-lg text-white'>
                               {userProfile.stats.following_count}
                             </div>
-                            <div className='text-muted-foreground'>Following</div>
+                            <div className='text-gray-400'>Követett</div>
                           </div>
                         </div>
 
                         {(userProfile.stats.success_rate > 0 ||
                           userProfile.stats.total_profit !== 0) && (
                           <>
-                            <div className='border-t pt-4'>
-                              <div className='text-center'>
-                                <div className='font-semibold text-lg text-green-600'>
+                            <div className='border-t border-gray-700 pt-4 grid grid-cols-2 gap-4'>
+                              <div className='text-center p-3 bg-gray-800/50 rounded-md'>
+                                <div className='font-semibold text-lg text-green-400'>
                                   {userProfile.stats.success_rate.toFixed(1)}%
                                 </div>
-                                <div className='text-muted-foreground'>Success Rate</div>
+                                <div className='text-gray-400 flex items-center justify-center gap-1'>
+                                  <Percent className='w-3 h-3' />
+                                  Sikerességi ráta
+                                </div>
                               </div>
-                            </div>
-
-                            <div className='text-center'>
-                              <div
-                                className={`font-semibold text-lg ${
-                                  userProfile.stats.total_profit >= 0
-                                    ? 'text-green-600'
-                                    : 'text-red-600'
-                                }`}
-                              >
-                                ${userProfile.stats.total_profit.toFixed(2)}
+                              <div className='text-center p-3 bg-gray-800/50 rounded-md'>
+                                <div
+                                  className={`font-semibold text-lg ${
+                                    userProfile.stats.total_profit >= 0
+                                      ? 'text-green-400'
+                                      : 'text-red-500'
+                                  }`}
+                                >
+                                  {userProfile.stats.total_profit >= 0 ? '+' : ''}
+                                  {userProfile.stats.total_profit.toFixed(2)}
+                                </div>
+                                <div className='text-gray-400 flex items-center justify-center gap-1'>
+                                  <DollarSign className='w-3 h-3' />
+                                  Teljes Profit
+                                </div>
                               </div>
-                              <div className='text-muted-foreground'>Total Profit</div>
                             </div>
                           </>
                         )}

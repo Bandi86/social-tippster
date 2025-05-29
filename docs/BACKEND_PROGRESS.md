@@ -598,7 +598,13 @@ backend/src/
 
 **Utolsó frissítés:** 2025. május 28. - Frontend integráció javítások és API kompatibilitás ✅
 
-## [2025-05-28] Comments Module Refactor & Admin Compatibility
+## [2025-05-29] Database Seeding Script
+
+- **Seed script (`seed.ts`) added:** Populates all main tables (users, posts, bookmarks, votes, shares, views, comments, comment votes, user logins, system metrics) with 2-3 records each for development/testing.
+- **How to use:** Run `npx ts-node backend/src/database/seed.ts` after DB migration.
+- **Note:** Script uses `.env` for DB connection. See backend/README.md for details.
+
+## [2025-05-29] Comments Module Refactor & Admin Compatibility
 
 ### What Changed
 

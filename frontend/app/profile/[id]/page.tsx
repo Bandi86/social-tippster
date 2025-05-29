@@ -1,16 +1,17 @@
+// Felhasználói profil oldal - moduláris komponensekkel refaktorálva
+// User profile page - refactored with modular components
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent } from '@/components/ui/card';
 import PostList from '@/components/user/PostList';
 import UserProfileCard from '@/components/user/UserProfileCard';
+import { ProfileContent, ProfileSkeleton, ProfileTabs } from '@/components/user/profile';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { fetchUserPosts, Post } from '@/lib/api/posts';
 import { fetchUserProfile, UserProfile } from '@/lib/api/users';
-import { ArrowLeft, MessageCircle, Users } from 'lucide-react';
+import { ArrowLeft, MessageCircle } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -20,7 +21,8 @@ export default function ProfilePage() {
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
 
-  const username = params.id as string; // The route is [id] but we use it for username
+  // Az útvonal [id] paramétert username-ként használjuk
+  const username = params.id as string;
 
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [userPosts, setUserPosts] = useState<Post[]>([]);
@@ -114,49 +116,21 @@ export default function ProfilePage() {
     }
   };
 
+  // Betöltési állapot - moduláris ProfileSkeleton használata
   if (isLoading) {
     return (
-      <div className='container mx-auto px-4 py-8'>
-        <div className='max-w-4xl mx-auto space-y-6'>
-          {/* Back button skeleton */}
-          <Skeleton className='h-10 w-24' />
-
-          {/* Profile card skeleton */}
-          <Card>
-            <CardHeader>
-              <div className='flex gap-6'>
-                <Skeleton className='h-32 w-32 rounded-full' />
-                <div className='space-y-4 flex-1'>
-                  <Skeleton className='h-8 w-64' />
-                  <Skeleton className='h-4 w-32' />
-                  <Skeleton className='h-16 w-full' />
-                  <div className='flex gap-2'>
-                    <Skeleton className='h-9 w-24' />
-                    <Skeleton className='h-9 w-24' />
-                  </div>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className='grid grid-cols-6 gap-4'>
-                {[...Array(6)].map((_, i) => (
-                  <div key={i} className='text-center space-y-2'>
-                    <Skeleton className='h-8 w-full' />
-                    <Skeleton className='h-4 w-full' />
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Tabs skeleton */}
-          <div className='space-y-4'>
-            <Skeleton className='h-10 w-64' />
-            <div className='space-y-4'>
-              {[...Array(3)].map((_, i) => (
-                <Skeleton key={i} className='h-32 w-full' />
-              ))}
-            </div>
+      <div className='min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white'>
+        <div className='container mx-auto px-4 py-8'>
+          <div className='max-w-4xl mx-auto space-y-6'>
+            <Button
+              variant='ghost'
+              onClick={() => router.back()}
+              className='mb-6 text-gray-300 hover:text-amber-400 hover:bg-gray-700/50'
+            >
+              <ArrowLeft className='mr-2 h-4 w-4' />
+              Vissza
+            </Button>
+            <ProfileSkeleton />
           </div>
         </div>
       </div>
@@ -165,111 +139,112 @@ export default function ProfilePage() {
 
   if (error || !userProfile) {
     return (
-      <div className='container mx-auto px-4 py-8'>
-        <div className='max-w-4xl mx-auto'>
-          <Button variant='ghost' onClick={() => router.back()} className='mb-6'>
-            <ArrowLeft className='mr-2 h-4 w-4' />
-            Back
-          </Button>
+      <div className='min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white'>
+        <div className='container mx-auto px-4 py-8'>
+          <div className='max-w-4xl mx-auto'>
+            <Button
+              variant='ghost'
+              onClick={() => router.back()}
+              className='mb-6 text-gray-300 hover:text-amber-400 hover:bg-gray-700/50'
+            >
+              <ArrowLeft className='mr-2 h-4 w-4' />
+              Vissza
+            </Button>
 
-          <Card>
-            <CardContent className='p-8 text-center'>
-              <h2 className='text-xl font-semibold mb-2'>User Not Found</h2>
-              <p className='text-muted-foreground mb-4'>
-                {error || 'The user you are looking for does not exist.'}
-              </p>
-              <Button onClick={() => router.push('/dashboard')}>Go to Dashboard</Button>
-            </CardContent>
-          </Card>
+            <Card className='bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700'>
+              <CardContent className='p-8 text-center'>
+                <h2 className='text-xl font-semibold mb-2 text-white'>Felhasználó nem található</h2>
+                <p className='text-gray-400 mb-4'>
+                  {error || 'A keresett felhasználó nem létezik.'}
+                </p>
+                <Button
+                  onClick={() => router.push('/')}
+                  className='bg-amber-600 hover:bg-amber-700 text-white'
+                >
+                  Vissza a főoldalra
+                </Button>{' '}
+                {/* Corrected router.push to go to home ('/') instead of '/dashboard' */}
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className='container mx-auto px-4 py-8'>
-      <div className='max-w-4xl mx-auto space-y-6'>
-        {/* Back button */}
-        <Button variant='ghost' onClick={() => router.back()} className='mb-6'>
-          <ArrowLeft className='mr-2 h-4 w-4' />
-          Back
-        </Button>
+    <div className='min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white'>
+      <div className='container mx-auto px-4 py-8'>
+        <div className='max-w-4xl mx-auto space-y-6'>
+          {/* Vissza gomb - Back button */}
+          <Button
+            variant='ghost'
+            onClick={() => router.back()}
+            className='mb-6 text-gray-300 hover:text-amber-400 hover:bg-gray-700/50'
+          >
+            <ArrowLeft className='mr-2 h-4 w-4' />
+            Vissza
+          </Button>
 
-        {/* User Profile Card */}
-        <UserProfileCard userProfile={userProfile} onFollowChange={handleFollowChange} />
+          {/* Felhasználó profil kártya - moduláris komponens */}
+          <UserProfileCard userProfile={userProfile} onFollowChange={handleFollowChange} />
 
-        {/* Profile Content Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
-            <TabsTrigger value='posts'>
-              <MessageCircle className='mr-2 h-4 w-4' />
-              Posts ({userProfile.stats.posts_count})
-            </TabsTrigger>
-            <TabsTrigger value='followers'>
-              <Users className='mr-2 h-4 w-4' />
-              Followers ({userProfile.stats.followers_count})
-            </TabsTrigger>
-            <TabsTrigger value='following'>
-              <Users className='mr-2 h-4 w-4' />
-              Following ({userProfile.stats.following_count})
-            </TabsTrigger>
-          </TabsList>
+          {/* Profil tartalom tabok - moduláris komponensekkel */}
+          <div className='space-y-4'>
+            <ProfileTabs
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              showFollowTabs={false} // Más felhasználó profilján nem láthatók a follow tabok
+              counts={{
+                posts: userProfile.stats.posts_count,
+                followers: userProfile.stats.followers_count,
+                following: userProfile.stats.following_count,
+              }}
+            />
 
-          <TabsContent value='posts' className='space-y-4'>
-            {postsLoading ? (
-              <div className='space-y-4'>
-                {[...Array(3)].map((_, i) => (
-                  <Card key={i}>
-                    <CardContent className='p-6'>
-                      <div className='space-y-4'>
-                        <Skeleton className='h-4 w-3/4' />
-                        <Skeleton className='h-16 w-full' />
-                        <div className='flex gap-4'>
-                          <Skeleton className='h-8 w-16' />
-                          <Skeleton className='h-8 w-16' />
-                          <Skeleton className='h-8 w-16' />
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : userPosts.length > 0 ? (
-              <PostList
-                initialPosts={userPosts}
-                onPostUpdate={handlePostUpdate}
-                onPostDelete={handlePostDelete}
-              />
-            ) : (
-              <Card>
-                <CardContent className='p-8 text-center'>
-                  <h3 className='text-lg font-semibold mb-2'>No Posts Yet</h3>
-                  <p className='text-muted-foreground'>
-                    {userProfile.user.username} hasn't shared any posts yet.
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
+            {/* Tab tartalmak - ProfileContent komponenssel */}
+            <div className='space-y-4'>
+              {/* Posztok tab */}
+              {activeTab === 'posts' && (
+                <ProfileContent
+                  isLoading={postsLoading}
+                  isEmpty={!postsLoading && userPosts.length === 0}
+                  emptyIcon={<MessageCircle className='w-12 h-12 text-gray-500 mx-auto' />}
+                  emptyTitle='Nincsenek még posztok'
+                  emptyDescription={`${userProfile.user.username} még nem osztott meg posztokat.`}
+                >
+                  {userPosts.length > 0 && (
+                    <PostList
+                      initialPosts={userPosts}
+                      onPostUpdate={handlePostUpdate}
+                      onPostDelete={handlePostDelete}
+                      showFilters={false}
+                      showCreateButton={false}
+                    />
+                  )}
+                </ProfileContent>
+              )}
 
-          <TabsContent value='followers'>
-            <Card>
-              <CardContent className='p-8 text-center'>
-                <h3 className='text-lg font-semibold mb-2'>Followers</h3>
-                <p className='text-muted-foreground'>Followers list will be implemented soon.</p>
-              </CardContent>
-            </Card>
-          </TabsContent>
+              {/* Követők tab */}
+              {activeTab === 'followers' && (
+                <ProfileContent
+                  title='Követők'
+                  isEmpty={true}
+                  emptyDescription='A követők listája hamarosan implementálva lesz.'
+                />
+              )}
 
-          <TabsContent value='following'>
-            <Card>
-              <CardContent className='p-8 text-center'>
-                <h3 className='text-lg font-semibold mb-2'>Following</h3>
-                <p className='text-muted-foreground'>Following list will be implemented soon.</p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+              {/* Követettek tab */}
+              {activeTab === 'following' && (
+                <ProfileContent
+                  title='Követettek'
+                  isEmpty={true}
+                  emptyDescription='A követett felhasználók listája hamarosan implementálva lesz.'
+                />
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

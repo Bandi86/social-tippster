@@ -28,14 +28,28 @@ Egy modern közösségi platform sportfogadási tippek megosztására, követés
 - 🌐 **Hungarian Localization** - Consistent Hungarian language support
 - 📚 **Documentation** - Complete Swagger/OpenAPI docs
 
-### Frontend
+### Frontend ✅ **ENHANCED REDDIT-LIKE LAYOUT**
 
-- **Next.js 14** - React framework (App Router)
+- **Next.js 15** - React framework (App Router)
 - **TypeScript** - Type-safe fejlesztés
 - **Tailwind CSS** - Utility-first CSS
 - **Shadcn/ui** - Modern UI komponensek
 - **React Hook Form** - Form kezelés
 - **Zustand** - State management
+
+### Frontend Features ✅
+
+- 🏠 **Reddit-Like Homepage** - Modern 3-column layout with comprehensive navigation
+- 🚀 **Always-Visible Post Creation** - Quick access post creation interface
+- 📊 **Live Dashboard Widgets** - Trending topics, live matches, community stats
+- 👤 **Enhanced User Profiles** - Quick view profiles with avatars and stats
+- 🎯 **Advanced Filtering** - Category-based post filtering and discovery
+- 📱 **Responsive Design** - Mobile-first design that works across all devices
+- 🎨 **Modern Dark Theme** - Elegant dark theme with amber accent colors
+- ⚡ **Real-time Updates** - Live match updates and community activity feeds
+- 👀 **Non-Authenticated User Experience** _(2025-05-29)_ - All content (posts, comments, stats) is visible to guests, but post creation, voting, commenting, bookmarking, and sharing are disabled. Read-only counters and clear login/register banners guide users to authentication. Guest users see a prominent welcome banner and feature preview, with all interactive elements replaced by static displays.
+- 🔧 **Complete Profile Management** _(2025-05-29)_ - Full profile editing system with avatar display, account settings, password change, and email update functionality. Users can view their complete profile with registration date, online status, and last login information. Profile navigation includes dedicated pages for settings, security, and account management.
+- 💬 **Advanced Comment System** _(2025-05-29)_ - Complete Zustand-based comment system with nested replies, voting, editing, and deletion. Fully migrated from API calls to centralized state management with proper error handling and optimistic updates.
 
 ### DevOps
 
@@ -243,6 +257,8 @@ npm run test:e2e
 - [x] Environment változók kezelése
 - [x] Docker setup
 - [x] **User CRUD API endpoints** (teljes implementáció)
+- [x] **Profile Management System** _(2025-05-29)_ - Complete user profile editing, password change, email update, and profile display functionality
+- [x] **Comment System Zustand Migration** _(2025-05-29)_ - Complete migration from API calls to centralized state management with proper error handling, property name fixes, and component integration
 
 ### 🚧 Fejlesztés alatt
 
@@ -254,7 +270,7 @@ npm run test:e2e
 ### 📋 Tervezett funkciók
 
 - [ ] Post entity és API
-- [ ] Comment rendszer
+- [x] **Comment rendszer** _(2025-05-29)_ - ✅ **COMPLETE** - Zustand-based comment system with nested replies, voting, and moderation
 - [ ] Vote/Rating rendszer
 - [ ] Real-time chat
 - [ ] Notification rendszer
@@ -353,9 +369,27 @@ Ez a projekt [MIT License](LICENSE) alatt áll.
   - Frontend-Backend API Integration
 - **DevOps** - Docker, CI/CD, deployment 🚧 **PLANNED**
 
-## 📋 Legutóbbi Változások (2025-05-28)
+## 📋 Legutóbbi Változások (2025-05-29)
 
-### ✅ Profile Edit System Fixes
+### ✅ Profile Management System Completion
+
+- **Posts Loading Fix**: Fixed profile page to load user's own posts correctly using username instead of ID
+- **Password Change API**: Resolved missing confirmPassword parameter in password change functionality
+- **Email Update Interface**: Added missing email field to UpdateUserData interface for email changes
+- **Profile Navigation**: Verified all profile action links work correctly (settings, password change, email change)
+- **Compilation Errors**: All TypeScript compilation errors in profile management system resolved
+- **Development Servers**: Both frontend (localhost:3000) and backend (localhost:3001) running successfully
+
+### 🔧 Technical Improvements
+
+- Fixed fetchUserPosts API call parameter mismatch in profile page
+- Corrected changeUserPassword function call with proper parameters
+- Enhanced UpdateUserData interface to support email updates
+- Verified ProfileActions component navigation functionality
+
+### 📋 Previous Changes (2025-05-28)
+
+#### ✅ Profile Edit System Fixes
 
 - **Compilation Errors Fixed**: Resolved all TypeScript compilation errors in profile edit functionality
 - **API Integration**: Fixed frontend-backend API communication for user profile updates
@@ -363,7 +397,7 @@ Ez a projekt [MIT License](LICENSE) alatt áll.
 - **Icon Library**: Fixed lucide-react icon import issues
 - **Development Servers**: Both frontend (3000) and backend (3001) running without errors
 
-### 🔧 Technical Improvements
+#### 🔧 Technical Improvements
 
 - Fixed auth store import paths across frontend components
 - Added backward compatibility aliases for API functions
@@ -377,7 +411,7 @@ Ez a projekt [MIT License](LICENSE) alatt áll.
 **Backend Completeness:** ✅ **95%** (Authentication + User Management teljes)
 **Frontend Integration:** ✅ **Profile System Working**
 
-**Utolsó frissítés:** 2025. május 28. - Profile Edit rendszer javítások és API integráció
+**Utolsó frissítés:** 2025. május 29. - Profile Management rendszer befejezése és tesztelése
 
 ## Backend CORS Policy Update (2025-05-28)
 
@@ -388,3 +422,19 @@ Ez a projekt [MIT License](LICENSE) alatt áll.
 
 - Increased rate limiting thresholds for all API buckets to reduce 429 errors during admin panel and E2E testing.
 - See `backend/src/config/throttler.config.ts` for new limits.
+
+## 🗃️ Database Seeding
+
+### Seed Script
+
+- A new seed script (`backend/src/database/seed.ts`) is available to populate the database with sample data for all major tables.
+- To run the seed script:
+
+```bash
+npx ts-node backend/src/database/seed.ts
+```
+
+- The script creates 3 users, 3 posts, and related bookmarks, votes, shares, views, comments, comment votes, user logins, and system metrics.
+- Useful for local development, testing, and demo environments.
+
+**Last updated:** 2025-05-29

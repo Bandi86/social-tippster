@@ -26,9 +26,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { toast } from '@/hooks/use-toast';
-import { Comment, deleteComment, reportComment, voteOnComment } from '@/lib/api/comments';
+import { useAuth } from '@/hooks/useAuth';
+import { useComments } from '@/hooks/useComments';
 import { cn } from '@/lib/utils';
-import { useAuthStore } from '@/store/auth';
+import type { Comment } from '@/store/comments';
 
 interface CommentCardProps {
   comment: Comment;
@@ -53,7 +54,8 @@ export default function CommentCard({
   onToggleReplies,
   className,
 }: CommentCardProps) {
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated } = useAuth();
+  const { voteOnComment, deleteComment, reportComment } = useComments();
   const [isVoting, setIsVoting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -73,8 +75,16 @@ export default function CommentCard({
     setIsVoting(true);
 
     try {
-      const response = await voteOnComment(comment.id, voteType);
-      onUpdate(response);
+      await voteOnComment(comment.id, voteType);
+
+      // Update the comment locally with new vote counts
+      const updatedComment = {
+        ...comment,
+        userVote: voteType,
+        upvotes: voteType === 1 ? comment.upvotes + 1 : comment.upvotes,
+        downvotes: voteType === -1 ? comment.downvotes + 1 : comment.downvotes,
+      };
+      onUpdate(updatedComment);
 
       toast({
         title: 'Szavazat leadva',

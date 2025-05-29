@@ -1,0 +1,9 @@
+// Profil komponensek export fájl - központi hozzáférés
+// Profile components export file - central access
+export { default as ProfileActions } from './ProfileActions';
+export { default as ProfileCard } from './ProfileCard';
+export { default as ProfileContent } from './ProfileContent';
+export { default as ProfileHeader } from './ProfileHeader';
+export { default as ProfileSkeleton } from './ProfileSkeleton';
+export { default as ProfileStats } from './ProfileStats';
+export { default as ProfileTabs } from './ProfileTabs';

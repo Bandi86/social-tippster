@@ -25,14 +25,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
-import {
-  Post,
-  removeVoteFromPost,
-  sharePost,
-  toggleBookmark,
-  trackPostView,
-  voteOnPost,
-} from '@/lib/api/posts';
+import { useAuth } from '@/hooks/useAuth';
+import { usePosts } from '@/hooks/usePosts';
+import { Post } from '@/store/posts';
 
 interface PostCardProps {
   post: Post;
@@ -44,6 +39,8 @@ export default function PostCard({ post, onPostUpdate, compact = false }: PostCa
   const [isVoting, setIsVoting] = useState(false);
   const [isBookmarking, setIsBookmarking] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
+  const { isAuthenticated } = useAuth();
+  const { voteOnPost, removeVoteFromPost, toggleBookmark, sharePost, trackPostView } = usePosts();
 
   // Handle post view tracking on mount
   React.useEffect(() => {
@@ -51,6 +48,15 @@ export default function PostCard({ post, onPostUpdate, compact = false }: PostCa
   }, [post.id]);
 
   const handleVote = async (type: 'like' | 'dislike') => {
+    if (!isAuthenticated) {
+      toast({
+        title: 'Bejelentkezés szükséges',
+        description: 'A szavazáshoz be kell jelentkezni',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if (isVoting) return;
     setIsVoting(true);
 
@@ -93,6 +99,15 @@ export default function PostCard({ post, onPostUpdate, compact = false }: PostCa
   };
 
   const handleBookmark = async () => {
+    if (!isAuthenticated) {
+      toast({
+        title: 'Bejelentkezés szükséges',
+        description: 'A könyvjelzőzéshez be kell jelentkezni',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if (isBookmarking) return;
     setIsBookmarking(true);
 
@@ -271,82 +286,133 @@ export default function PostCard({ post, onPostUpdate, compact = false }: PostCa
           <div className='flex items-center gap-4'>
             {/* Vote buttons */}
             <div className='flex items-center gap-1'>
-              <Button
-                variant='ghost'
-                size='sm'
-                onClick={() => handleVote('like')}
-                disabled={isVoting}
-                className={`h-8 px-2 ${
-                  post.user_vote === 'like'
-                    ? 'text-green-400 bg-green-500/20'
-                    : 'text-gray-400 hover:text-green-400'
-                }`}
-              >
-                <Heart className='h-4 w-4' />
-                <span className='ml-1'>{post.likes_count}</span>
-              </Button>
+              {isAuthenticated ? (
+                <>
+                  <Button
+                    variant='ghost'
+                    size='sm'
+                    onClick={() => handleVote('like')}
+                    disabled={isVoting}
+                    className={`h-8 px-2 ${
+                      post.user_vote === 'like'
+                        ? 'text-green-400 bg-green-500/20'
+                        : 'text-gray-400 hover:text-green-400'
+                    }`}
+                  >
+                    <Heart className='h-4 w-4' />
+                    <span className='ml-1'>{post.likes_count}</span>
+                  </Button>
 
-              <Button
-                variant='ghost'
-                size='sm'
-                onClick={() => handleVote('dislike')}
-                disabled={isVoting}
-                className={`h-8 px-2 ${
-                  post.user_vote === 'dislike'
-                    ? 'text-red-400 bg-red-500/20'
-                    : 'text-gray-400 hover:text-red-400'
-                }`}
-              >
-                <HeartOff className='h-4 w-4' />
-                <span className='ml-1'>{post.dislikes_count}</span>
-              </Button>
+                  <Button
+                    variant='ghost'
+                    size='sm'
+                    onClick={() => handleVote('dislike')}
+                    disabled={isVoting}
+                    className={`h-8 px-2 ${
+                      post.user_vote === 'dislike'
+                        ? 'text-red-400 bg-red-500/20'
+                        : 'text-gray-400 hover:text-red-400'
+                    }`}
+                  >
+                    <HeartOff className='h-4 w-4' />
+                    <span className='ml-1'>{post.dislikes_count}</span>
+                  </Button>
+                </>
+              ) : (
+                <div className='flex items-center gap-1'>
+                  <div className='flex items-center gap-1 text-gray-500 px-2 py-1'>
+                    <Heart className='h-4 w-4' />
+                    <span className='ml-1'>{post.likes_count}</span>
+                  </div>
+                  <div className='flex items-center gap-1 text-gray-500 px-2 py-1'>
+                    <HeartOff className='h-4 w-4' />
+                    <span className='ml-1'>{post.dislikes_count}</span>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Comments */}
-            <Link href={`/posts/${post.id}#comments`}>
+            {isAuthenticated ? (
+              <Link href={`/posts/${post.id}#comments`}>
+                <Button
+                  variant='ghost'
+                  size='sm'
+                  className='h-8 px-2 text-gray-400 hover:text-blue-400'
+                >
+                  <MessageCircle className='h-4 w-4' />
+                  <span className='ml-1'>{post.comments_count}</span>
+                </Button>
+              </Link>
+            ) : (
+              <div className='flex items-center gap-1 text-gray-500 px-2 py-1'>
+                <MessageCircle className='h-4 w-4' />
+                <span className='ml-1'>{post.comments_count}</span>
+              </div>
+            )}
+
+            {/* Bookmark */}
+            {isAuthenticated ? (
               <Button
                 variant='ghost'
                 size='sm'
-                className='h-8 px-2 text-gray-400 hover:text-blue-400'
+                onClick={handleBookmark}
+                disabled={isBookmarking}
+                className={`h-8 px-2 ${
+                  post.user_bookmarked
+                    ? 'text-amber-400 bg-amber-500/20'
+                    : 'text-gray-400 hover:text-amber-400'
+                }`}
               >
-                <MessageCircle className='h-4 w-4' />
-                <span className='ml-1'>{post.comments_count}</span>
+                {post.user_bookmarked ? (
+                  <BookmarkCheck className='h-4 w-4' />
+                ) : (
+                  <Bookmark className='h-4 w-4' />
+                )}
+                <span className='ml-1'>{post.bookmarks_count}</span>
               </Button>
-            </Link>
-
-            {/* Bookmark */}
-            <Button
-              variant='ghost'
-              size='sm'
-              onClick={handleBookmark}
-              disabled={isBookmarking}
-              className={`h-8 px-2 ${
-                post.user_bookmarked
-                  ? 'text-amber-400 bg-amber-500/20'
-                  : 'text-gray-400 hover:text-amber-400'
-              }`}
-            >
-              {post.user_bookmarked ? (
-                <BookmarkCheck className='h-4 w-4' />
-              ) : (
+            ) : (
+              <div className='flex items-center gap-1 text-gray-500 px-2 py-1'>
                 <Bookmark className='h-4 w-4' />
-              )}
-              <span className='ml-1'>{post.bookmarks_count}</span>
-            </Button>
+                <span className='ml-1'>{post.bookmarks_count}</span>
+              </div>
+            )}
           </div>
 
           {/* Share button */}
-          <Button
-            variant='ghost'
-            size='sm'
-            onClick={() => handleShare()}
-            disabled={isSharing}
-            className='h-8 px-2 text-gray-400 hover:text-purple-400'
-          >
-            <Share2 className='h-4 w-4' />
-            <span className='ml-1'>{post.shares_count}</span>
-          </Button>
+          {isAuthenticated ? (
+            <Button
+              variant='ghost'
+              size='sm'
+              onClick={() => handleShare()}
+              disabled={isSharing}
+              className='h-8 px-2 text-gray-400 hover:text-purple-400'
+            >
+              <Share2 className='h-4 w-4' />
+              <span className='ml-1'>{post.shares_count}</span>
+            </Button>
+          ) : (
+            <div className='flex items-center gap-1 text-gray-500 px-2 py-1'>
+              <Share2 className='h-4 w-4' />
+              <span className='ml-1'>{post.shares_count}</span>
+            </div>
+          )}
         </div>
+
+        {/* Login prompt for non-authenticated users */}
+        {!isAuthenticated && (
+          <div className='mt-3 p-3 bg-gradient-to-r from-amber-900/20 to-amber-800/20 border border-amber-700/30 rounded-lg'>
+            <p className='text-sm text-amber-300 text-center'>
+              <Link
+                href='/auth/login'
+                className='hover:text-amber-200 underline underline-offset-2'
+              >
+                Jelentkezz be
+              </Link>{' '}
+              a szavazáshoz, kommenteléshez és könyvjelzőzéshez
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

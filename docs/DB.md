@@ -953,3 +953,11 @@ CREATE TABLE posts (
 CREATE INDEX idx_posts_author ON posts(author_id);
 CREATE INDEX idx_posts_category ON posts(category);
 ```
+
+## [2025-05-29] Seed Script Added
+
+A new seed script (`backend/src/database/seed.ts`) is available to quickly populate the database with sample data for all main entities (users, posts, interactions, analytics, etc.).
+
+- Run with: `npx ts-node backend/src/database/seed.ts`
+- Populates 2-3 records per table for development/demo
+- Uses `.env` for DB connection

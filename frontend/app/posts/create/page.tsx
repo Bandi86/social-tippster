@@ -21,8 +21,9 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
-import { createPost, CreatePostData } from '@/lib/api/posts';
-import { useAuthStore } from '@/store/auth-store';
+import { useAuth } from '@/hooks/useAuth';
+import { usePosts } from '@/hooks/usePosts';
+import { CreatePostData } from '@/store/posts';
 
 const postSchema = z.object({
   title: z.string().min(1, 'A cím kötelező').max(255, 'A cím túl hosszú'),
@@ -42,7 +43,8 @@ type PostFormData = z.infer<typeof postSchema>;
 
 export default function CreatePostPage() {
   const router = useRouter();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated } = useAuth();
+  const { createPost } = usePosts();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [preview, setPreview] = useState(false);
 
@@ -90,7 +92,6 @@ export default function CreatePostPage() {
         content: data.content,
         type: data.type,
         is_premium: data.is_premium,
-        tags: data.tags,
       };
 
       // Add tip-specific fields if type is tip

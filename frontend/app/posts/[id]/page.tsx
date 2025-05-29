@@ -31,24 +31,26 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import CommentList from '@/components/user/CommentList';
 import { toast } from '@/hooks/use-toast';
-import {
-  Post,
-  deletePost,
-  fetchPostById,
-  removeVoteFromPost,
-  sharePost,
-  toggleBookmark,
-  voteOnPost,
-} from '@/lib/api/posts';
-import { useAuthStore } from '@/store/auth-store';
+import { useAuth } from '@/hooks/useAuth';
+import { usePosts } from '@/hooks/usePosts';
 import Link from 'next/link';
 
 export default function PostDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const { user, isAuthenticated } = useAuthStore();
-  const [post, setPost] = useState<Post | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, isAuthenticated } = useAuth();
+  const {
+    currentPost: post,
+    isLoading: loading,
+    fetchPostById,
+    voteOnPost,
+    removeVoteFromPost,
+    toggleBookmark,
+    sharePost,
+    deletePost,
+    trackPostView,
+    updatePostLocally,
+  } = usePosts();
   const [isVoting, setIsVoting] = useState(false);
   const [isBookmarking, setIsBookmarking] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
@@ -63,9 +65,9 @@ export default function PostDetailPage() {
 
   const loadPost = async () => {
     try {
-      setLoading(true);
-      const postData = await fetchPostById(postId);
-      setPost(postData);
+      await fetchPostById(postId);
+      // Track view after loading
+      await trackPostView(postId);
     } catch (error) {
       console.error('Failed to load post:', error);
       toast({
@@ -74,8 +76,6 @@ export default function PostDetailPage() {
         variant: 'destructive',
       });
       router.push('/dashboard');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -86,31 +86,10 @@ export default function PostDetailPage() {
     try {
       if (post.user_vote === type) {
         await removeVoteFromPost(post.id);
-        setPost(prev =>
-          prev
-            ? {
-                ...prev,
-                user_vote: null,
-                likes_count: type === 'like' ? prev.likes_count - 1 : prev.likes_count,
-                dislikes_count: type === 'dislike' ? prev.dislikes_count - 1 : prev.dislikes_count,
-              }
-            : null,
-        );
+        // Update handled by store
       } else {
         await voteOnPost(post.id, type);
-        const likesChange = type === 'like' ? 1 : post.user_vote === 'like' ? -1 : 0;
-        const dislikesChange = type === 'dislike' ? 1 : post.user_vote === 'dislike' ? -1 : 0;
-
-        setPost(prev =>
-          prev
-            ? {
-                ...prev,
-                user_vote: type,
-                likes_count: prev.likes_count + likesChange,
-                dislikes_count: prev.dislikes_count + dislikesChange,
-              }
-            : null,
-        );
+        // Update handled by store
       }
 
       toast({
@@ -135,17 +114,7 @@ export default function PostDetailPage() {
 
     try {
       const result = await toggleBookmark(post.id);
-      setPost(prev =>
-        prev
-          ? {
-              ...prev,
-              user_bookmarked: result.bookmarked,
-              bookmarks_count: result.bookmarked
-                ? prev.bookmarks_count + 1
-                : prev.bookmarks_count - 1,
-            }
-          : null,
-      );
+      // Update handled by store
 
       toast({
         title: 'Sikeres',
@@ -169,14 +138,7 @@ export default function PostDetailPage() {
 
     try {
       await sharePost(post.id, platform);
-      setPost(prev =>
-        prev
-          ? {
-              ...prev,
-              shares_count: prev.shares_count + 1,
-            }
-          : null,
-      );
+      // Update handled by store
 
       toast({
         title: 'Sikeres',
