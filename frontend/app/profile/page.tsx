@@ -10,17 +10,11 @@ import UserProfileCard from '@/components/user/UserProfileCard';
 import { ProfileContent, ProfileSkeleton, ProfileTabs } from '@/components/user/profile';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { fetchUserPosts, Post } from '@/lib/api/posts';
-import { fetchUserProfile, UserProfile } from '@/lib/api/users';
-import {
-  ArrowLeft,
-  BarChart2,
-  DollarSign,
-  Edit3,
-  MessageCircle,
-  Percent,
-  Settings,
-} from 'lucide-react';
+import { usePosts } from '@/hooks/usePosts';
+import { useUsers } from '@/hooks/useUsers';
+import { Post } from '@/store/posts';
+import { UserProfile } from '@/store/users';
+import { ArrowLeft, BarChart2, DollarSign, Edit3, MessageCircle, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -30,11 +24,12 @@ export default function CurrentUserProfilePage() {
   const { user: currentUser, isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
 
+  // Zustand hooks
+  const { fetchUserProfile, isLoading: usersLoading, error: usersError } = useUsers();
+  const { fetchUserPosts, isLoading: postsLoading, error: postsError } = usePosts();
+
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [userPosts, setUserPosts] = useState<Post[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [postsLoading, setPostsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('posts');
 
   useEffect(() => {
@@ -53,22 +48,16 @@ export default function CurrentUserProfilePage() {
     if (!currentUser) return;
 
     try {
-      setIsLoading(true);
-      setError(null);
-
       // Get current user's detailed profile using username
       const profile = await fetchUserProfile(currentUser.username);
       setUserProfile(profile);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to load your profile';
-      setError(errorMessage);
       toast({
         title: 'Error',
         description: errorMessage,
         variant: 'destructive',
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -76,9 +65,8 @@ export default function CurrentUserProfilePage() {
     if (!userProfile) return;
 
     try {
-      setPostsLoading(true);
-      const posts = await fetchUserPosts(userProfile.user.username);
-      setUserPosts(posts.posts || []);
+      const response = await fetchUserPosts(userProfile.user.username);
+      setUserPosts(response.posts || []);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to load your posts';
       toast({
@@ -86,8 +74,6 @@ export default function CurrentUserProfilePage() {
         description: errorMessage,
         variant: 'destructive',
       });
-    } finally {
-      setPostsLoading(false);
     }
   };
 
@@ -139,11 +125,11 @@ export default function CurrentUserProfilePage() {
           </div>
 
           {/* Error State */}
-          {error && (
+          {(usersError || postsError) && (
             <Card className='mb-6 bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700'>
               <CardContent className='pt-6'>
                 <div className='text-center py-8'>
-                  <p className='text-red-500 mb-4'>{error}</p>
+                  <p className='text-red-500 mb-4'>{usersError || postsError}</p>
                   <Button
                     onClick={loadCurrentUserProfile}
                     className='bg-amber-600 hover:bg-amber-700 text-white'
@@ -156,10 +142,10 @@ export default function CurrentUserProfilePage() {
           )}
 
           {/* Loading State */}
-          {isLoading && !error && <ProfileSkeleton />}
+          {(usersLoading || postsLoading) && !(usersError || postsError) && <ProfileSkeleton />}
 
           {/* Content */}
-          {!isLoading && !error && userProfile && (
+          {!usersLoading && !(usersError || postsError) && userProfile && (
             <div className='space-y-6'>
               {/* User Profile Card - modular component használata */}
               <UserProfileCard
@@ -204,7 +190,7 @@ export default function CurrentUserProfilePage() {
                             initialPosts={userPosts}
                             showCreateButton={false}
                             showFilters={false}
-                            authorFilter={userProfile.user.id}
+                            authorFilter={userProfile.user.user_id}
                           />
                         )}
                       </ProfileContent>
@@ -295,7 +281,7 @@ export default function CurrentUserProfilePage() {
                           </div>
                           <div className='text-center p-3 bg-gray-800/50 rounded-md'>
                             <div className='font-semibold text-lg text-white'>
-                              {userProfile.stats.tips_count}
+                              {userProfile.stats.posts_count}
                             </div>
                             <div className='text-gray-400'>Tippek</div>
                           </div>
@@ -313,33 +299,26 @@ export default function CurrentUserProfilePage() {
                           </div>
                         </div>
 
-                        {(userProfile.stats.success_rate > 0 ||
-                          userProfile.stats.total_profit !== 0) && (
+                        {(userProfile.stats.reputation_score > 0 ||
+                          userProfile.stats.likes_received > 0) && (
                           <>
                             <div className='border-t border-gray-700 pt-4 grid grid-cols-2 gap-4'>
                               <div className='text-center p-3 bg-gray-800/50 rounded-md'>
                                 <div className='font-semibold text-lg text-green-400'>
-                                  {userProfile.stats.success_rate.toFixed(1)}%
+                                  {userProfile.stats.reputation_score}
                                 </div>
                                 <div className='text-gray-400 flex items-center justify-center gap-1'>
-                                  <Percent className='w-3 h-3' />
-                                  Sikerességi ráta
+                                  <BarChart2 className='w-3 h-3' />
+                                  Hírnév pontszám
                                 </div>
                               </div>
                               <div className='text-center p-3 bg-gray-800/50 rounded-md'>
-                                <div
-                                  className={`font-semibold text-lg ${
-                                    userProfile.stats.total_profit >= 0
-                                      ? 'text-green-400'
-                                      : 'text-red-500'
-                                  }`}
-                                >
-                                  {userProfile.stats.total_profit >= 0 ? '+' : ''}
-                                  {userProfile.stats.total_profit.toFixed(2)}
+                                <div className='font-semibold text-lg text-blue-400'>
+                                  {userProfile.stats.likes_received}
                                 </div>
                                 <div className='text-gray-400 flex items-center justify-center gap-1'>
                                   <DollarSign className='w-3 h-3' />
-                                  Teljes Profit
+                                  Kapott kedvelések
                                 </div>
                               </div>
                             </div>

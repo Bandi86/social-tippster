@@ -4,39 +4,6 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { ChangePasswordData, FetchUsersParams, UpdateProfileData, User, UserStats } from '../types';
 
-// UserProfile interface for profile pages
-export interface UserProfile {
-  user: {
-    user_id: string;
-    username: string;
-    email: string;
-    first_name: string;
-    last_name: string;
-    profile_image?: string;
-    bio?: string;
-    location?: string;
-    website?: string;
-    social_links?: {
-      twitter?: string;
-      linkedin?: string;
-      github?: string;
-    };
-    is_active: boolean;
-    is_verified: boolean;
-    is_premium: boolean;
-    created_at: string;
-    updated_at: string;
-  };
-  stats: {
-    posts_count: number;
-    comments_count: number;
-    likes_received: number;
-    reputation_score: number;
-    followers_count: number;
-    following_count: number;
-  };
-}
-
 // Helper to get auth token
 function getAuthToken(): string | null {
   if (typeof window === 'undefined') return null;
@@ -68,6 +35,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/a
 // Admin-specific interfaces
 export interface AdminUser extends User {
   // Admin-only fields
+  password_hash?: string;
   login_count: number;
   last_login?: string;
   ban_reason?: string;
@@ -159,7 +127,6 @@ interface UsersState {
 // Enhanced actions interface with admin functionality
 interface UsersActions {
   // Regular user actions
-  fetchUserProfile: (username: string) => Promise<UserProfile>;
   updateProfile: (data: UpdateProfileData) => Promise<User>;
   changePassword: (data: ChangePasswordData) => Promise<void>;
   fetchUsers: (params?: FetchUsersParams) => Promise<void>;
@@ -221,19 +188,6 @@ export const useUsersStore = create<UsersState & UsersActions>()(
       isLoadingAdminStats: false,
 
       // Regular user actions
-      async fetchUserProfile(username: string) {
-        set({ isLoading: true, error: null });
-        try {
-          const url = `${API_BASE_URL}/users/profile/${username}`;
-          const profile = await axiosWithAuth({ url, method: 'GET' });
-          set({ isLoading: false });
-          return profile;
-        } catch (error: any) {
-          set({ error: error.message, isLoading: false });
-          throw error;
-        }
-      },
-
       async updateProfile(data) {
         set({ isSubmitting: true, error: null });
         try {

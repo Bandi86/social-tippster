@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { changeUserPassword } from '@/lib/api/users';
+import { useUsers } from '@/hooks/useUsers';
 import { ArrowLeft, Eye, EyeOff, Lock, Save } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -24,6 +24,9 @@ export default function ChangePasswordPage() {
   const { user } = useAuth();
   const { toast } = useToast();
 
+  // Zustand hooks
+  const { changePassword, isSubmitting, error: storeError } = useUsers();
+
   const [passwordData, setPasswordData] = useState<PasswordFormData>({
     current_password: '',
     new_password: '',
@@ -36,7 +39,6 @@ export default function ChangePasswordPage() {
     confirm: false,
   });
 
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleInputChange = (field: keyof PasswordFormData, value: string) => {
@@ -90,14 +92,12 @@ export default function ChangePasswordPage() {
       return;
     }
 
-    setIsLoading(true);
     setError(null);
 
     try {
-      await changeUserPassword({
-        currentPassword: passwordData.current_password,
+      await changePassword({
+        oldPassword: passwordData.current_password,
         newPassword: passwordData.new_password,
-        confirmPassword: passwordData.confirm_password,
       });
 
       toast({
@@ -120,8 +120,6 @@ export default function ChangePasswordPage() {
       setError(
         error instanceof Error ? error.message : 'Hiba történt a jelszó megváltoztatása során.',
       );
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -288,10 +286,10 @@ export default function ChangePasswordPage() {
                   <div className='flex gap-4 pt-4'>
                     <Button
                       type='submit'
-                      disabled={isLoading}
+                      disabled={isSubmitting}
                       className='bg-amber-600 hover:bg-amber-700 text-white'
                     >
-                      {isLoading ? (
+                      {isSubmitting ? (
                         'Mentés...'
                       ) : (
                         <>

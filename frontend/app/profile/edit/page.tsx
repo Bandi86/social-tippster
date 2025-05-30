@@ -10,7 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { changeUserPassword, updateUserProfile } from '@/lib/api/users';
+import { useUsers } from '@/hooks/useUsers';
 import { ArrowLeft, Camera, Lock, Save } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -41,6 +41,9 @@ export default function EditProfilePage() {
   const { user, refreshUserData } = useAuth();
   const { toast } = useToast();
 
+  // Zustand hooks
+  const { updateProfile, changePassword, isSubmitting, error } = useUsers();
+
   const [profileData, setProfileData] = useState<ProfileFormData>({
     first_name: '',
     last_name: '',
@@ -62,8 +65,6 @@ export default function EditProfilePage() {
     confirm_password: '',
   });
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [passwordLoading, setPasswordLoading] = useState(false);
   const [activeSection, setActiveSection] = useState<'profile' | 'password'>('profile');
 
   // Redirect if not authenticated
@@ -132,7 +133,6 @@ export default function EditProfilePage() {
   const handleSaveProfile = async () => {
     if (!user) return;
 
-    setIsLoading(true);
     try {
       // Filter out empty social links
       const cleanedSocialLinks = Object.fromEntries(
@@ -144,7 +144,7 @@ export default function EditProfilePage() {
         social_links: Object.keys(cleanedSocialLinks).length > 0 ? cleanedSocialLinks : undefined,
       };
 
-      await updateUserProfile(updateData);
+      await updateProfile(updateData);
       await refreshUserData(); // Refresh user data in auth context
 
       toast({
@@ -158,8 +158,6 @@ export default function EditProfilePage() {
         description: errorMessage,
         variant: 'destructive',
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -176,12 +174,10 @@ export default function EditProfilePage() {
       return;
     }
 
-    setPasswordLoading(true);
     try {
-      await changeUserPassword({
-        currentPassword: passwordData.current_password,
+      await changePassword({
+        oldPassword: passwordData.current_password,
         newPassword: passwordData.new_password,
-        confirmPassword: passwordData.confirm_password,
       });
 
       // Clear password form
@@ -202,8 +198,6 @@ export default function EditProfilePage() {
         description: errorMessage,
         variant: 'destructive',
       });
-    } finally {
-      setPasswordLoading(false);
     }
   };
 
@@ -407,8 +401,8 @@ export default function EditProfilePage() {
 
             {/* Save Button */}
             <div className='flex justify-end'>
-              <Button onClick={handleSaveProfile} disabled={isLoading} className='min-w-[120px]'>
-                {isLoading ? (
+              <Button onClick={handleSaveProfile} disabled={isSubmitting} className='min-w-[120px]'>
+                {isSubmitting ? (
                   'Saving...'
                 ) : (
                   <>
@@ -473,12 +467,8 @@ export default function EditProfilePage() {
                   />
                 </div>
 
-                <Button
-                  onClick={handleChangePassword}
-                  disabled={passwordLoading}
-                  className='w-full'
-                >
-                  {passwordLoading ? 'Changing Password...' : 'Change Password'}
+                <Button onClick={handleChangePassword} disabled={isSubmitting} className='w-full'>
+                  {isSubmitting ? 'Changing Password...' : 'Change Password'}
                 </Button>
               </div>
             </CardContent>

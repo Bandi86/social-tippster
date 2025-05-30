@@ -217,7 +217,10 @@ interface CommentsActions {
   updateCommentStatus: (id: string, status: 'active' | 'hidden' | 'pending') => Promise<void>;
   toggleCommentPin: (id: string) => Promise<void>;
   bulkDeleteComments: (ids: string[]) => Promise<void>;
-  bulkUpdateCommentsStatus: (ids: string[], status: 'active' | 'hidden' | 'pending') => Promise<void>;
+  bulkUpdateCommentsStatus: (
+    ids: string[],
+    status: 'active' | 'hidden' | 'pending',
+  ) => Promise<void>;
 
   // Admin UI Management
   setAdminFilters: (filters: Partial<AdminCommentsParams>) => void;
@@ -269,7 +272,8 @@ export const useCommentsStore = create<CommentsState & CommentsActions>()(
         try {
           const searchParams = new URLSearchParams();
           if (postId) searchParams.append('postId', postId);
-          if (params?.parentCommentId) searchParams.append('parentCommentId', params.parentCommentId);
+          if (params?.parentCommentId)
+            searchParams.append('parentCommentId', params.parentCommentId);
           if (params?.page) searchParams.append('page', params.page.toString());
           if (params?.limit) searchParams.append('limit', params.limit.toString());
           if (params?.sortBy) searchParams.append('sortBy', params.sortBy);
@@ -372,7 +376,7 @@ export const useCommentsStore = create<CommentsState & CommentsActions>()(
             ...adminFilters,
             ...params,
             page: params.page || adminPagination.page,
-            limit: params.limit || adminPagination.limit
+            limit: params.limit || adminPagination.limit,
           };
 
           // Mock API call - in production this would be a real API call
@@ -424,7 +428,7 @@ export const useCommentsStore = create<CommentsState & CommentsActions>()(
               page: finalParams.page || 1,
               limit: finalParams.limit || 20,
               totalPages: Math.ceil(mockAdminComments.length / (finalParams.limit || 20)),
-            }
+            },
           };
 
           set({
@@ -488,7 +492,7 @@ export const useCommentsStore = create<CommentsState & CommentsActions>()(
             adminComments: state.adminComments.map(comment =>
               comment.id === id
                 ? { ...comment, status, updated_at: new Date().toISOString() }
-                : comment
+                : comment,
             ),
             isSubmitting: false,
           }));
@@ -507,8 +511,12 @@ export const useCommentsStore = create<CommentsState & CommentsActions>()(
           set(state => ({
             adminComments: state.adminComments.map(comment =>
               comment.id === id
-                ? { ...comment, is_pinned: !comment.is_pinned, updated_at: new Date().toISOString() }
-                : comment
+                ? {
+                    ...comment,
+                    is_pinned: !comment.is_pinned,
+                    updated_at: new Date().toISOString(),
+                  }
+                : comment,
             ),
             isSubmitting: false,
           }));
@@ -545,7 +553,7 @@ export const useCommentsStore = create<CommentsState & CommentsActions>()(
             adminComments: state.adminComments.map(comment =>
               ids.includes(comment.id)
                 ? { ...comment, status, updated_at: new Date().toISOString() }
-                : comment
+                : comment,
             ),
             selectedCommentIds: [],
             isSubmitting: false,
@@ -628,6 +636,6 @@ export const useCommentsStore = create<CommentsState & CommentsActions>()(
         set({ error: null });
       },
     }),
-    { name: 'comments-store' }
-  )
+    { name: 'comments-store' },
+  ),
 );

@@ -199,11 +199,6 @@ interface PostsActions {
   fetchPosts: (params?: FetchPostsParams, append?: boolean) => Promise<void>;
   fetchFeaturedPosts: () => Promise<void>;
   fetchPostById: (id: string) => Promise<void>;
-  fetchUserPosts: (
-    username: string,
-    page?: number,
-    limit?: number,
-  ) => Promise<{ posts: Post[]; meta: any }>;
   createPost: (data: any) => Promise<Post>;
   updatePost: (id: string, updates: Partial<Post>) => Promise<void>;
   deletePost: (id: string) => Promise<void>;
@@ -403,25 +398,6 @@ export const usePostsStore = create<PostsState & PostsActions>()(
             isLoading: false,
             error: error instanceof Error ? error.message : 'Failed to fetch post',
           });
-        }
-      },
-
-      fetchUserPosts: async (username: string, page: number = 1, limit: number = 10) => {
-        try {
-          set({ isLoading: true, error: null });
-          const response = await axiosWithAuth({
-            method: 'GET',
-            url: `${API_BASE_URL}/posts/user/${username}?page=${page}&limit=${limit}`,
-          });
-          set({ isLoading: false });
-          return response;
-        } catch (error) {
-          console.error('Error fetching user posts:', error);
-          set({
-            isLoading: false,
-            error: error instanceof Error ? error.message : 'Failed to fetch user posts',
-          });
-          throw error;
         }
       },
 
@@ -642,18 +618,16 @@ export const usePostsStore = create<PostsState & PostsActions>()(
           });
 
           // Transform regular posts to admin posts format
-          const adminPosts: AdminPost[] =
-            response.posts?.map((post: any) => ({
-              ...post,
-              is_reported: post.is_reported || false,
-              reports_count: post.reports_count || 0,
-            })) || [];
+          const adminPosts: AdminPost[] = response.posts?.map((post: any) => ({
+            ...post,
+            is_reported: post.is_reported || false,
+            reports_count: post.reports_count || 0,
+          })) || [];
 
           set({
             adminPosts,
             adminTotalPosts: response.total || adminPosts.length,
-            adminTotalPages:
-              response.totalPages || Math.ceil(adminPosts.length / (params.limit || 10)),
+            adminTotalPages: response.totalPages || Math.ceil(adminPosts.length / (params.limit || 10)),
             adminCurrentPage: params.page || 1,
             isLoadingAdminPosts: false,
             adminError: null,
@@ -729,14 +703,12 @@ export const usePostsStore = create<PostsState & PostsActions>()(
       bulkDeletePosts: async (postIds: string[]) => {
         try {
           set({ isSubmitting: true, adminError: null });
-          await Promise.all(
-            postIds.map(id =>
-              axiosWithAuth({
-                method: 'DELETE',
-                url: `${API_BASE_URL}/posts/${id}`,
-              }),
-            ),
-          );
+          await Promise.all(postIds.map(id =>
+            axiosWithAuth({
+              method: 'DELETE',
+              url: `${API_BASE_URL}/posts/${id}`,
+            })
+          ));
 
           // Remove from local state
           set(state => ({
@@ -761,50 +733,24 @@ export const usePostsStore = create<PostsState & PostsActions>()(
       bulkUpdatePosts: async (postIds: string[], updates: Partial<AdminPost>) => {
         try {
           set({ isSubmitting: true, adminError: null });
-          await Promise.all(
-            postIds.map(id =>
-              axiosWithAuth({
-                method: 'PATCH',
-                url: `${API_BASE_URL}/posts/${id}`,
-                data: updates,
-              }),
-            ),
-          );
+          await Promise.all(postIds.map(id =>
+            axiosWithAuth({
+              method: 'PATCH',
+              url: `${API_BASE_URL}/posts/${id}`,
+              data: updates,
+            })
+          ));
 
           // Update local state
-          set(state => {
-            // Destructure updates to separate fields that are AdminPost-specific or have different types
-            const {
-              author: _adminAuthor, // Exclude admin-specific author type from Post updates
-              is_reported: _is_reported, // Exclude AdminPost-specific field
-              reports_count: _reports_count, // Exclude AdminPost-specific field
-              ...postCompatibleUpdates // These are updates applicable to Post fields (excluding author)
-            } = updates;
-
-            const newPosts = state.posts.map(p => {
-              if (postIds.includes(p.id)) {
-                // Apply only compatible updates to Post objects
-                // This preserves Post['author'] and avoids adding AdminPost-only fields
-                return { ...p, ...postCompatibleUpdates };
-              }
-              return p;
-            });
-
-            const newAdminPosts = state.adminPosts.map(adminPost => {
-              // Corrected variable name here
-              if (postIds.includes(adminPost.id)) {
-                // For adminPosts, all updates can be applied as 'updates' is Partial<AdminPost>
-                return { ...adminPost, ...updates };
-              }
-              return adminPost;
-            });
-
-            return {
-              posts: newPosts,
-              adminPosts: newAdminPosts,
-              isSubmitting: false,
-            };
-          });
+          set(state => ({
+            posts: state.posts.map(post =>
+              postIds.includes(post.id) ? { ...post, ...updates } : post
+            ),
+            adminPosts: state.adminPosts.map(post =>
+              postIds.includes(post.id) ? { ...post, ...updates } : post
+            ),
+            isSubmitting: false,
+          }));
 
           get().clearCache();
         } catch (error) {
@@ -817,32 +763,17 @@ export const usePostsStore = create<PostsState & PostsActions>()(
         }
       },
 
-// Local state updates
+      // Local state updates
       updatePostLocally: (id: string, updates: Partial<Post>) => {
-        set(state => {
-          // Destructure 'updates' (Partial<Post>).
-          // We separate 'author' because Post['author'] and AdminPost['author'] have different types.
-          // 'otherUpdatesCompatibleWithAdminPost' will contain all fields from 'updates' except 'author'.
-          const { author: _postAuthorSpecificUpdate, ...otherUpdatesCompatibleWithAdminPost } = updates;
-
-          return {
-            // For posts, featuredPosts, and currentPost, 'updates' (Partial<Post>) can be applied directly.
-            posts: state.posts.map(p => (p.id === id ? { ...p, ...updates } : p)),
-            featuredPosts: state.featuredPosts.map(fp =>
-              fp.id === id ? { ...fp, ...updates } : fp,
-            ),
-            currentPost:
-              state.currentPost?.id === id ? { ...state.currentPost, ...updates } : state.currentPost,
-            // For adminPosts, apply only the updates that are compatible.
-            // This excludes Post['author'] from being incorrectly applied to AdminPost['author'].
-            adminPosts: state.adminPosts.map(adminP => {
-              if (adminP.id === id) {
-                return { ...adminP, ...otherUpdatesCompatibleWithAdminPost };
-              }
-              return adminP;
-            }),
-          };
-        });
+        set(state => ({
+          posts: state.posts.map(post => (post.id === id ? { ...post, ...updates } : post)),
+          featuredPosts: state.featuredPosts.map(post =>
+            post.id === id ? { ...post, ...updates } : post,
+          ),
+          currentPost:
+            state.currentPost?.id === id ? { ...state.currentPost, ...updates } : state.currentPost,
+          adminPosts: state.adminPosts.map(post => (post.id === id ? { ...post, ...updates } : post)),
+        }));
       },
 
       removePostLocally: (id: string) => {
@@ -877,7 +808,7 @@ export const usePostsStore = create<PostsState & PostsActions>()(
 
       setAdminFilters: (filters: Partial<PostsState['adminFilters']>) => {
         set(state => ({
-          adminFilters: { ...state.adminFilters, ...filters },
+          adminFilters: { ...state.adminFilters, ...filters }
         }));
       },
 

@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { updateUserProfile } from '@/lib/api/users';
+import { useUsers } from '@/hooks/useUsers';
 import { ArrowLeft, Eye, EyeOff, Mail, Save } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -23,6 +23,7 @@ export default function ChangeEmailPage() {
   const router = useRouter();
   const { user, refreshUserData } = useAuth();
   const { toast } = useToast();
+  const { updateProfile } = useUsers();
 
   const [emailData, setEmailData] = useState<EmailFormData>({
     new_email: '',
@@ -87,9 +88,7 @@ export default function ChangeEmailPage() {
     setError(null);
 
     try {
-      // Note: This would need backend support for email change with password verification
-      // For now, we'll simulate the process
-      await updateUserProfile({
+      await updateProfile({
         email: emailData.new_email,
       });
 

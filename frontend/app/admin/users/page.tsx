@@ -36,18 +36,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-
-import {
-  banUser,
-  deleteUser,
-  fetchAdminStats,
-  fetchAdminUsers,
-  revokeUserEmailVerification,
-  unbanUser,
-  updateUserRole,
-  verifyUserEmail,
-} from '@/lib/api/admin-apis/users';
-import { User } from '@/types/index';
+import { useUsers } from '@/hooks/useUsers';
+import { AdminUser } from '@/store/users';
 import {
   AlertTriangle,
   Ban,
@@ -74,16 +64,33 @@ interface AdminStats {
 }
 
 const AdminUsersPage = () => {
-  const [users, setUsers] = useState<User[]>([]);
-  const [stats, setStats] = useState<AdminStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState<string>('all');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalUsers, setTotalUsers] = useState(0);
+  const {
+    // Admin data
+    adminUsers: users,
+    adminUserStats: stats,
+
+    // Admin pagination and filters
+    adminPagination,
+    adminFilters,
+
+    // Admin UI state
+    isLoadingAdminUsers: loading,
+
+    // Admin actions
+    fetchAdminUsers,
+    fetchAdminUserStats,
+    banUser,
+    unbanUser,
+    deleteUser,
+    changeUserRole,
+    verifyUserEmail,
+    revokeUserEmailVerification,
+    setAdminPage,
+    setAdminFilters,
+  } = useUsers();
+
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; user: User | null }>({
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; user: AdminUser | null }>({
     open: false,
     user: null,
   });
@@ -93,50 +100,41 @@ const AdminUsersPage = () => {
 
   const usersPerPage = 10;
 
+  // Extract values from pagination object
+  const currentPage = adminPagination.page;
+  const totalUsers = adminPagination.total;
+  const totalPages = adminPagination.totalPages;
+
+  // Extract values from filters object
+  const searchTerm = adminFilters.search;
+  const roleFilter = adminFilters.role;
+  // Map banned boolean to status filter value
+  const statusFilter =
+    adminFilters.banned === true ? 'banned' : adminFilters.banned === false ? 'active' : 'all';
+
   const loadUsers = async (signal?: AbortSignal) => {
     try {
-      setLoading(true);
-
       const params = {
         page: currentPage,
         limit: usersPerPage,
         search: searchTerm || undefined,
         role: roleFilter !== 'all' ? roleFilter : undefined,
-        banned: statusFilter === 'banned' ? true : statusFilter === 'active' ? false : undefined,
+        banned: adminFilters.banned,
       };
 
-      const response = await fetchAdminUsers(params);
-
-      // Check if the request was cancelled
-      if (signal?.aborted) {
-        return;
-      }
-
-      setUsers(response.users);
-      setTotalUsers(response.total);
+      await fetchAdminUsers(params);
     } catch (error) {
       // Don't show error if request was cancelled
       if (!signal?.aborted) {
         console.error('Failed to load users:', error);
         toast.error('Failed to load users');
       }
-    } finally {
-      if (!signal?.aborted) {
-        setLoading(false);
-      }
     }
   };
 
   const loadStats = async (signal?: AbortSignal) => {
     try {
-      const statsData = await fetchAdminStats();
-
-      // Check if the request was cancelled
-      if (signal?.aborted) {
-        return;
-      }
-
-      setStats(statsData);
+      await fetchAdminUserStats();
     } catch (error) {
       // Don't show error if request was cancelled
       if (!signal?.aborted) {
@@ -153,8 +151,6 @@ const AdminUsersPage = () => {
 
     const initializeData = async () => {
       try {
-        setLoading(true);
-
         // Load both stats and initial users data
         await Promise.all([loadStats(abortController.signal), loadUsers(abortController.signal)]);
       } catch (error) {
@@ -195,7 +191,7 @@ const AdminUsersPage = () => {
 
       switch (action) {
         case 'ban':
-          await banUser(userId);
+          await banUser(userId, 'Banned by admin');
           toast.success('User banned successfully');
           break;
         case 'unban':
@@ -212,7 +208,7 @@ const AdminUsersPage = () => {
           break;
         case 'role':
           if (newRole) {
-            await updateUserRole(userId, newRole);
+            await changeUserRole(userId, newRole);
             toast.success(`User role updated to ${newRole}`);
           }
           break;
@@ -254,8 +250,6 @@ const AdminUsersPage = () => {
         return 'border-amber-500/50 text-amber-300';
     }
   };
-
-  const totalPages = Math.ceil(totalUsers / usersPerPage);
 
   return (
     <div className='space-y-6'>
@@ -322,12 +316,12 @@ const AdminUsersPage = () => {
                 <Input
                   placeholder='Search users...'
                   value={searchTerm}
-                  onChange={e => setSearchTerm(e.target.value)}
+                  onChange={e => setAdminFilters({ search: e.target.value })}
                   className='pl-9 bg-gray-800 border-gray-700 text-white'
                 />
               </div>
             </div>
-            <Select value={roleFilter} onValueChange={setRoleFilter}>
+            <Select value={roleFilter} onValueChange={value => setAdminFilters({ role: value })}>
               <SelectTrigger className='w-full md:w-[180px] bg-gray-800 border-gray-700 text-white'>
                 <SelectValue placeholder='Filter by role' />
               </SelectTrigger>
@@ -338,7 +332,21 @@ const AdminUsersPage = () => {
                 <SelectItem value='user'>User</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <Select
+              value={statusFilter}
+              onValueChange={value => {
+                // Map frontend status values to backend format
+                if (value === 'active') {
+                  setAdminFilters({ banned: false });
+                } else if (value === 'banned') {
+                  setAdminFilters({ banned: true });
+                } else {
+                  // For 'all', remove the banned filter
+                  const { banned, ...restFilters } = adminFilters;
+                  setAdminFilters(restFilters);
+                }
+              }}
+            >
               <SelectTrigger className='w-full md:w-[180px] bg-gray-800 border-gray-700 text-white'>
                 <SelectValue placeholder='Filter by status' />
               </SelectTrigger>
@@ -543,7 +551,7 @@ const AdminUsersPage = () => {
                     <Button
                       variant='outline'
                       size='sm'
-                      onClick={() => setCurrentPage(currentPage - 1)}
+                      onClick={() => setAdminPage(currentPage - 1)}
                       disabled={currentPage === 1}
                       className='border-gray-700 bg-gray-800 text-white hover:bg-gray-700'
                     >
@@ -555,7 +563,7 @@ const AdminUsersPage = () => {
                     <Button
                       variant='outline'
                       size='sm'
-                      onClick={() => setCurrentPage(currentPage + 1)}
+                      onClick={() => setAdminPage(currentPage + 1)}
                       disabled={currentPage === totalPages}
                       className='border-gray-700 bg-gray-800 text-white hover:bg-gray-700'
                     >

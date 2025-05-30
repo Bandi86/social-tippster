@@ -9,8 +9,10 @@ import UserProfileCard from '@/components/user/UserProfileCard';
 import { ProfileContent, ProfileSkeleton, ProfileTabs } from '@/components/user/profile';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { fetchUserPosts, Post } from '@/lib/api/posts';
-import { fetchUserProfile, UserProfile } from '@/lib/api/users';
+import { usePosts } from '@/hooks/usePosts';
+import { useUsers } from '@/hooks/useUsers';
+import { Post } from '@/store/posts';
+import { UserProfile } from '@/store/users';
 import { ArrowLeft, MessageCircle } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -20,6 +22,8 @@ export default function ProfilePage() {
   const router = useRouter();
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
+  const { fetchUserProfile, isLoading: usersLoading, error: usersError } = useUsers();
+  const { fetchUserPosts, isLoading: postsLoading, error: postsError } = usePosts();
 
   // Az útvonal [id] paramétert username-ként használjuk
   const username = params.id as string;
@@ -27,7 +31,7 @@ export default function ProfilePage() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [userPosts, setUserPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [postsLoading, setPostsLoading] = useState(false);
+  const [postsLoadingState, setPostsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('posts');
 
@@ -45,39 +49,29 @@ export default function ProfilePage() {
 
   const loadUserProfile = async () => {
     try {
-      setIsLoading(true);
-      setError(null);
       const profile = await fetchUserProfile(username);
       setUserProfile(profile);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to load user profile';
-      setError(errorMessage);
       toast({
         title: 'Error',
         description: errorMessage,
         variant: 'destructive',
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const loadUserPosts = async () => {
     if (!userProfile?.user) return;
-
     try {
-      setPostsLoading(true);
       const response = await fetchUserPosts(userProfile.user.username);
       setUserPosts(response.posts);
     } catch (error) {
-      console.error('Failed to load user posts:', error);
       toast({
         title: 'Error',
         description: 'Failed to load user posts',
         variant: 'destructive',
       });
-    } finally {
-      setPostsLoading(false);
     }
   };
 
@@ -85,10 +79,6 @@ export default function ProfilePage() {
     if (userProfile) {
       setUserProfile({
         ...userProfile,
-        user: {
-          ...userProfile.user,
-          is_following: isFollowing,
-        },
         stats: {
           ...userProfile.stats,
           followers_count: userProfile.stats.followers_count + (isFollowing ? 1 : -1),
@@ -207,8 +197,8 @@ export default function ProfilePage() {
               {/* Posztok tab */}
               {activeTab === 'posts' && (
                 <ProfileContent
-                  isLoading={postsLoading}
-                  isEmpty={!postsLoading && userPosts.length === 0}
+                  isLoading={postsLoadingState}
+                  isEmpty={!postsLoadingState && userPosts.length === 0}
                   emptyIcon={<MessageCircle className='w-12 h-12 text-gray-500 mx-auto' />}
                   emptyTitle='Nincsenek még posztok'
                   emptyDescription={`${userProfile.user.username} még nem osztott meg posztokat.`}

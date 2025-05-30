@@ -28,16 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  AdminComment,
-  bulkDeleteComments,
-  bulkUpdateCommentsStatus,
-  deleteComment,
-  fetchAdminComments,
-  fetchCommentsStats,
-  toggleCommentPin,
-  updateCommentStatus,
-} from '@/lib/api/admin-apis/comments';
+import { useComments } from '@/hooks/useComments';
 import {
   AlertTriangle,
   Eye,
@@ -70,23 +61,48 @@ interface CommentsStats {
 }
 
 export default function AdminCommentsPage() {
-  const [comments, setComments] = useState<AdminComment[]>([]);
-  const [stats, setStats] = useState<CommentsStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<string>('newest');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalComments, setTotalComments] = useState(0);
+  const {
+    // Admin data
+    adminComments: comments,
+    commentsStats: stats,
+
+    // Admin pagination and filters
+    adminPagination,
+    adminFilters,
+
+    // Admin UI state
+    isLoadingAdminComments: loading,
+
+    // Admin actions
+    fetchAdminComments,
+    fetchCommentsStats,
+    deleteComment,
+    updateCommentStatus,
+    toggleCommentPin,
+    bulkDeleteComments,
+    bulkUpdateCommentsStatus,
+    setAdminPage,
+    setAdminFilters,
+  } = useComments();
+
   const [selectedComments, setSelectedComments] = useState<string[]>([]);
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
   const router = useRouter();
 
   const commentsPerPage = 20;
 
+  // Extract values from pagination object
+  const currentPage = adminPagination.page;
+  const totalComments = adminPagination.total;
+  const totalPages = adminPagination.totalPages;
+
+  // Extract values from filters object
+  const searchTerm = adminFilters.search;
+  const statusFilter = adminFilters.status;
+  const sortBy = adminFilters.sort;
+
   const loadComments = async () => {
     try {
-      setLoading(true);
       const filters = {
         search: searchTerm || undefined,
         status: statusFilter !== 'all' ? statusFilter : undefined,
@@ -95,19 +111,11 @@ export default function AdminCommentsPage() {
         limit: commentsPerPage,
       };
 
-      const [commentsData, statsData] = await Promise.all([
-        fetchAdminComments(filters),
-        fetchCommentsStats(),
-      ]);
-
-      setComments(commentsData.comments);
-      setTotalComments(commentsData.meta.total);
-      setStats(statsData);
+      await fetchAdminComments(filters);
+      await fetchCommentsStats();
     } catch (error) {
       console.error('Error loading comments:', error);
       toast.error('Failed to load comments');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -116,7 +124,7 @@ export default function AdminCommentsPage() {
   }, [currentPage, statusFilter, sortBy]);
 
   const handleSearch = () => {
-    setCurrentPage(1);
+    setAdminPage(1);
     loadComments();
   };
 
@@ -132,7 +140,7 @@ export default function AdminCommentsPage() {
     try {
       await deleteComment(id);
       toast.success('Comment deleted successfully');
-      loadComments();
+      await loadComments();
     } catch (error) {
       toast.error('Failed to delete comment');
     }
@@ -144,7 +152,7 @@ export default function AdminCommentsPage() {
       toast.success(
         `Comment ${status === 'active' ? 'approved' : status === 'hidden' ? 'hidden' : 'set to pending'}`,
       );
-      loadComments();
+      await loadComments();
     } catch (error) {
       toast.error('Failed to update comment status');
     }
@@ -154,7 +162,7 @@ export default function AdminCommentsPage() {
     try {
       await toggleCommentPin(id);
       toast.success('Comment pin status updated');
-      loadComments();
+      await loadComments();
     } catch (error) {
       toast.error('Failed to update pin status');
     }
@@ -201,7 +209,7 @@ export default function AdminCommentsPage() {
       }
 
       setSelectedComments([]);
-      loadComments();
+      await loadComments();
     } catch (error) {
       toast.error(`Failed to ${action} comments`);
     } finally {
@@ -233,8 +241,6 @@ export default function AdminCommentsPage() {
         return <Badge variant='outline'>{status}</Badge>;
     }
   };
-
-  const totalPages = Math.ceil(totalComments / commentsPerPage);
 
   if (loading && !comments.length) {
     return (
@@ -358,13 +364,16 @@ export default function AdminCommentsPage() {
                 <Input
                   placeholder='Search comments, authors, or posts...'
                   value={searchTerm}
-                  onChange={e => setSearchTerm(e.target.value)}
+                  onChange={e => setAdminFilters({ search: e.target.value })}
                   onKeyPress={handleKeyPress}
                   className='pl-10'
                 />
               </div>
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <Select
+              value={statusFilter}
+              onValueChange={value => setAdminFilters({ status: value })}
+            >
               <SelectTrigger className='w-[140px]'>
                 <SelectValue placeholder='Status' />
               </SelectTrigger>
@@ -375,7 +384,7 @@ export default function AdminCommentsPage() {
                 <SelectItem value='pending'>Pending</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={sortBy} onValueChange={setSortBy}>
+            <Select value={sortBy} onValueChange={value => setAdminFilters({ sort: value as any })}>
               <SelectTrigger className='w-[140px]'>
                 <SelectValue placeholder='Sort by' />
               </SelectTrigger>
@@ -602,7 +611,7 @@ export default function AdminCommentsPage() {
                 <Button
                   variant='outline'
                   size='sm'
-                  onClick={() => setCurrentPage(currentPage - 1)}
+                  onClick={() => setAdminPage(currentPage - 1)}
                   disabled={currentPage === 1 || loading}
                 >
                   Previous
@@ -616,7 +625,7 @@ export default function AdminCommentsPage() {
                         key={page}
                         variant={page === currentPage ? 'default' : 'outline'}
                         size='sm'
-                        onClick={() => setCurrentPage(page)}
+                        onClick={() => setAdminPage(page)}
                         disabled={loading}
                         className='w-8 h-8 p-0'
                       >
@@ -628,7 +637,7 @@ export default function AdminCommentsPage() {
                 <Button
                   variant='outline'
                   size='sm'
-                  onClick={() => setCurrentPage(currentPage + 1)}
+                  onClick={() => setAdminPage(currentPage + 1)}
                   disabled={currentPage === totalPages || loading}
                 >
                   Next

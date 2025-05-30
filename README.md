@@ -50,6 +50,7 @@ Egy modern közösségi platform sportfogadási tippek megosztására, követés
 - 👀 **Non-Authenticated User Experience** _(2025-05-29)_ - All content (posts, comments, stats) is visible to guests, but post creation, voting, commenting, bookmarking, and sharing are disabled. Read-only counters and clear login/register banners guide users to authentication. Guest users see a prominent welcome banner and feature preview, with all interactive elements replaced by static displays.
 - 🔧 **Complete Profile Management** _(2025-05-29)_ - Full profile editing system with avatar display, account settings, password change, and email update functionality. Users can view their complete profile with registration date, online status, and last login information. Profile navigation includes dedicated pages for settings, security, and account management.
 - 💬 **Advanced Comment System** _(2025-05-29)_ - Complete Zustand-based comment system with nested replies, voting, editing, and deletion. Fully migrated from API calls to centralized state management with proper error handling and optimistic updates.
+- 🛡️ **Admin User Management** _(2025-05-30)_ - Complete Zustand store migration for admin users page. All admin operations (ban/unban, verify/unverify, role changes) now use centralized state management with proper error handling and type safety.
 
 ### DevOps
 

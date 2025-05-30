@@ -30,16 +30,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { toast } from '@/hooks/use-toast';
-import {
-  AdminPost,
-  bulkDeletePosts,
-  bulkUpdatePosts,
-  deletePost,
-  fetchAdminPosts,
-  fetchPostsStats,
-  togglePostFeature,
-  togglePostVisibility,
-} from '@/lib/api/admin-apis/posts';
+import { usePosts } from '@/hooks/usePosts';
+import { AdminPost } from '@/store/posts';
 import {
   AlertTriangle,
   BarChart3,
@@ -72,19 +64,36 @@ interface PostsStats {
 
 export default function AdminPostsPage() {
   const router = useRouter();
-  const [posts, setPosts] = useState<AdminPost[]>([]);
-  const [stats, setStats] = useState<PostsStats | null>(null);
-  const [loading, setLoading] = useState(true);
+  const {
+    // Admin data
+    adminPosts: posts,
+    postsStats: stats,
+
+    // Admin pagination
+    adminCurrentPage: currentPage,
+    adminTotalPages: totalPages,
+    adminTotalPosts: totalPosts,
+
+    // Admin filters
+    adminFilters: filters,
+
+    // Admin UI state
+    isLoadingAdminPosts: loading,
+    adminError,
+
+    // Admin actions
+    fetchAdminPosts,
+    fetchPostsStats,
+    deletePost,
+    togglePostFeature,
+    togglePostVisibility,
+    bulkDeletePosts,
+    bulkUpdatePosts,
+    setAdminCurrentPage,
+    setAdminFilters,
+  } = usePosts();
+
   const [selectedPosts, setSelectedPosts] = useState<string[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPosts, setTotalPosts] = useState(0);
-  const [filters, setFilters] = useState({
-    search: '',
-    type: 'all',
-    status: 'all',
-    sortBy: 'created_at' as const,
-    sortOrder: 'desc' as const,
-  });
 
   const postsPerPage = 10;
 
@@ -95,20 +104,22 @@ export default function AdminPostsPage() {
 
   const loadPosts = async () => {
     try {
-      setLoading(true);
       const params = {
         page: currentPage,
         limit: postsPerPage,
         search: filters.search || undefined,
         type: filters.type !== 'all' ? filters.type : undefined,
         status: filters.status !== 'all' ? filters.status : undefined,
-        sortBy: filters.sortBy,
-        sortOrder: filters.sortOrder,
+        sortBy: filters.sortBy as
+          | 'created_at'
+          | 'updated_at'
+          | 'views_count'
+          | 'likes_count'
+          | 'reports_count',
+        sortOrder: filters.sortOrder as 'asc' | 'desc',
       };
 
-      const { posts: fetchedPosts, total } = await fetchAdminPosts(params);
-      setPosts(fetchedPosts);
-      setTotalPosts(total);
+      await fetchAdminPosts(params);
     } catch (error) {
       console.error('Error loading posts:', error);
       toast({
@@ -116,15 +127,12 @@ export default function AdminPostsPage() {
         description: 'A posztok betöltése sikertelen',
         variant: 'destructive',
       });
-    } finally {
-      setLoading(false);
     }
   };
 
   const loadStats = async () => {
     try {
-      const fetchedStats = await fetchPostsStats();
-      setStats(fetchedStats);
+      await fetchPostsStats();
     } catch (error) {
       console.error('Error loading stats:', error);
     }
@@ -137,8 +145,9 @@ export default function AdminPostsPage() {
         title: 'Siker',
         description: 'A poszt sikeresen törölve',
       });
-      loadPosts();
-      loadStats();
+      // Reload data from store
+      await loadPosts();
+      await loadStats();
     } catch (error) {
       console.error('Error deleting post:', error);
       toast({
@@ -156,7 +165,7 @@ export default function AdminPostsPage() {
         title: 'Siker',
         description: featured ? 'Poszt kiemelve' : 'Kiemelés eltávolítva',
       });
-      loadPosts();
+      await loadPosts();
     } catch (error) {
       console.error('Error toggling feature:', error);
       toast({
@@ -174,8 +183,8 @@ export default function AdminPostsPage() {
         title: 'Siker',
         description: hidden ? 'Poszt elrejtve' : 'Poszt megjelenítve',
       });
-      loadPosts();
-      loadStats();
+      await loadPosts();
+      await loadStats();
     } catch (error) {
       console.error('Error toggling visibility:', error);
       toast({
@@ -196,8 +205,8 @@ export default function AdminPostsPage() {
         description: `${selectedPosts.length} poszt törölve`,
       });
       setSelectedPosts([]);
-      loadPosts();
-      loadStats();
+      await loadPosts();
+      await loadStats();
     } catch (error) {
       console.error('Error bulk deleting:', error);
       toast({
@@ -218,8 +227,8 @@ export default function AdminPostsPage() {
         description: `${selectedPosts.length} poszt frissítve`,
       });
       setSelectedPosts([]);
-      loadPosts();
-      loadStats();
+      await loadPosts();
+      await loadStats();
     } catch (error) {
       console.error('Error bulk updating:', error);
       toast({
@@ -255,8 +264,6 @@ export default function AdminPostsPage() {
 
     return <Badge variant={variants[status as keyof typeof variants] || 'outline'}>{status}</Badge>;
   };
-
-  const totalPages = Math.ceil(totalPosts / postsPerPage);
 
   return (
     <div className='space-y-6'>
@@ -349,7 +356,7 @@ export default function AdminPostsPage() {
                   id='search'
                   placeholder='Cím vagy tartalom...'
                   value={filters.search}
-                  onChange={e => setFilters(prev => ({ ...prev, search: e.target.value }))}
+                  onChange={e => setAdminFilters({ search: e.target.value })}
                   className='pl-8 bg-gray-800 border-gray-600 text-white'
                 />
               </div>
@@ -359,7 +366,7 @@ export default function AdminPostsPage() {
               <Label className='text-gray-300'>Típus</Label>
               <Select
                 value={filters.type}
-                onValueChange={value => setFilters(prev => ({ ...prev, type: value }))}
+                onValueChange={value => setAdminFilters({ type: value })}
               >
                 <SelectTrigger className='bg-gray-800 border-gray-600 text-white'>
                   <SelectValue />
@@ -378,7 +385,7 @@ export default function AdminPostsPage() {
               <Label className='text-gray-300'>Státusz</Label>
               <Select
                 value={filters.status}
-                onValueChange={value => setFilters(prev => ({ ...prev, status: value }))}
+                onValueChange={value => setAdminFilters({ status: value })}
               >
                 <SelectTrigger className='bg-gray-800 border-gray-600 text-white'>
                   <SelectValue />
@@ -397,7 +404,7 @@ export default function AdminPostsPage() {
               <Label className='text-gray-300'>Rendezés</Label>
               <Select
                 value={filters.sortBy}
-                onValueChange={value => setFilters(prev => ({ ...prev, sortBy: value as any }))}
+                onValueChange={value => setAdminFilters({ sortBy: value as any })}
               >
                 <SelectTrigger className='bg-gray-800 border-gray-600 text-white'>
                   <SelectValue />
@@ -416,7 +423,7 @@ export default function AdminPostsPage() {
               <Label className='text-gray-300'>Irány</Label>
               <Select
                 value={filters.sortOrder}
-                onValueChange={value => setFilters(prev => ({ ...prev, sortOrder: value as any }))}
+                onValueChange={value => setAdminFilters({ sortOrder: value as any })}
               >
                 <SelectTrigger className='bg-gray-800 border-gray-600 text-white'>
                   <SelectValue />
@@ -654,7 +661,7 @@ export default function AdminPostsPage() {
                   variant='outline'
                   size='sm'
                   disabled={currentPage === 1}
-                  onClick={() => setCurrentPage(prev => prev - 1)}
+                  onClick={() => setAdminCurrentPage(currentPage - 1)}
                   className='border-gray-600 text-gray-300'
                 >
                   Előző
@@ -663,7 +670,7 @@ export default function AdminPostsPage() {
                   variant='outline'
                   size='sm'
                   disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage(prev => prev + 1)}
+                  onClick={() => setAdminCurrentPage(currentPage + 1)}
                   className='border-gray-600 text-gray-300'
                 >
                   Következő

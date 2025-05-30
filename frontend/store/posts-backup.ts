@@ -30,46 +30,6 @@ async function axiosWithAuth(config: any) {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
-// Post interface matching component expectations
-export interface Post {
-  id: string;
-  title: string;
-  content: string;
-  excerpt?: string;
-  type: 'tip' | 'discussion' | 'news' | 'analysis';
-  status: 'draft' | 'published' | 'archived' | 'hidden';
-  author_id: string;
-  author?: {
-    user_id: string;
-    username: string;
-    profile_image?: string;
-    reputation_score: number;
-  };
-  // Tip-specific fields
-  odds?: number;
-  stake?: number;
-  confidence?: number;
-  betting_market?: string;
-  // Statistics
-  views_count: number;
-  likes_count: number;
-  dislikes_count: number;
-  comments_count: number;
-  bookmarks_count: number;
-  shares_count: number;
-  // Features
-  is_featured: boolean;
-  is_premium: boolean;
-  is_pinned: boolean;
-  // Timestamps
-  created_at: string;
-  updated_at: string;
-  published_at?: string;
-  // User interactions (if authenticated)
-  user_vote?: 'like' | 'dislike' | null;
-  user_bookmarked?: boolean;
-}
-
 // Admin-specific interfaces
 export interface AdminPost extends Omit<Post, 'author'> {
   author?: {
@@ -111,6 +71,46 @@ export interface AdminPostsResponse {
   page: number;
   limit: number;
   totalPages: number;
+}
+
+// Post interface matching component expectations
+export interface Post {
+  id: string;
+  title: string;
+  content: string;
+  excerpt?: string;
+  type: 'tip' | 'discussion' | 'news' | 'analysis';
+  status: 'draft' | 'published' | 'archived' | 'hidden';
+  author_id: string;
+  author?: {
+    user_id: string;
+    username: string;
+    profile_image?: string;
+    reputation_score: number;
+  };
+  // Tip-specific fields
+  odds?: number;
+  stake?: number;
+  confidence?: number;
+  betting_market?: string;
+  // Statistics
+  views_count: number;
+  likes_count: number;
+  dislikes_count: number;
+  comments_count: number;
+  bookmarks_count: number;
+  shares_count: number;
+  // Features
+  is_featured: boolean;
+  is_premium: boolean;
+  is_pinned: boolean;
+  // Timestamps
+  created_at: string;
+  updated_at: string;
+  published_at?: string;
+  // User interactions (if authenticated)
+  user_vote?: 'like' | 'dislike' | null;
+  user_bookmarked?: boolean;
 }
 
 export interface PostsResponse {
@@ -199,11 +199,6 @@ interface PostsActions {
   fetchPosts: (params?: FetchPostsParams, append?: boolean) => Promise<void>;
   fetchFeaturedPosts: () => Promise<void>;
   fetchPostById: (id: string) => Promise<void>;
-  fetchUserPosts: (
-    username: string,
-    page?: number,
-    limit?: number,
-  ) => Promise<{ posts: Post[]; meta: any }>;
   createPost: (data: any) => Promise<Post>;
   updatePost: (id: string, updates: Partial<Post>) => Promise<void>;
   deletePost: (id: string) => Promise<void>;
@@ -218,10 +213,6 @@ interface PostsActions {
   // Admin-specific actions
   fetchAdminPosts: (params?: AdminPostsParams) => Promise<void>;
   fetchPostsStats: () => Promise<void>;
-  togglePostFeature: (id: string, featured: boolean) => Promise<void>;
-  togglePostVisibility: (id: string, hidden: boolean) => Promise<void>;
-  bulkDeletePosts: (postIds: string[]) => Promise<void>;
-  bulkUpdatePosts: (postIds: string[], updates: Partial<AdminPost>) => Promise<void>;
 
   // Local state management
   updatePostLocally: (id: string, updates: Partial<Post>) => void;
@@ -232,16 +223,13 @@ interface PostsActions {
   setSearchQuery: (query: string) => void;
   setSelectedType: (type: string) => void;
   setSortBy: (sortBy: string) => void;
-  setAdminFilters: (filters: Partial<PostsState['adminFilters']>) => void;
 
   // Pagination
   setCurrentPage: (page: number) => void;
-  setAdminCurrentPage: (page: number) => void;
   resetPagination: () => void;
 
   // Utility
   clearError: () => void;
-  clearAdminError: () => void;
   clearCache: () => void;
   reset: () => void;
 }
@@ -278,13 +266,6 @@ export const usePostsStore = create<PostsState & PostsActions>()(
       searchQuery: '',
       selectedType: 'all',
       sortBy: 'newest',
-      adminFilters: {
-        search: '',
-        type: 'all',
-        status: 'all',
-        sortBy: 'created_at',
-        sortOrder: 'desc',
-      },
       isLoading: false,
       isLoadingMore: false,
       isSubmitting: false,
@@ -367,12 +348,12 @@ export const usePostsStore = create<PostsState & PostsActions>()(
       fetchFeaturedPosts: async () => {
         try {
           set({ isLoading: true, error: null });
-          const response = await axiosWithAuth({
+          const posts = await axiosWithAuth({
             method: 'GET',
             url: `${API_BASE_URL}/posts?featured=true&limit=10`,
           });
           set({
-            featuredPosts: response.posts || response,
+            featuredPosts: posts,
             isLoading: false,
             error: null,
           });
@@ -403,25 +384,6 @@ export const usePostsStore = create<PostsState & PostsActions>()(
             isLoading: false,
             error: error instanceof Error ? error.message : 'Failed to fetch post',
           });
-        }
-      },
-
-      fetchUserPosts: async (username: string, page: number = 1, limit: number = 10) => {
-        try {
-          set({ isLoading: true, error: null });
-          const response = await axiosWithAuth({
-            method: 'GET',
-            url: `${API_BASE_URL}/posts/user/${username}?page=${page}&limit=${limit}`,
-          });
-          set({ isLoading: false });
-          return response;
-        } catch (error) {
-          console.error('Error fetching user posts:', error);
-          set({
-            isLoading: false,
-            error: error instanceof Error ? error.message : 'Failed to fetch user posts',
-          });
-          throw error;
         }
       },
 
@@ -493,7 +455,6 @@ export const usePostsStore = create<PostsState & PostsActions>()(
           // Remove from posts list
           set(state => ({
             posts: state.posts.filter(post => post.id !== id),
-            adminPosts: state.adminPosts.filter(post => post.id !== id),
             totalPosts: state.totalPosts - 1,
             currentPost: state.currentPost?.id === id ? null : state.currentPost,
             isSubmitting: false,
@@ -628,32 +589,15 @@ export const usePostsStore = create<PostsState & PostsActions>()(
       fetchAdminPosts: async (params = {}) => {
         try {
           set({ isLoadingAdminPosts: true, adminError: null });
-          const searchParams = new URLSearchParams();
-
-          Object.entries(params).forEach(([key, value]) => {
-            if (value && value !== 'all') {
-              searchParams.append(key, value.toString());
-            }
-          });
-
-          const response = await axiosWithAuth({
+          const response: AdminPostsResponse = await axiosWithAuth({
             method: 'GET',
-            url: `${API_BASE_URL}/posts?${searchParams.toString()}`,
+            url: `${API_BASE_URL}/admin/posts`,
+            params,
           });
-
-          // Transform regular posts to admin posts format
-          const adminPosts: AdminPost[] =
-            response.posts?.map((post: any) => ({
-              ...post,
-              is_reported: post.is_reported || false,
-              reports_count: post.reports_count || 0,
-            })) || [];
-
           set({
-            adminPosts,
-            adminTotalPosts: response.total || adminPosts.length,
-            adminTotalPages:
-              response.totalPages || Math.ceil(adminPosts.length / (params.limit || 10)),
+            adminPosts: response.posts,
+            adminTotalPosts: response.total,
+            adminTotalPages: response.totalPages,
             adminCurrentPage: params.page || 1,
             isLoadingAdminPosts: false,
             adminError: null,
@@ -670,29 +614,10 @@ export const usePostsStore = create<PostsState & PostsActions>()(
       fetchPostsStats: async () => {
         try {
           set({ isLoadingStats: true, adminError: null });
-
-          // Since we don't have a dedicated stats endpoint, calculate from posts
-          const response = await axiosWithAuth({
+          const stats = await axiosWithAuth({
             method: 'GET',
-            url: `${API_BASE_URL}/posts?limit=1000`,
+            url: `${API_BASE_URL}/admin/posts/stats`,
           });
-
-          const posts = response.posts || [];
-          const stats: PostsStats = {
-            total: posts.length,
-            published: posts.filter((p: any) => p.status === 'published').length,
-            draft: posts.filter((p: any) => p.status === 'draft').length,
-            hidden: posts.filter((p: any) => p.status === 'hidden').length,
-            reported: posts.filter((p: any) => p.is_reported).length,
-            totalViews: posts.reduce((sum: number, p: any) => sum + (p.views_count || 0), 0),
-            totalLikes: posts.reduce((sum: number, p: any) => sum + (p.likes_count || 0), 0),
-            recentPosts: posts.filter((p: any) => {
-              const weekAgo = new Date();
-              weekAgo.setDate(weekAgo.getDate() - 7);
-              return new Date(p.created_at) > weekAgo;
-            }).length,
-          };
-
           set({
             postsStats: stats,
             isLoadingStats: false,
@@ -707,142 +632,17 @@ export const usePostsStore = create<PostsState & PostsActions>()(
         }
       },
 
-      togglePostFeature: async (id: string, featured: boolean) => {
-        try {
-          await get().updatePost(id, { is_featured: featured });
-        } catch (error) {
-          console.error('Error toggling post feature:', error);
-          throw error;
-        }
-      },
-
-      togglePostVisibility: async (id: string, hidden: boolean) => {
-        try {
-          const status = hidden ? 'hidden' : 'published';
-          await get().updatePost(id, { status });
-        } catch (error) {
-          console.error('Error toggling post visibility:', error);
-          throw error;
-        }
-      },
-
-      bulkDeletePosts: async (postIds: string[]) => {
-        try {
-          set({ isSubmitting: true, adminError: null });
-          await Promise.all(
-            postIds.map(id =>
-              axiosWithAuth({
-                method: 'DELETE',
-                url: `${API_BASE_URL}/posts/${id}`,
-              }),
-            ),
-          );
-
-          // Remove from local state
-          set(state => ({
-            posts: state.posts.filter(post => !postIds.includes(post.id)),
-            adminPosts: state.adminPosts.filter(post => !postIds.includes(post.id)),
-            totalPosts: state.totalPosts - postIds.length,
-            adminTotalPosts: state.adminTotalPosts - postIds.length,
-            isSubmitting: false,
-          }));
-
-          get().clearCache();
-        } catch (error) {
-          console.error('Error bulk deleting posts:', error);
-          set({
-            isSubmitting: false,
-            adminError: error instanceof Error ? error.message : 'Failed to delete posts',
-          });
-          throw error;
-        }
-      },
-
-      bulkUpdatePosts: async (postIds: string[], updates: Partial<AdminPost>) => {
-        try {
-          set({ isSubmitting: true, adminError: null });
-          await Promise.all(
-            postIds.map(id =>
-              axiosWithAuth({
-                method: 'PATCH',
-                url: `${API_BASE_URL}/posts/${id}`,
-                data: updates,
-              }),
-            ),
-          );
-
-          // Update local state
-          set(state => {
-            // Destructure updates to separate fields that are AdminPost-specific or have different types
-            const {
-              author: _adminAuthor, // Exclude admin-specific author type from Post updates
-              is_reported: _is_reported, // Exclude AdminPost-specific field
-              reports_count: _reports_count, // Exclude AdminPost-specific field
-              ...postCompatibleUpdates // These are updates applicable to Post fields (excluding author)
-            } = updates;
-
-            const newPosts = state.posts.map(p => {
-              if (postIds.includes(p.id)) {
-                // Apply only compatible updates to Post objects
-                // This preserves Post['author'] and avoids adding AdminPost-only fields
-                return { ...p, ...postCompatibleUpdates };
-              }
-              return p;
-            });
-
-            const newAdminPosts = state.adminPosts.map(adminPost => {
-              // Corrected variable name here
-              if (postIds.includes(adminPost.id)) {
-                // For adminPosts, all updates can be applied as 'updates' is Partial<AdminPost>
-                return { ...adminPost, ...updates };
-              }
-              return adminPost;
-            });
-
-            return {
-              posts: newPosts,
-              adminPosts: newAdminPosts,
-              isSubmitting: false,
-            };
-          });
-
-          get().clearCache();
-        } catch (error) {
-          console.error('Error bulk updating posts:', error);
-          set({
-            isSubmitting: false,
-            adminError: error instanceof Error ? error.message : 'Failed to update posts',
-          });
-          throw error;
-        }
-      },
-
-// Local state updates
+      // Local state updates
       updatePostLocally: (id: string, updates: Partial<Post>) => {
-        set(state => {
-          // Destructure 'updates' (Partial<Post>).
-          // We separate 'author' because Post['author'] and AdminPost['author'] have different types.
-          // 'otherUpdatesCompatibleWithAdminPost' will contain all fields from 'updates' except 'author'.
-          const { author: _postAuthorSpecificUpdate, ...otherUpdatesCompatibleWithAdminPost } = updates;
-
-          return {
-            // For posts, featuredPosts, and currentPost, 'updates' (Partial<Post>) can be applied directly.
-            posts: state.posts.map(p => (p.id === id ? { ...p, ...updates } : p)),
-            featuredPosts: state.featuredPosts.map(fp =>
-              fp.id === id ? { ...fp, ...updates } : fp,
-            ),
-            currentPost:
-              state.currentPost?.id === id ? { ...state.currentPost, ...updates } : state.currentPost,
-            // For adminPosts, apply only the updates that are compatible.
-            // This excludes Post['author'] from being incorrectly applied to AdminPost['author'].
-            adminPosts: state.adminPosts.map(adminP => {
-              if (adminP.id === id) {
-                return { ...adminP, ...otherUpdatesCompatibleWithAdminPost };
-              }
-              return adminP;
-            }),
-          };
-        });
+        set(state => ({
+          posts: state.posts.map(post => (post.id === id ? { ...post, ...updates } : post)),
+          featuredPosts: state.featuredPosts.map(post =>
+            post.id === id ? { ...post, ...updates } : post,
+          ),
+          currentPost:
+            state.currentPost?.id === id ? { ...state.currentPost, ...updates } : state.currentPost,
+          adminPosts: state.adminPosts.map(post => (post.id === id ? { ...post, ...updates } : post)),
+        }));
       },
 
       removePostLocally: (id: string) => {
@@ -875,19 +675,9 @@ export const usePostsStore = create<PostsState & PostsActions>()(
         set({ sortBy });
       },
 
-      setAdminFilters: (filters: Partial<PostsState['adminFilters']>) => {
-        set(state => ({
-          adminFilters: { ...state.adminFilters, ...filters },
-        }));
-      },
-
       // Pagination
       setCurrentPage: (page: number) => {
         set({ currentPage: page });
-      },
-
-      setAdminCurrentPage: (page: number) => {
-        set({ adminCurrentPage: page });
       },
 
       resetPagination: () => {
@@ -902,10 +692,6 @@ export const usePostsStore = create<PostsState & PostsActions>()(
       // Utility
       clearError: () => {
         set({ error: null });
-      },
-
-      clearAdminError: () => {
-        set({ adminError: null });
       },
 
       clearCache: () => {
@@ -929,13 +715,6 @@ export const usePostsStore = create<PostsState & PostsActions>()(
           searchQuery: '',
           selectedType: 'all',
           sortBy: 'newest',
-          adminFilters: {
-            search: '',
-            type: 'all',
-            status: 'all',
-            sortBy: 'created_at',
-            sortOrder: 'desc',
-          },
           isLoading: false,
           isLoadingMore: false,
           isSubmitting: false,
@@ -953,7 +732,6 @@ export const usePostsStore = create<PostsState & PostsActions>()(
         searchQuery: state.searchQuery,
         selectedType: state.selectedType,
         sortBy: state.sortBy,
-        adminFilters: state.adminFilters,
       }),
     },
   ),
