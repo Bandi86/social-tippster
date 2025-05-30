@@ -6,6 +6,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  NotFoundException,
   Param,
   ParseUUIDPipe,
   Patch,
@@ -141,6 +142,28 @@ export class PostsController {
     }
 
     return await this.postsService.deletePost(id);
+  }
+
+  // --- Post View Tracking ---
+  @Post(':id/view')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Track a post view (anonymous or authenticated)' })
+  @ApiParam({ name: 'id', description: 'Post UUID' })
+  @ApiResponse({ status: 201, description: 'View tracked successfully' })
+  @ApiResponse({ status: 404, description: 'Post not found' })
+  async trackPostView(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user?: User,
+  ): Promise<{ success: boolean }> {
+    try {
+      await this.postsService.trackView(id, user);
+      return { success: true };
+    } catch (err) {
+      if (err instanceof Error && err.message === 'Post not found') {
+        throw new NotFoundException('Post not found');
+      }
+      throw err;
+    }
   }
 
   // TODO: Implement controller endpoints for post interactions (vote, bookmark, share, view)

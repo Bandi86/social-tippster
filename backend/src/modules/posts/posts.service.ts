@@ -69,7 +69,27 @@ export class PostsService {
     await this.postRepository.update(id, { deleted_at: new Date() });
   }
 
+  async trackView(
+    postId: string,
+    user?: import('../users/entities/user.entity').User,
+  ): Promise<void> {
+    // Find the post
+    const post = await this.postRepository.findOne({ where: { id: postId } });
+    if (!post) throw new Error('Post not found');
+
+    // Create a new PostView entity
+    const postView = this.postViewRepository.create({
+      post_id: postId,
+      user_id: user && user.user_id ? user.user_id : undefined,
+      // Optionally: ip_address, user_agent, referrer can be added from request headers if needed
+      is_unique: false, // For now, always false
+    });
+    await this.postViewRepository.save(postView);
+
+    // Increment views_count on the post
+    await this.postRepository.increment({ id: postId }, 'views_count', 1);
+  }
+
   // TODO: Implement service methods for post interactions (vote, bookmark, share, view)
   // TODO: Implement service methods for comment system
-
 }

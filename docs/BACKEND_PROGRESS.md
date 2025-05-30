@@ -1,5 +1,16 @@
 # Social Tippster Backend Development Progress
 
+## 2025-05-30 – Notification rendszer backend
+
+- Notification entity, DTO-k (create, update) létrehozva
+- Notification service, controller, module implementálva (CRUD, markAsRead, userId szerinti lekérdezés)
+- API dokumentáció (`docs/API.md`) frissítve
+- Jogosultsági elv: csak saját értesítések, admin láthat másét
+- NotificationType enum bővítve: post_liked, post_shared, new_follower
+- Új endpoint: PATCH /notifications/mark-all-read?user_id=... (összes értesítés olvasottra)
+
+# Social Tippster Backend Development Progress
+
 ## ✅ COMPLETED FEATURES
 
 ### 1. Project Structure & Configuration ✅
@@ -514,6 +525,13 @@ backend/src/
 - **Data**: type (like/dislike), created_at
 - **Constraints**: Unique(user_id, comment_id)
 
+### Notifications Table (notifications) ✅
+
+- **Primary Key**: id (UUID)
+- **User Relationship**: user_id (FK to users.user_id)
+- **Content**: title, message, is_read, type (info, warning, error)
+- **Timestamps**: created_at, updated_at
+
 ### Database Status ✅
 
 - ✅ **TypeORM Configuration**: Complete setup with PostgreSQL
@@ -524,6 +542,7 @@ backend/src/
   - Post <-> PostVote/PostBookmark/PostShare/PostView/PostComment (OneToMany/ManyToOne)
   - PostComment <-> PostComment (self-reference for nested replies)
   - PostComment <-> PostCommentVote (OneToMany/ManyToOne)
+  - User <-> Notification (OneToMany/ManyToOne)
 - ✅ **Indexes**: Optimized queries with proper indexing on all entities
 - ✅ **Connection**: Verified and tested with real operations
 - ✅ **Auto-sync**: Development environment with automatic schema updates
@@ -641,3 +660,29 @@ backend/src/
 - **Javaslatok:** Valós API integráció, admin poszt funkciók bővítése, moderációs/audit funkciók fejlesztése, tesztek bővítése, minden felhasználói szöveg magyarítása.
 
 ---
+
+## [2025-05-30] Seed Data Bővítés
+
+- Jelentősen bővítve lett a seed script (`backend/src/database/seed.ts`):
+  - Minden posthoz legalább 7 változatos komment generálódik, több szerzőtől.
+  - Minden posthoz 2-3 nested (válasz) komment is készül, így a kommentrendszer tesztelése valósághűbb.
+  - A kommentek tartalma változatos, magyar és angol példamondatokkal.
+- A változtatás célja, hogy a fejlesztés és tesztelés során minden funkció (kommentelés, válasz, szavazás) bőséges tesztadattal rendelkezzen.
+- A seed script futtatása továbbra is: `npx ts-node backend/src/database/seed.ts`
+
+**Készítette:** Copilot Chat, 2025-05-30
+
+## [2025-05-30] Seed Script Törlés Logika Javítás
+
+- A seed scriptben a teljes törléshez mostantól mindenhol `.clear()` metódust használunk a `.delete({})` helyett, hogy kompatibilis legyen a TypeORM újabb verzióival és ne dobjon hibát.
+- A seed script elején a jelszó kiíratása is aktív, így könnyen ellenőrizhető, hogy a környezeti változók helyesen töltődnek-e be.
+- Ezzel a seed script minden környezetben hibamentesen futtatható.
+
+**Utoljára frissítve:** 2025-05-30
+
+## 2025-05-30
+
+- Implemented POST /posts/:id/view endpoint for post view tracking (NestJS)
+- Service method creates PostView entity and increments views_count
+- Error handling for missing post (404)
+- Swagger docs updated

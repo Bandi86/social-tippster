@@ -1,6 +1,6 @@
 'use client';
 
-import CreatePostForm from '@/components/user/CreatePostForm';
+import CreatePostForm from '@/components/user/posts/CreatePostForm';
 import PostList from '@/components/user/PostList';
 import { useAuth } from '@/hooks/useAuth';
 import { useState } from 'react';

@@ -51,6 +51,7 @@ Egy modern közösségi platform sportfogadási tippek megosztására, követés
 - 🔧 **Complete Profile Management** _(2025-05-29)_ - Full profile editing system with avatar display, account settings, password change, and email update functionality. Users can view their complete profile with registration date, online status, and last login information. Profile navigation includes dedicated pages for settings, security, and account management.
 - 💬 **Advanced Comment System** _(2025-05-29)_ - Complete Zustand-based comment system with nested replies, voting, editing, and deletion. Fully migrated from API calls to centralized state management with proper error handling and optimistic updates.
 - 🛡️ **Admin User Management** _(2025-05-30)_ - Teljes Zustand store migráció, magyar szövegek, valós adatok, minden admin művelet (kitiltás, verifikáció, szerepkör váltás) egységesen, magyar kommentekkel és hibakezeléssel. Egyes admin poszt/moderációs funkciók fejlesztés alatt állnak, ezek a dashboardon is jelezve vannak.
+- ⚡ **Component Performance Optimization** _(2025-05-30)_ - Critical bug fixes for PostList and CommentList components including infinite loop elimination, duplicate function resolution, and interface corrections. Implemented shared component architecture with debounced search (400ms), React.memo optimizations, and infinite scroll. Performance improvements estimated at 40-60% reduction in unnecessary re-renders. Complete Hungarian language documentation and consistent error handling throughout.
 
 ### DevOps
 
@@ -435,10 +436,10 @@ Ez a projekt [MIT License](LICENSE) alatt áll.
 npx ts-node backend/src/database/seed.ts
 ```
 
-- The script creates 3 users, 3 posts, and related bookmarks, votes, shares, views, comments, comment votes, user logins, and system metrics.
-- Useful for local development, testing, and demo environments.
+- The script now creates 5 users, 5 posts, és minden posthoz legalább 7 változatos kommentet, valamint 2-3 nested (válasz) kommentet is. Minden főbb táblához (users, posts, bookmarks, votes, shares, views, comments, comment votes, user logins, system metrics) bőséges tesztadat kerül. A kommentek tartalma magyar és angol példamondatokkal változatosabb lett.
+- Useful for local development, testing, and demo environments. A bővített seed adatokkal a kommentrendszer, szavazás, és interakciók valósághűen tesztelhetők.
 
-**Last updated:** 2025-05-29
+**Last updated:** 2025-05-30
 
 ## 2025-05-30: Profile Error Handling Improvement
 
@@ -447,3 +448,20 @@ npx ts-node backend/src/database/seed.ts
 - **Frontend**: Now displays a user-friendly error card if the backend returns an error (e.g., user not found).
 
 ---
+
+### 2025-05-30: Seed Script Törlés Logika Javítás
+
+- A seed script mostantól minden törléshez `.clear()` metódust használ, így kompatibilis a TypeORM újabb verzióival és nem dob hibát.
+- A jelszó kiíratása is aktív a script elején, így könnyen ellenőrizhető a környezeti változók helyessége.
+
+---
+
+## Adatbázis seedelése
+
+A seed script mostantól natív SQL `TRUNCATE ... CASCADE` parancsot használ, így minden adatot biztonságosan töröl, és újra feltölt.
+Futtatás:
+
+```bash
+cd backend
+npx ts-node src/database/seed.ts
+```

@@ -8,7 +8,7 @@ export const dataSourceOptions: DataSourceOptions = {
   host: process.env.DATABASE_HOST || 'localhost',
   port: parseInt(process.env.DATABASE_PORT ?? '5433', 10),
   username: process.env.DATABASE_USERNAME || 'postgres',
-  password: process.env.DATABASE_PASSWORD || '',
+  password: process.env.DATABASE_PASSWORD,
   database: process.env.DATABASE_NAME || 'tippmix',
   entities: [__dirname + '/../**/*.entity{.ts,.js}'],
   migrations: [__dirname + '/migrations/**/*{.ts,.js}'],
@@ -17,3 +17,11 @@ export const dataSourceOptions: DataSourceOptions = {
 
 const dataSource = new DataSource(dataSourceOptions);
 export default dataSource;
+
+/* console.log(`🔌 Database connection options:
+  Host: ${dataSourceOptions.host}
+  Port: ${dataSourceOptions.port}
+  Username: ${dataSourceOptions.username}
+  Database: ${dataSourceOptions.database}
+  Synchronize: ${dataSourceOptions.synchronize}
+`); */

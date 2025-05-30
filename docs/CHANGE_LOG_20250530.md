@@ -1,5 +1,17 @@
 # Change Log - 2025-05-30
 
+## Notification rendszer backend (2025-05-30)
+
+- Notification entity, DTO-k (create, update) létrehozva
+- Notification service, controller, module implementálva (CRUD, markAsRead, userId szerinti lekérdezés)
+- API dokumentáció (`docs/API.md`) frissítve
+- Jogosultsági elv: csak saját értesítések, admin láthat másét
+- Felkészítés frontend integrációra
+- NotificationType enum bővítve: post_liked, post_shared, new_follower
+- Új endpoint: PATCH /notifications/mark-all-read?user_id=... (összes értesítés olvasottra)
+
+---
+
 ## Task: Complete Zustand Store Migration for Admin Users Page
 
 ### Type: Bug Fix / Migration Completion
@@ -223,3 +235,20 @@ _Last updated: 2025-05-30_
 ---
 
 _Dátum: 2025-05-30_
+
+# 2025-05-30 Seed script törlés logika javítása
+
+- Hibát javítottunk, amely akkor jelentkezett, ha a seed script TypeORM `.clear()` metódust használt idegen kulcsos táblákra.
+- Mostantól natív SQL `TRUNCATE ... CASCADE` parancsot használunk a teljes adatbázis törlésére a seed script elején.
+
+---
+
+## [backend] Add post view tracking endpoint
+
+- Implemented POST /posts/:id/view endpoint in backend (NestJS)
+- Added PostsService.trackView method to create PostView entity and increment views_count
+- Endpoint supports both anonymous and authenticated users
+- Error handling for missing post (404)
+- Updated Swagger API docs
+
+**Timestamp:** 2025-05-30

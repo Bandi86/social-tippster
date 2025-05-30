@@ -961,3 +961,33 @@ A new seed script (`backend/src/database/seed.ts`) is available to quickly popul
 - Run with: `npx ts-node backend/src/database/seed.ts`
 - Populates 2-3 records per table for development/demo
 - Uses `.env` for DB connection
+
+## [2025-05-30] Seed Data Bővítés
+
+A seed script (`backend/src/database/seed.ts`) jelentősen bővült:
+
+- Minden posthoz legalább 7 változatos komment generálódik, több szerzőtől.
+- Minden posthoz 2-3 nested (válasz) komment is készül, így a kommentrendszer tesztelése valósághűbb.
+- A kommentek tartalma magyar és angol példamondatokkal változatosabb lett.
+- A változtatás célja, hogy a fejlesztés és tesztelés során minden funkció (kommentelés, válasz, szavazás) bőséges tesztadattal rendelkezzen.
+
+A seed script futtatása:
+
+```
+npx ts-node backend/src/database/seed.ts
+```
+
+**Készítette:** Copilot Chat, 2025-05-30
+
+## [2025-05-30] Seed Script Törlés Logika Javítás
+
+- A seed scriptben a teljes törléshez mostantól mindenhol `.clear()` metódust használunk a `.delete({})` helyett, hogy kompatibilis legyen a TypeORM újabb verzióival és ne dobjon hibát.
+- A seed script elején a jelszó kiíratása is aktív, így könnyen ellenőrizhető, hogy a környezeti változók helyesen töltődnek-e be.
+- Ezzel a seed script minden környezetben hibamentesen futtatható.
+
+**Utoljára frissítve:** 2025-05-30
+
+## [2025-05-30] Seed script törlés logika javítása
+
+- A seed script mostantól natív SQL `TRUNCATE ... CASCADE` parancsot használ, hogy minden adatot biztonságosan töröljön, figyelembe véve az idegen kulcsokat.
+- Előtte a TypeORM `.clear()` metódusa hibát okozott, ha volt idegen kulcsos kapcsolat.

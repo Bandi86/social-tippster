@@ -1,3 +1,14 @@
+# Notification rendszer backend (2025-05-30)
+
+- Notification entity, DTO-k (create, update) létrehozva
+- Notification service, controller, module implementálva (CRUD, markAsRead, userId szerinti lekérdezés)
+- API dokumentáció (`docs/API.md`) frissítve
+- Jogosultsági elv: csak saját értesítések, admin láthat másét
+- Felkészítés frontend integrációra
+- 2025-05-30: WebSocket notification payload szerkezet egységesítve (type, notification, meta, timestamp). Típusdefiníció frontend/types és backend gateway-ben. Dokumentáció frissítve (API.md, implement-notifications-to-frontend.md).
+
+---
+
 # 🎉 Implementation Summary - Complete Backend System
 
 **Dátum:** 2025. május 25.
@@ -282,7 +293,7 @@ src/modules/posts/           # ✅ UPDATED: Complete Posts System with Authentic
     ├── get-post-by-id.dto.ts         # ✅ Single post queries
     ├── post-response.dto.ts          # ✅ Response formatting
     ├── post-interactions.dto.ts      # ✅ User interactions
-    ├── post-stats.dto.ts             # ✅ Analytics DTOs
+    ├── post-stats.dto             # ✅ Analytics DTOs
     ├── post-comments.dto.ts          # ✅ Comment system
     └── index.dto.ts          # ✅ DTO exports
 

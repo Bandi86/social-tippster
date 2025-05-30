@@ -542,3 +542,17 @@ export interface FetchUsersParams {
   role?: string;
   status?: string;
 }
+
+// =============================================================================
+// NOTIFICATION TYPES
+// =============================================================================
+
+/**
+ * Standardized payload for notification WebSocket events.
+ */
+export interface WebSocketNotificationPayload {
+  type: string;
+  notification?: Notification | null;
+  meta?: Record<string, any> | null;
+  timestamp: string;
+}

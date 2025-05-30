@@ -39,7 +39,7 @@ After completing any task, **always update**:
 
 ### Core Documentation
 
-1. Main `README.md` in root directory
+<!-- 1. Main `README.md` in root directory -->
 2. Relevant files in `/docs` directory related to changes
 3. create change logs  with type of changed task and time like this: `CHANGE_LOG_202505028.md`
 4. When u update doc files, always read them first and fill them out logically, don't overwrite the whole thing with new data, but structure them appropriately.
@@ -52,6 +52,18 @@ After completing any task, **always update**:
 - **Authentication changes**: Update `AUTHENTICATION.md`
 - **UI components**: Update `SHADCN_SETUP.md`
 - **Admin features**: Update `ADMIN_PANEL_IMPLEMENTATION.md`
+- **Zustand store changes**: Update `ZUSTAND_STORE.md`
+- **Testing changes**: Update `TESTING.md`
+- **Seed data changes**: Update `SEED_DATA.md`
+- **Debugging changes**: Update `DEBUGGING.md`
+- **API changes**: Update `API.md`
+- **Performance changes**: Update `PERFORMANCE.md`
+- **Deployment changes**: Update `DEPLOYMENT.md`
+- **Security changes**: Update `SECURITY.md`
+- **Accessibility changes**: Update `ACCESSIBILITY.md`
+- **Internationalization changes**: Update `INTERNATIONALIZATION.md`
+- **Code quality changes**: Update `CODE_QUALITY.md`
+
 
 ### Documentation Standards
 

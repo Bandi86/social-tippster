@@ -29,7 +29,7 @@ interface LoginFormProps {
   redirectTo?: string;
 }
 
-export function LoginForm({ onSuccess, redirectTo = '/dashboard' }: LoginFormProps) {
+export function LoginForm({ onSuccess, redirectTo = '/' }: LoginFormProps) {
   const { login, error, isLoading, clearError } = useAuth();
   const router = useRouter();
   const [showPassword, setShowPassword] = React.useState(false);

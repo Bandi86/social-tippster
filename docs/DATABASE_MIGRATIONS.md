@@ -4,6 +4,17 @@ This document tracks database migrations and schema changes for the Social Tipps
 
 ## Latest Migrations
 
+### 1733640000000-CreateNotificationsTable
+
+**Date: May 30, 2025**
+
+Created notifications table for user notifications management:
+
+- `notifications`: Stores notifications for users
+  - Enum fields: `type`, `priority`
+  - Relationships: `user_id` (FK), related `post`, `comment`, `user` (nullable)
+  - Indexes: `user_id+read_status`, `type`
+
 ### 1733580000000-CreateAnalyticsEntities
 
 **Date: May 28, 2025**
