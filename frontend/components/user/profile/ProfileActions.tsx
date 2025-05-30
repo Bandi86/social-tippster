@@ -5,10 +5,12 @@
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { followUser, getDisplayName, unfollowUser, User } from '@/lib/api/users';
+import { useUsers } from '@/hooks/useUsers';
+import { User } from '@/types/index';
 import { Edit, Lock, Mail, MessageCircle, Settings, UserMinus, UserPlus } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
+
 
 interface ProfileActionsProps {
   user: User;
@@ -31,7 +33,7 @@ export default function ProfileActions({
 }: ProfileActionsProps) {
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
+  const { followUser, unfollowUser, isSubmitting, error: followError } = useUsers();
   const [followingState, setFollowingState] = useState(isFollowing);
 
   // Saját profil ellenőrzése - Check if own profile
@@ -48,8 +50,6 @@ export default function ProfileActions({
       });
       return;
     }
-
-    setIsLoading(true);
     try {
       let newFollowState: boolean;
       if (followingState) {
@@ -58,7 +58,7 @@ export default function ProfileActions({
         newFollowState = false;
         toast({
           title: 'Követés visszavonva',
-          description: `Már nem követed: ${getDisplayName(user)}.`,
+          description: `Már nem követed: ${user.username}.`,
         });
       } else {
         await followUser(user.id);
@@ -66,7 +66,7 @@ export default function ProfileActions({
         newFollowState = true;
         toast({
           title: 'Követve',
-          description: `Mostantól követed: ${getDisplayName(user)}.`,
+          description: `Mostantól követed: ${user.username}.`,
         });
       }
       onFollowChange?.(newFollowState);
@@ -74,11 +74,10 @@ export default function ProfileActions({
       toast({
         title: 'Hiba',
         description:
-          error instanceof Error ? error.message : 'A követési állapot frissítése sikertelen.',
+          followError ||
+          (error instanceof Error ? error.message : 'A követési állapot frissítése sikertelen.'),
         variant: 'destructive',
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -141,8 +140,8 @@ export default function ProfileActions({
           {!isOwnProfile && (
             <Button
               onClick={handleFollowToggle}
-              disabled={isLoading}
               size='sm'
+              disabled={isSubmitting}
               variant={followingState ? 'outline' : 'default'}
               className={
                 followingState

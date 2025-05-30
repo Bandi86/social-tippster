@@ -1,15 +1,22 @@
-// Enhanced comments store with admin functionality
-import axios from '@/lib/api/axios';
+// ===============================
+// Komment és admin komment store (Zustand)
+// Ez a file tartalmazza az összes komment és adminisztrátori komment műveletet egy helyen.
+// Átlátható szekciók, magyar kommentek, könnyen bővíthető szerkezet.
+// ===============================
+
+// ---- Importok ----
+import axios from '@/lib/axios';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
-// Helper to get auth token
+// ---- Helper függvények ----
+// Auth token lekérése localStorage-ból
 function getAuthToken(): string | null {
   if (typeof window === 'undefined') return null;
   return localStorage.getItem('authToken');
 }
 
-// Helper to make authenticated axios requests
+// Authentikált axios kérés helper
 async function axiosWithAuth(config: any) {
   const token = getAuthToken();
   const headers = {
@@ -17,7 +24,6 @@ async function axiosWithAuth(config: any) {
     ...(config.headers || {}),
   };
   if (token) headers.Authorization = `Bearer ${token}`;
-
   try {
     const response = await axios({ ...config, headers });
     return response.data;
@@ -31,7 +37,8 @@ async function axiosWithAuth(config: any) {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
-// Regular Comment interface for user-facing functionality
+// ---- Interface-k ----
+// Komment interfész (felhasználói nézethez)
 export interface Comment {
   id: string;
   content: string;
@@ -60,7 +67,7 @@ export interface Comment {
   replies?: Comment[];
 }
 
-// Admin-specific Comment interface
+// Admin-specifikus komment interfész
 export interface AdminComment {
   id: string;
   content: string;
@@ -91,7 +98,7 @@ export interface AdminComment {
   deleted_at?: string;
 }
 
-// Statistics interface for admin dashboard
+// Statisztikai interfész az admin dashboardhoz
 export interface CommentsStats {
   total: number;
   active: number;
@@ -103,7 +110,7 @@ export interface CommentsStats {
   recentComments: number;
 }
 
-// Admin comment filtering parameters
+// Admin komment szűrési paraméterek
 export interface AdminCommentsParams {
   search?: string;
   status?: string;
@@ -118,7 +125,7 @@ export interface AdminCommentsParams {
   limit?: number;
 }
 
-// Admin comments response with pagination
+// Admin kommentek válasza oldaltöréssel
 export interface AdminCommentsResponse {
   comments: AdminComment[];
   meta: {
@@ -129,7 +136,7 @@ export interface AdminCommentsResponse {
   };
 }
 
-// Regular comments response for user-facing functionality
+// Felhasználói kommentek válasza oldaltöréssel
 export interface CommentsResponse {
   comments: Comment[];
   total: number;
@@ -158,7 +165,7 @@ export interface FetchCommentsParams {
   parentCommentId?: string;
 }
 
-// Extended comment for replies with nested structure
+// Kiterjesztett komment válaszokkal, beágyazott struktúrával
 export interface CommentWithReplies extends Comment {
   replies?: Comment[];
   showReplies?: boolean;
@@ -166,17 +173,18 @@ export interface CommentWithReplies extends Comment {
   replyCount: number;
 }
 
-// Enhanced state interface with admin functionality
+// ---- Store state ----
+// Kiterjesztett állapot interfész admin funkciókkal
 interface CommentsState {
-  // Regular user-facing data
+  // Rendszerint felhasználói adatok
   commentsByPost: Record<string, CommentWithReplies[]>;
   currentComment: Comment | null;
 
-  // Admin-specific data
+  // Admin-specifikus adatok
   adminComments: AdminComment[];
   commentsStats: CommentsStats | null;
 
-  // Admin pagination and filtering
+  // Admin lapozás és szűrés
   adminPagination: {
     page: number;
     limit: number;
@@ -185,56 +193,60 @@ interface CommentsState {
   };
   adminFilters: AdminCommentsParams;
 
-  // Admin UI state
+  // Admin UI állapot
   selectedCommentIds: string[];
 
-  // UI State
+  // UI állapot
   isLoading: boolean;
   isSubmitting: boolean;
   error: string | null;
 
-  // Admin loading states
+  // Admin betöltési állapotok
   isLoadingAdminComments: boolean;
   isLoadingStats: boolean;
 
-  // Reply System
+  // Válasz rendszer
   replyingTo: string | null;
   editingComment: Comment | null;
 }
 
-// Enhanced actions interface with admin functionality
+// ---- Store actions ----
+// Kiterjesztett akció interfész admin funkciókkal
 interface CommentsActions {
-  // Regular CRUD Operations
+  // Rendszerint CRUD műveletek
   fetchComments: (postId: string, params?: FetchCommentsParams) => Promise<void>;
   createComment: (data: CreateCommentData) => Promise<Comment>;
   updateComment: (id: string, data: UpdateCommentData) => Promise<Comment>;
   deleteComment: (id: string) => Promise<void>;
 
-  // Admin CRUD Operations
+  // Admin CRUD műveletek
   fetchAdminComments: (params?: AdminCommentsParams) => Promise<void>;
   fetchCommentsStats: () => Promise<void>;
   fetchAdminCommentById: (id: string) => Promise<AdminComment>;
   updateCommentStatus: (id: string, status: 'active' | 'hidden' | 'pending') => Promise<void>;
   toggleCommentPin: (id: string) => Promise<void>;
   bulkDeleteComments: (ids: string[]) => Promise<void>;
-  bulkUpdateCommentsStatus: (ids: string[], status: 'active' | 'hidden' | 'pending') => Promise<void>;
+  bulkUpdateCommentsStatus: (
+    ids: string[],
+    status: 'active' | 'hidden' | 'pending',
+  ) => Promise<void>;
 
-  // Admin UI Management
+  // Admin UI kezelés
   setAdminFilters: (filters: Partial<AdminCommentsParams>) => void;
   setAdminPage: (page: number) => void;
   toggleCommentSelection: (id: string) => void;
   selectAllComments: () => void;
   clearCommentSelection: () => void;
 
-  // Regular Interactions
+  // Rendszerint interakciók
   voteOnComment: (id: string, value: 1 | -1) => Promise<void>;
   reportComment: (id: string, reason: string) => Promise<void>;
 
-  // UI Management
+  // UI kezelés
   setReplyingTo: (commentId: string | null) => void;
   setEditingComment: (comment: Comment | null) => void;
 
-  // Utility
+  // Segédprogram
   clearCommentsForPost: (postId: string) => void;
   clearError: () => void;
 }
@@ -242,7 +254,7 @@ interface CommentsActions {
 export const useCommentsStore = create<CommentsState & CommentsActions>()(
   devtools(
     (set, get) => ({
-      // Initial state
+      // Kezdeti állapot
       commentsByPost: {},
       currentComment: null,
       adminComments: [],
@@ -263,13 +275,14 @@ export const useCommentsStore = create<CommentsState & CommentsActions>()(
       replyingTo: null,
       editingComment: null,
 
-      // Regular user-facing methods
+      // Rendszerint felhasználói metódusok
       async fetchComments(postId, params) {
         set({ isLoading: true, error: null });
         try {
           const searchParams = new URLSearchParams();
           if (postId) searchParams.append('postId', postId);
-          if (params?.parentCommentId) searchParams.append('parentCommentId', params.parentCommentId);
+          if (params?.parentCommentId)
+            searchParams.append('parentCommentId', params.parentCommentId);
           if (params?.page) searchParams.append('page', params.page.toString());
           if (params?.limit) searchParams.append('limit', params.limit.toString());
           if (params?.sortBy) searchParams.append('sortBy', params.sortBy);
@@ -363,7 +376,7 @@ export const useCommentsStore = create<CommentsState & CommentsActions>()(
         }
       },
 
-      // Admin-specific methods
+      // Admin-specifikus metódusok
       async fetchAdminComments(params = {}) {
         set({ isLoadingAdminComments: true, error: null });
         try {
@@ -372,10 +385,10 @@ export const useCommentsStore = create<CommentsState & CommentsActions>()(
             ...adminFilters,
             ...params,
             page: params.page || adminPagination.page,
-            limit: params.limit || adminPagination.limit
+            limit: params.limit || adminPagination.limit,
           };
 
-          // Mock API call - in production this would be a real API call
+          // Mock API hívás - élesben ez egy valós API hívás lenne
           const searchParams = new URLSearchParams();
           Object.entries(finalParams).forEach(([key, value]) => {
             if (value !== undefined && value !== null && value !== '') {
@@ -383,10 +396,10 @@ export const useCommentsStore = create<CommentsState & CommentsActions>()(
             }
           });
 
-          // Simulate admin API call
+          // Admin API hívás szimulálása
           await new Promise(resolve => setTimeout(resolve, 500));
 
-          // Mock response - in production, replace with real API call
+          // Mock válasz - élesben, cseréld le valós API hívásra
           const mockAdminComments: AdminComment[] = [
             {
               id: '1',
@@ -414,7 +427,7 @@ export const useCommentsStore = create<CommentsState & CommentsActions>()(
               created_at: '2024-01-15T10:30:00Z',
               updated_at: '2024-01-15T10:30:00Z',
             },
-            // Add more mock data as needed
+            // További mock adatok hozzáadása szükség szerint
           ];
 
           const response: AdminCommentsResponse = {
@@ -424,7 +437,7 @@ export const useCommentsStore = create<CommentsState & CommentsActions>()(
               page: finalParams.page || 1,
               limit: finalParams.limit || 20,
               totalPages: Math.ceil(mockAdminComments.length / (finalParams.limit || 20)),
-            }
+            },
           };
 
           set({
@@ -441,7 +454,7 @@ export const useCommentsStore = create<CommentsState & CommentsActions>()(
       async fetchCommentsStats() {
         set({ isLoadingStats: true, error: null });
         try {
-          // Mock API call - replace with real implementation
+          // Mock API hívás - cseréld le valós implementációra
           await new Promise(resolve => setTimeout(resolve, 300));
 
           const mockStats: CommentsStats = {
@@ -463,7 +476,7 @@ export const useCommentsStore = create<CommentsState & CommentsActions>()(
 
       async fetchAdminCommentById(id) {
         try {
-          // Mock API call - replace with real implementation
+          // Mock API hívás - cseréld le valós implementációra
           await new Promise(resolve => setTimeout(resolve, 200));
 
           const { adminComments } = get();
@@ -481,14 +494,14 @@ export const useCommentsStore = create<CommentsState & CommentsActions>()(
       async updateCommentStatus(id, status) {
         set({ isSubmitting: true, error: null });
         try {
-          // Mock API call - replace with real implementation
+          // Mock API hívás - cseréld le valós implementációra
           await new Promise(resolve => setTimeout(resolve, 300));
 
           set(state => ({
             adminComments: state.adminComments.map(comment =>
               comment.id === id
                 ? { ...comment, status, updated_at: new Date().toISOString() }
-                : comment
+                : comment,
             ),
             isSubmitting: false,
           }));
@@ -501,14 +514,18 @@ export const useCommentsStore = create<CommentsState & CommentsActions>()(
       async toggleCommentPin(id) {
         set({ isSubmitting: true, error: null });
         try {
-          // Mock API call - replace with real implementation
+          // Mock API hívás - cseréld le valós implementációra
           await new Promise(resolve => setTimeout(resolve, 300));
 
           set(state => ({
             adminComments: state.adminComments.map(comment =>
               comment.id === id
-                ? { ...comment, is_pinned: !comment.is_pinned, updated_at: new Date().toISOString() }
-                : comment
+                ? {
+                    ...comment,
+                    is_pinned: !comment.is_pinned,
+                    updated_at: new Date().toISOString(),
+                  }
+                : comment,
             ),
             isSubmitting: false,
           }));
@@ -521,7 +538,7 @@ export const useCommentsStore = create<CommentsState & CommentsActions>()(
       async bulkDeleteComments(ids) {
         set({ isSubmitting: true, error: null });
         try {
-          // Mock API call - replace with real implementation
+          // Mock API hívás - cseréld le valós implementációra
           await new Promise(resolve => setTimeout(resolve, 500));
 
           set(state => ({
@@ -538,14 +555,14 @@ export const useCommentsStore = create<CommentsState & CommentsActions>()(
       async bulkUpdateCommentsStatus(ids, status) {
         set({ isSubmitting: true, error: null });
         try {
-          // Mock API call - replace with real implementation
+          // Mock API hívás - cseréld le valós implementációra
           await new Promise(resolve => setTimeout(resolve, 500));
 
           set(state => ({
             adminComments: state.adminComments.map(comment =>
               ids.includes(comment.id)
                 ? { ...comment, status, updated_at: new Date().toISOString() }
-                : comment
+                : comment,
             ),
             selectedCommentIds: [],
             isSubmitting: false,
@@ -556,11 +573,11 @@ export const useCommentsStore = create<CommentsState & CommentsActions>()(
         }
       },
 
-      // Admin UI Management
+      // Admin UI kezelés
       setAdminFilters(filters) {
         set(state => ({
           adminFilters: { ...state.adminFilters, ...filters },
-          adminPagination: { ...state.adminPagination, page: 1 }, // Reset to first page
+          adminPagination: { ...state.adminPagination, page: 1 }, // Visszaállítás az első oldalra
         }));
       },
 
@@ -588,7 +605,7 @@ export const useCommentsStore = create<CommentsState & CommentsActions>()(
         set({ selectedCommentIds: [] });
       },
 
-      // Regular user interactions
+      // Rendszerint felhasználói interakciók
       async voteOnComment(id, value) {
         try {
           const url = `${API_BASE_URL}/comments/${id}/vote`;
@@ -607,7 +624,7 @@ export const useCommentsStore = create<CommentsState & CommentsActions>()(
         }
       },
 
-      // UI Management
+      // UI kezelés
       setReplyingTo(commentId) {
         set({ replyingTo: commentId });
       },
@@ -628,6 +645,6 @@ export const useCommentsStore = create<CommentsState & CommentsActions>()(
         set({ error: null });
       },
     }),
-    { name: 'comments-store' }
-  )
+    { name: 'comments-store' },
+  ),
 );

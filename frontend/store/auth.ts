@@ -1,11 +1,21 @@
+// ===============================
+// Authentikáció store (Zustand)
+// Ez a file tartalmazza az összes authentikációval kapcsolatos műveletet.
+// Átlátható szekciók, magyar kommentek, könnyen bővíthető szerkezet.
+// ===============================
+
+// ---- Importok ----
 import { AuthActions, AuthState, AuthTokens, User } from '@/types';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+// ---- API BASE URL ----
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
+// ---- Interface-k ----
 interface AuthStore extends AuthState, AuthActions {}
 
+// ---- Store state ----
 export const useAuthStore = create<AuthStore>()(
   persist(
     (set, get) => ({
@@ -106,21 +116,46 @@ export const useAuthStore = create<AuthStore>()(
           // Check if user data is nested or direct
           const backendUser = data.user || data;
 
-          // Map backend user format to frontend format
-          const user = {
-            id: backendUser.user_id,
-            email: backendUser.email,
-            username: backendUser.username,
-            first_name: backendUser.first_name,
-            last_name: backendUser.last_name,
-            role: backendUser.role,
-            is_active: backendUser.is_active,
-            is_banned: backendUser.is_banned || false,
-            is_verified: backendUser.is_verified || false,
-            created_at: backendUser.created_at,
-            updated_at: backendUser.updated_at,
-            profile_image: backendUser.profile_image,
-            last_login: backendUser.last_login,
+          // Map backend user format to full User type (fill missing fields with defaults)
+          const user: User = {
+            user_id: backendUser.user_id ?? backendUser.id ?? '',
+            email: backendUser.email ?? '',
+            username: backendUser.username ?? '',
+            first_name: backendUser.first_name ?? '',
+            last_name: backendUser.last_name ?? '',
+            role: backendUser.role ?? 'user',
+            is_active: backendUser.is_active ?? false,
+            is_banned: backendUser.is_banned ?? false,
+            is_verified: backendUser.is_verified ?? false,
+            is_premium: backendUser.is_premium ?? false,
+            created_at: backendUser.created_at ?? '',
+            updated_at: backendUser.updated_at ?? '',
+            profile_image: backendUser.profile_image ?? null,
+            last_login: backendUser.last_login ?? null,
+            password_hash: backendUser.password_hash ?? '',
+            login_count: backendUser.login_count ?? 0,
+            reputation_score: backendUser.reputation_score ?? 0,
+            bio: backendUser.bio ?? '',
+            location: backendUser.location ?? '',
+            website: backendUser.website ?? '',
+            banned_until: backendUser.banned_until ?? null,
+            ban_reason: backendUser.ban_reason ?? null,
+            created_by: backendUser.created_by ?? null,
+            updated_by: backendUser.updated_by ?? null,
+            id: '',
+            referral_count: 0,
+            follower_count: 0,
+            following_count: 0,
+            post_count: 0,
+            badge_count: 0,
+            total_tips: 0,
+            successful_tips: 0,
+            tip_success_rate: 0,
+            total_profit: 0,
+            current_streak: 0,
+            best_streak: 0,
+            two_factor_enabled: false,
+            language_preference: ''
           };
 
           set({

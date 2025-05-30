@@ -34,6 +34,12 @@ export const useUsers = () => {
     updateProfile: store.updateProfile,
     changePassword: store.changePassword,
     fetchUsers: store.fetchUsers,
+    followUser: store.followUser,
+    unfollowUser: store.unfollowUser,
+
+     // Utility functions
+    getDisplayName: store.getDisplayName,
+    getUserAvatarUrl: store.getUserAvatarUrl,
 
     // Basic admin actions (existing)
     banUser: store.banUser,

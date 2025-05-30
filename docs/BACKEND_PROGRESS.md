@@ -624,3 +624,20 @@ backend/src/
 - Verified with full build and lint: no errors remain.
 
 ---
+
+## 2025-05-30: User Profile 404 Handling
+
+- Confirmed backend `/users/profile/:username` endpoint returns 404 and Hungarian error message if user is not found.
+- This enables the frontend to show a user-friendly error card for missing or deleted users.
+
+## 2025-05-30: Admin Store QA, magyarítás, valós adat integráció
+
+- Átnéztük az összes adminhoz kapcsolódó Zustand store-t (users, comments, posts), hookot és metódust.
+- Ellenőriztük, hogy minden admin funkció magyar kommentekkel, magyar felhasználói szövegekkel, valós adatokkal és egységesen, hibamentesen működik-e.
+- Feltártuk a hiányosságokat, mock adatokat, jövőbeni fejlesztési irányokat.
+- **Hiányosságok:** fetchAdminUsers, fetchAdminComments, fetchAdminUserStats, fetchCommentsStats – ezekben jelenleg szimulált adat van, cserélni kell valós API-ra.
+- **Admin poszt funkciók:** CRUD, státuszváltás, tömeges műveletek, statisztikák – részben hiányoznak vagy nincsenek végig implementálva.
+- **Moderációs eszközök:** Moderációs queue, audit log, export funkciók – UI/logic placeholder van, de a teljes backend/összekötés még hiányzik.
+- **Javaslatok:** Valós API integráció, admin poszt funkciók bővítése, moderációs/audit funkciók fejlesztése, tesztek bővítése, minden felhasználói szöveg magyarítása.
+
+---

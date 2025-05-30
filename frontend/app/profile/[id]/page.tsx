@@ -51,13 +51,17 @@ export default function ProfilePage() {
     try {
       const profile = await fetchUserProfile(username);
       setUserProfile(profile);
+      setError(null); // reset error if successful
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to load user profile';
+      setError(errorMessage); // set error state for UI
       toast({
-        title: 'Error',
+        title: 'Hiba',
         description: errorMessage,
         variant: 'destructive',
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -153,7 +157,6 @@ export default function ProfilePage() {
                 >
                   Vissza a főoldalra
                 </Button>{' '}
-                {/* Corrected router.push to go to home ('/') instead of '/dashboard' */}
               </CardContent>
             </Card>
           </div>

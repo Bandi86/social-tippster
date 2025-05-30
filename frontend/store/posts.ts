@@ -1,14 +1,22 @@
-import axios from '@/lib/api/axios';
+// ===============================
+// Poszt store (Zustand)
+// Ez a file tartalmazza az összes poszt és admin poszt műveletet egy helyen.
+// Átlátható szekciók, magyar kommentek, könnyen bővíthető szerkezet.
+// ===============================
+
+// ---- Importok ----
+import axios from '@/lib/axios';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
-// Helper to get auth token
+// ---- Helper függvények ----
+// Auth token lekérése localStorage-ból
 function getAuthToken(): string | null {
   if (typeof window === 'undefined') return null;
   return localStorage.getItem('authToken');
 }
 
-// Helper to make authenticated axios requests
+// Authentikált axios kérés helper
 async function axiosWithAuth(config: any) {
   const token = getAuthToken();
   const headers = {
@@ -16,7 +24,6 @@ async function axiosWithAuth(config: any) {
     ...(config.headers || {}),
   };
   if (token) headers.Authorization = `Bearer ${token}`;
-
   try {
     const response = await axios({ ...config, headers });
     return response.data;
@@ -144,6 +151,7 @@ export interface FetchPostsParams {
   featured?: boolean;
 }
 
+// ---- Store state ----
 interface PostsState {
   // Data
   posts: Post[];
@@ -194,6 +202,7 @@ interface PostsState {
   postsCache: Map<string, { posts: Post[]; meta: any; timestamp: number }>;
 }
 
+// ---- Store actions ----
 interface PostsActions {
   // CRUD Operations
   fetchPosts: (params?: FetchPostsParams, append?: boolean) => Promise<void>;
@@ -259,6 +268,7 @@ const generateCacheKey = (params: FetchPostsParams = {}) => {
   });
 };
 
+// ---- Zustand store létrehozása ----
 export const usePostsStore = create<PostsState & PostsActions>()(
   devtools(
     (set, get) => ({
@@ -817,13 +827,14 @@ export const usePostsStore = create<PostsState & PostsActions>()(
         }
       },
 
-// Local state updates
+      // Local state updates
       updatePostLocally: (id: string, updates: Partial<Post>) => {
         set(state => {
           // Destructure 'updates' (Partial<Post>).
           // We separate 'author' because Post['author'] and AdminPost['author'] have different types.
           // 'otherUpdatesCompatibleWithAdminPost' will contain all fields from 'updates' except 'author'.
-          const { author: _postAuthorSpecificUpdate, ...otherUpdatesCompatibleWithAdminPost } = updates;
+          const { author: _postAuthorSpecificUpdate, ...otherUpdatesCompatibleWithAdminPost } =
+            updates;
 
           return {
             // For posts, featuredPosts, and currentPost, 'updates' (Partial<Post>) can be applied directly.
@@ -832,7 +843,9 @@ export const usePostsStore = create<PostsState & PostsActions>()(
               fp.id === id ? { ...fp, ...updates } : fp,
             ),
             currentPost:
-              state.currentPost?.id === id ? { ...state.currentPost, ...updates } : state.currentPost,
+              state.currentPost?.id === id
+                ? { ...state.currentPost, ...updates }
+                : state.currentPost,
             // For adminPosts, apply only the updates that are compatible.
             // This excludes Post['author'] from being incorrectly applied to AdminPost['author'].
             adminPosts: state.adminPosts.map(adminP => {

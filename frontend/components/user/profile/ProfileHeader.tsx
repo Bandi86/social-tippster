@@ -4,7 +4,8 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { getDisplayName, getUserAvatarUrl, User } from '@/lib/api/users';
+import { useUsers } from '@/hooks';
+import {User} from '@/types/index';
 import { Calendar, Circle, Clock, Globe, Mail, MapPin, Star } from 'lucide-react';
 
 interface ProfileHeaderProps {
@@ -18,6 +19,10 @@ interface ProfileHeaderProps {
  * @param user - Felhasználó adatok
  */
 export default function ProfileHeader({ user }: ProfileHeaderProps) {
+
+  // Felhasználói adatok lekérése a hookból
+  const { getDisplayName, getUserAvatarUrl } = useUsers();
+
   // Csatlakozási dátum formázása magyar formátumban
   const formatJoinDate = (dateString: string) => {
     const date = new Date(dateString);

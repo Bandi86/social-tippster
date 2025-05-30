@@ -138,6 +138,43 @@ Completed the migration of all profile-related pages to use Zustand stores and h
 
 ---
 
+## Profile Page Error Handling Enhancement (2025-05-30)
+
+### Type: UI/UX Bugfix
+
+### Time: 2025-05-30
+
+#### Problem
+
+- When navigating to a non-existent or deleted user's profile, the page only showed a loading skeleton and no clear error message.
+
+#### Solution
+
+- Added robust error state handling to `frontend/app/profile/[id]/page.tsx`.
+- Now, if the backend returns a 404 or any error, the UI displays a clear error card with a user-friendly message and navigation options.
+- Backend already returns a Hungarian error message for missing users.
+
+#### Files Changed
+
+- `frontend/app/profile/[id]/page.tsx`
+
+#### QA
+
+- Verified: Navigating to `/profile/[invalid-username]` now shows a proper error message and not just a skeleton.
+
+---
+
+## Zustand store refaktor és egységesítés
+
+- **users.ts, comments.ts, posts.ts, auth.ts**: Átláthatóbb szerkezet, magyar szekció-kommentek, minden logika egy helyen
+- Backup és enhanced file-ok kiváltása, minden admin/user logika egy file-ban
+- Store/README.md frissítve
+- Szerkezeti és komment javítások
+
+_Dátum: 2025-05-30_
+
+---
+
 ### Frontend
 
 - **Bug Fix (Zustand Store)**:
@@ -148,3 +185,41 @@ Completed the migration of all profile-related pages to use Zustand stores and h
   - **Timestamp**: 2025-05-30
 
 _Last updated: 2025-05-30_
+
+---
+
+## Task: Admin felület Zustand store-ok és hookok teljes áttekintése, magyarítás, valós adat integráció, hibák és hiányosságok feltárása
+
+### Típus: Refaktor / QA / Dokumentáció
+
+### Időpont: 2025-05-30
+
+### Összefoglaló
+
+- Átnéztük az összes adminhoz kapcsolódó Zustand store-t (users, comments, posts), hookot és metódust.
+- Ellenőriztük, hogy minden admin funkció magyar kommentekkel, magyar felhasználói szövegekkel, valós adatokkal és egységesen, hibamentesen működik-e.
+- Feltártuk a hiányosságokat, mock adatokat, jövőbeni fejlesztési irányokat.
+
+### Főbb változások
+
+- **Magyar kommentek és szövegek**: Minden store-ban és admin felületen magyar kommentek és felhasználói szövegek.
+- **Valós adat integráció**: Az admin user, comment és statisztika store metódusoknál jeleztük, hogy a mock adatokat cserélni kell valós API hívásra.
+- **Error handling**: Minden admin műveletnél magyar nyelvű, informatív hibakezelés.
+- **Hiányosságok dokumentálása**: Listáztuk, hogy mely admin poszt funkciók, moderációs eszközök, audit log, export funkciók hiányoznak vagy csak részben implementáltak.
+- **Javaslatok**: Javasoltuk a valós API integrációt, admin poszt funkciók bővítését, moderációs/audit funkciók fejlesztését, tesztek bővítését.
+
+### Hiányosságok, jövőbeni teendők
+
+- **Mock adatok**: fetchAdminUsers, fetchAdminComments, fetchAdminUserStats, fetchCommentsStats – ezekben jelenleg szimulált adat van, cserélni kell valós API-ra.
+- **Admin poszt funkciók**: CRUD, státuszváltás, tömeges műveletek, statisztikák – részben hiányoznak vagy nincsenek végig implementálva.
+- **Moderációs eszközök**: Moderációs queue, audit log, export funkciók – UI/logic placeholder van, de a teljes backend/összekötés még hiányzik.
+- **Tesztelés**: Playwright tesztek bővítése minden új/zárolt admin funkcióhoz.
+
+### Dokumentáció
+
+- Frissítve: `docs/ADMIN_PANEL_IMPLEMENTATION.md`, `docs/FRONTEND_PROGRESS.MD`, `docs/BACKEND_PROGRESS.md`
+- Minden változás magyarul, tömören, de részletesen összefoglalva.
+
+---
+
+_Dátum: 2025-05-30_

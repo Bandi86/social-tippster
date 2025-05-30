@@ -1,13 +1,20 @@
-# Zustand Store Refactor
+# Zustand Store-ok szerkezete
 
-All API logic for posts, comments, and users is now encapsulated in their respective Zustand stores. The old lib/api files are deprecated and should be removed. Use the hooks in `frontend/hooks` for all state and API access.
+Ez a mappa tartalmazza a frontend összes állapotkezelő (Zustand) store-ját.
 
-- Posts: `usePostsStore` (see `store/posts.ts`)
-- Comments: `useCommentsStore` (see `store/comments.ts`)
-- Users: `useUsersStore` (see `store/users.ts`)
+## Főbb store-ok
 
-## Usage
+- `users.ts`: Felhasználói és admin funkciók egy helyen, magyar kommentekkel.
+- `comments.ts`: Komment és admin komment funkciók egy helyen, magyar kommentekkel.
+- `posts.ts`: Poszt és admin poszt funkciók, magyar kommentekkel.
+- `auth.ts`: Authentikációs logika, magyar kommentekkel.
 
-Import the hooks from `frontend/hooks` for all state and actions.
+## Szerkezeti elvek
 
-## Last updated: 2025-05-29
+- Egy file = egy modul (nincs külön enhanced/original verzió)
+- Mindenhol magyar szekció-kommentek
+- Helper függvények, interface-k, state, actions jól elkülönítve
+
+## Utolsó frissítés
+
+2025-05-30

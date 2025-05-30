@@ -191,4 +191,36 @@ GET    /admin/analytics/growth   - Growth trends
 
 ---
 
-_Last updated: May 28, 2025 - Complete backend implementation finished_
+## [2025-05-30] Admin Store QA, magyarítás, valós adat integráció
+
+### Áttekintés
+
+- Átnéztük az összes adminhoz kapcsolódó Zustand store-t (users, comments, posts), hookot és metódust.
+- Minden admin funkció magyar kommentekkel, magyar felhasználói szövegekkel, valós adatokkal és egységesen, hibamentesen működik-e.
+- Feltártuk a hiányosságokat, mock adatokat, jövőbeni fejlesztési irányokat.
+
+### Főbb változások
+
+- **Magyar kommentek és szövegek**: Minden store-ban és admin felületen magyar kommentek és felhasználói szövegek.
+- **Valós adat integráció**: Az admin user, comment és statisztika store metódusoknál jeleztük, hogy a mock adatokat cserélni kell valós API hívásra.
+- **Error handling**: Minden admin műveletnél magyar nyelvű, informatív hibakezelés.
+- **Hiányosságok dokumentálása**: Listáztuk, hogy mely admin poszt funkciók, moderációs eszközök, audit log, export funkciók hiányoznak vagy csak részben implementáltak.
+- **Javaslatok**: Javasoltuk a valós API integrációt, admin poszt funkciók bővítését, moderációs/audit funkciók fejlesztését, tesztek bővítését.
+
+### Hiányosságok, mock adatok
+
+- **fetchAdminUsers, fetchAdminComments, fetchAdminUserStats, fetchCommentsStats** – jelenleg szimulált adatot használnak, ezeket cserélni kell valós API hívásra.
+- **Admin poszt funkciók**: CRUD, státuszváltás, tömeges műveletek, statisztikák – részben hiányoznak vagy nincsenek végig implementálva.
+- **Moderációs eszközök**: Moderációs queue, audit log, export funkciók – UI/logic placeholder van, de a teljes backend/összekötés még hiányzik.
+
+### Javaslatok, következő lépések
+
+- Valós API integráció minden admin store metódusban
+- Admin poszt funkciók bővítése, egységesítés
+- Moderációs/audit funkciók fejlesztése backend és frontend oldalon
+- Tesztek bővítése minden új/zárolt admin funkcióhoz
+- Minden felhasználói szöveg magyarítása
+
+---
+
+_Last updated: 2025-05-30 - Teljes admin dashboard magyarítás, Zustand hookok, valós adatok, hiányosságok jelezve a felületen is._

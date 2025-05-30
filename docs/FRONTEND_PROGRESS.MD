@@ -315,3 +315,32 @@ _Last reviewed: 2025-05-29_
 - ✅ Documentation and changelogs updated
 
 _Last updated: 2025-05-30_
+
+## 2025-05-30
+
+- Zustand store-ok (users, comments, posts, auth) egységesítve, minden logika egy file-ban
+- Magyar szekció-kommentek, átláthatóbb szerkezet
+- Backup/enhanced file-ok kiváltva
+- Store/README.md frissítve
+
+---
+
+## 2025-05-30: Profile Page Error Handling
+
+- Improved error handling on the user profile page (`/profile/[username]`).
+- If a user does not exist or is deleted, the frontend now displays a clear error card instead of just a loading skeleton.
+- Error state is set and handled in the React component, and the backend 404 message is surfaced to the user.
+
+---
+
+## 2025-05-30: Admin Store QA, magyarítás, valós adat integráció
+
+- Átnéztük az összes adminhoz kapcsolódó Zustand store-t (users, comments, posts), hookot és metódust.
+- Ellenőriztük, hogy minden admin funkció magyar kommentekkel, magyar felhasználói szövegekkel, valós adatokkal és egységesen, hibamentesen működik-e.
+- Feltártuk a hiányosságokat, mock adatokat, jövőbeni fejlesztési irányokat.
+- **Hiányosságok:** fetchAdminUsers, fetchAdminComments, fetchAdminUserStats, fetchCommentsStats – ezekben jelenleg szimulált adat van, cserélni kell valós API-ra.
+- **Admin poszt funkciók:** CRUD, státuszváltás, tömeges műveletek, statisztikák – részben hiányoznak vagy nincsenek végig implementálva.
+- **Moderációs eszközök:** Moderációs queue, audit log, export funkciók – UI/logic placeholder van, de a teljes backend/összekötés még hiányzik.
+- **Javaslatok:** Valós API integráció, admin poszt funkciók bővítése, moderációs/audit funkciók fejlesztése, tesztek bővítése, minden felhasználói szöveg magyarítása.
+
+---
