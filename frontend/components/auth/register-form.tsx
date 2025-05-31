@@ -60,7 +60,7 @@ interface RegisterFormProps {
   redirectTo?: string;
 }
 
-export function RegisterForm({ onSuccess, redirectTo = '/dashboard' }: RegisterFormProps) {
+export function RegisterForm({ onSuccess, redirectTo = '/' }: RegisterFormProps) {
   const { register: registerUser, error, isLoading, clearError } = useAuth();
   const router = useRouter();
   const [showPassword, setShowPassword] = React.useState(false);

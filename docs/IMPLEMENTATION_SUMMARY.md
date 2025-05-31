@@ -480,6 +480,21 @@ The frontend authentication system has been completely fixed and is now fully fu
 
 **See detailed documentation:** `docs/FRONTEND_AUTHENTICATION_FIXES.md`
 
+## 2025-05-31 – Élő meccsek komponens feltételes megjelenítése (frontend)
+
+- LiveMatches komponens mostantól csak bejelentkezett felhasználók számára jelenik meg a főoldalon
+- Suspense fallback mostantól saját Loading komponenst használ
+- Új Loading komponens: `frontend/components/ui/Loading.tsx`
+
+---
+
+## 2025-05-31 – Loading komponens konszolidáció (frontend)
+
+- A duplikált ui/Loading.tsx törölve, minden loading állapothoz a shared/LoadingStates komponensek használatosak
+- Root page és Suspense fallback egységesen CenteredLoading-et használ
+
+---
+
 ## 🔄 Következő Lépések
 
 ### Database Migration Required ⚠️

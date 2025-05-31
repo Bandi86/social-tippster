@@ -13,6 +13,7 @@ import {
   Post,
   Query,
   UseGuards,
+  ValidationPipe,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -25,6 +26,9 @@ import {
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { User, UserRole } from '../users/entities/user.entity';
+import { CreatePostDto } from './dto/create-post.dto';
+import { GetPostsQueryDto } from './dto/get-posts-query.dto';
+import { UpdatePostDto } from './dto/update-post.dto';
 import { Post as PostEntity } from './entities';
 import { PostsService } from './posts.service';
 
@@ -43,10 +47,11 @@ export class PostsController {
     description: 'Post created successfully',
     type: PostEntity,
   })
+  @ApiResponse({ status: 400, description: 'Bad Request - Validation failed' })
   @ApiResponse({ status: 401, description: 'Unauthorized - JWT token required' })
-  @ApiBody({ type: Object }) // TODO: Create proper CreatePostDto
+  @ApiBody({ type: CreatePostDto })
   async createPost(
-    @Body() createPostDto: Partial<PostEntity>,
+    @Body(new ValidationPipe({ transform: true, whitelist: true })) createPostDto: CreatePostDto,
     @CurrentUser() user: User,
   ): Promise<PostEntity> {
     return await this.postsService.createPost(createPostDto, user.user_id);
@@ -59,7 +64,10 @@ export class PostsController {
     description: 'Posts retrieved successfully',
     type: [PostEntity],
   })
-  async findAllPosts(@Query() queryDto: { limit?: number }) {
+  @ApiResponse({ status: 400, description: 'Bad Request - Invalid query parameters' })
+  async findAllPosts(
+    @Query(new ValidationPipe({ transform: true, whitelist: true })) queryDto: GetPostsQueryDto,
+  ) {
     return await this.postsService.findAllPosts(queryDto);
   }
 
@@ -77,12 +85,13 @@ export class PostsController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Update post (author only)' })
   @ApiParam({ name: 'id', description: 'Post UUID' })
-  @ApiBody({ type: Object }) // TODO: Create proper UpdatePostDto
+  @ApiBody({ type: UpdatePostDto })
   @ApiResponse({
     status: 200,
     description: 'Post updated successfully',
     type: PostEntity,
   })
+  @ApiResponse({ status: 400, description: 'Bad Request - Validation failed' })
   @ApiResponse({ status: 401, description: 'Unauthorized - JWT token required' })
   @ApiResponse({
     status: 403,
@@ -91,7 +100,7 @@ export class PostsController {
   @ApiResponse({ status: 404, description: 'Post not found' })
   async updatePost(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() updatePostDto: Partial<PostEntity>,
+    @Body(new ValidationPipe({ transform: true, whitelist: true })) updatePostDto: UpdatePostDto,
     @CurrentUser() user: User,
   ): Promise<PostEntity | null> {
     // First get the post to check ownership
@@ -166,7 +175,101 @@ export class PostsController {
     }
   }
 
-  // TODO: Implement controller endpoints for post interactions (vote, bookmark, share, view)
+  // --- Post Interactions ---
+  @Post(':id/like')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Like a post' })
+  @ApiParam({ name: 'id', description: 'Post UUID' })
+  @ApiResponse({ status: 201, description: 'Post liked successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized - JWT token required' })
+  @ApiResponse({ status: 404, description: 'Post not found' })
+  async likePost(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: User,
+  ): Promise<{ success: boolean }> {
+    try {
+      await this.postsService.likePost(id, user.user_id);
+      return { success: true };
+    } catch (err) {
+      if (err instanceof Error && err.message === 'Post not found') {
+        throw new NotFoundException('Post not found');
+      }
+      throw err;
+    }
+  }
+
+  @Delete(':id/like')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Remove like from a post' })
+  @ApiParam({ name: 'id', description: 'Post UUID' })
+  @ApiResponse({ status: 204, description: 'Like removed successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized - JWT token required' })
+  @ApiResponse({ status: 404, description: 'Post not found' })
+  async unlikePost(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: User,
+  ): Promise<void> {
+    try {
+      await this.postsService.unlikePost(id, user.user_id);
+    } catch (err) {
+      if (err instanceof Error && err.message === 'Post not found') {
+        throw new NotFoundException('Post not found');
+      }
+      throw err;
+    }
+  }
+
+  @Post(':id/bookmark')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Bookmark a post' })
+  @ApiParam({ name: 'id', description: 'Post UUID' })
+  @ApiResponse({ status: 201, description: 'Post bookmarked successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized - JWT token required' })
+  @ApiResponse({ status: 404, description: 'Post not found' })
+  async bookmarkPost(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: User,
+  ): Promise<{ success: boolean }> {
+    try {
+      await this.postsService.bookmarkPost(id, user.user_id);
+      return { success: true };
+    } catch (err) {
+      if (err instanceof Error && err.message === 'Post not found') {
+        throw new NotFoundException('Post not found');
+      }
+      throw err;
+    }
+  }
+
+  @Delete(':id/bookmark')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Remove bookmark from a post' })
+  @ApiParam({ name: 'id', description: 'Post UUID' })
+  @ApiResponse({ status: 204, description: 'Bookmark removed successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized - JWT token required' })
+  @ApiResponse({ status: 404, description: 'Post not found' })
+  async unbookmarkPost(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: User,
+  ): Promise<void> {
+    try {
+      await this.postsService.unbookmarkPost(id, user.user_id);
+    } catch (err) {
+      if (err instanceof Error && err.message === 'Post not found') {
+        throw new NotFoundException('Post not found');
+      }
+      throw err;
+    }
+  }
+
   // TODO: Implement controller endpoints for comment system
   // TODO: Implement controller endpoints for post statistics and analytics
 }

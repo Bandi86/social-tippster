@@ -29,4 +29,8 @@ export class MatchRepository {
     }
     return this.matchRepository.create(dto);
   }
+
+  createQueryBuilder(alias?: string) {
+    return this.matchRepository.createQueryBuilder(alias);
+  }
 }

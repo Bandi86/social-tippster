@@ -122,3 +122,36 @@ Utolsó frissítés: 2025-05-30
 - Data transformation is handled in the store for admin UI compatibility
 
 _Last updated: 2025-05-31_
+
+---
+
+## Live Matches API (2025-05-31)
+
+### Endpoint
+
+- `GET /matches/live` – List all currently live matches
+
+### Response (példa):
+
+```json
+[
+  {
+    "id": "uuid",
+    "home_team": "Manchester United",
+    "away_team": "Liverpool",
+    "home_score": 2,
+    "away_score": 1,
+    "status": "live",
+    "current_time": "67'",
+    "league": "Premier League",
+    "sport": "football",
+    "start_time": "2025-05-31T18:00:00Z",
+    "venue": "Old Trafford"
+  }
+]
+```
+
+- A `sport` mező mostantól a ligához tartozó `sport_type` alapján töltődik ki (nem hardcode-olt)
+- A válasz mezői: lásd LiveMatchResponseDto
+
+_Last updated: 2025-05-31_

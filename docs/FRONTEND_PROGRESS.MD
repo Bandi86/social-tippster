@@ -398,3 +398,25 @@ _Last updated: 2025-05-30_
 - All mock implementations for admin comment features replaced with real API calls
 - Data mapping and error handling improved for admin moderation UI
 - Manual testing completed for admin comment list, stats, and actions
+
+## 2025-05-31 – Élő meccsek sport típus integráció
+
+- A főoldali élő meccsek modul (LiveMatches) mostantól a backend /matches/live API-t használja, amely a sport mezőt a ligához tartozó sport_type alapján adja vissza
+- A LiveMatch típus a frontend és backend között teljesen egyezik
+- Hibás hardcode-olt sport mező megszüntetve, minden sport típus helyesen jelenik meg
+- Seed script is frissítve, hogy a ligák sport_type mezője helyesen töltődjön
+
+## 2025-05-31 – Élő meccsek komponens feltételes megjelenítése
+
+- Élő meccsek (LiveMatches) komponens mostantól csak bejelentkezett felhasználók számára jelenik meg a főoldalon
+- Suspense fallback mostantól saját Loading komponenst használ (helyettesíti a szöveges fallbacket)
+- Új Loading komponens készült: `frontend/components/ui/Loading.tsx`
+- Import hibák javítva a főoldalon
+
+## 2025-05-31 – Loading komponens konszolidáció
+
+- A duplikált `frontend/components/ui/Loading.tsx` törölve
+- Minden loading állapothoz mostantól a `shared/LoadingStates`-ban lévő CenteredLoading, LoadingSkeleton stb. komponensek használatosak
+- Root page és minden Suspense fallback egységesen ezt használja
+
+---

@@ -71,3 +71,33 @@ TypeORM requires:
 - Corrected entity imports and TypeORM configuration
 - Ensured proper bidirectional relationship definition
 - Updated documentation with debugging guidance for similar issues
+
+---
+
+# CHANGE LOG – 2025-05-31
+
+## Élő meccsek komponens feltételes megjelenítése (frontend)
+
+**Task Type:** Frontend Logic Update
+**Time:** 2025-05-31
+
+### Változások:
+
+- Élő meccsek (LiveMatches) komponens mostantól csak bejelentkezett felhasználók számára jelenik meg a főoldalon
+- Suspense fallback mostantól saját Loading komponenst használ (helyettesíti a szöveges fallbacket)
+- Új Loading komponens készült: `frontend/components/ui/Loading.tsx`
+- Import hibák javítva a főoldalon
+
+### Tesztelés:
+
+- Ellenőrizve, hogy kijelentkezett állapotban az Élő meccsek szekció nem jelenik meg
+- Bejelentkezve helyesen betölt és animált töltőképernyőt mutat
+
+### Dokumentáció:
+
+- Frissítve: FRONTEND_PROGRESS.MD, IMPLEMENTATION_SUMMARY.md
+
+---
+
+**Responsible:** GitHub Copilot
+**Date:** 2025-05-31

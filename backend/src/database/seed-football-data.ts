@@ -4,7 +4,7 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
 
-import { League } from '../modules/data/league/entities/league.entity';
+import { League, SportType } from '../modules/data/league/entities/league.entity';
 import { Match, MatchStatus } from '../modules/data/match/entities/match.entity';
 import { Season } from '../modules/data/season/entities/season.entity';
 import { Team } from '../modules/data/team/entities/team.entity';
@@ -21,12 +21,14 @@ async function seedFootballData() {
       name: 'Premier League',
       country: 'England',
       logoUrl: 'https://example.com/premier-league-logo.png',
+      sport_type: SportType.FOOTBALL,
     });
 
     const laLiga = await leagueRepo.save({
       name: 'La Liga',
       country: 'Spain',
       logoUrl: 'https://example.com/la-liga-logo.png',
+      sport_type: SportType.FOOTBALL,
     });
 
     console.log('✅ Created leagues');

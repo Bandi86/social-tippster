@@ -9,6 +9,13 @@ import {
 import { Season } from '../../season/entities/season.entity';
 import { Team } from '../../team/entities/team.entity';
 
+export enum SportType {
+  FOOTBALL = 'football',
+  BASKETBALL = 'basketball',
+  TENNIS = 'tennis',
+  BASEBALL = 'baseball',
+}
+
 @Entity('leagues')
 export class League {
   @PrimaryGeneratedColumn('uuid')
@@ -31,6 +38,13 @@ export class League {
 
   @Column({ type: 'boolean', default: true })
   isActive: boolean;
+
+  @Column({
+    type: 'enum',
+    enum: SportType,
+    default: SportType.FOOTBALL,
+  })
+  sport_type: SportType;
 
   @OneToMany(() => Team, team => team.league)
   teams: Team[];

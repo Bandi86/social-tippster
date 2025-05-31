@@ -1,82 +1,93 @@
 'use client';
 
 import CardWrapper from '@/components/shared/CardWrapper';
-import { Badge } from '@/components/ui/badge';
-import {
-  LiveMatch,
-  fetchLiveMatches,
-  formatScore,
-  getMatchStatus,
-  getSportIcon,
-  shortenTeamName,
-} from '@/lib/matches-utils';
+import { useAuth } from '@/hooks/useAuth';
+import { fetchLiveMatches, LiveMatch } from '@/lib/matches-utils';
 import { Activity } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import LiveMatchItem from './LiveMatchItem';
 
-/**
- * Élő meccs komponens
- * Individual live match display component
- */
-function LiveMatchItem({ match }: { match: LiveMatch }) {
-  const status = getMatchStatus(match);
-
-  return (
-    <div className='p-3 bg-gray-800/50 rounded-lg border border-gray-700'>
-      <div className='flex justify-between items-center mb-2'>
-        <span className='text-sm font-semibold text-white flex items-center gap-2'>
-          <span>{getSportIcon(match.sport)}</span>
-          <span className='truncate'>
-            {shortenTeamName(match.home_team)} vs {shortenTeamName(match.away_team)}
-          </span>
-        </span>
-        <Badge className={status.color_class}>{status.display_text}</Badge>
-      </div>
-
-      <div className='text-center'>
-        <span className='text-2xl font-bold text-amber-400'>
-          {formatScore(match.home_score, match.away_score)}
-        </span>
-      </div>
-
-      <div className='text-xs text-gray-400 text-center mt-2'>
-        {match.current_time && `${match.current_time} - `}
-        {match.league}
-      </div>
-    </div>
-  );
-}
-
-/**
- * Élő meccsek komponens
- * Valós idejű sportesemények eredményeinek megjelenítése
- */
 export default function LiveMatches() {
   const [matches, setMatches] = useState<LiveMatch[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
+    let mounted = true;
+    let intervalId: NodeJS.Timeout | null = null;
+
     const loadLiveMatches = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const data = await fetchLiveMatches(3);
-        setMatches(data);
-      } catch (err) {
-        setError('Nem sikerült betölteni az élő meccseket');
-        console.error('Error fetching live matches:', err);
-      } finally {
+      // Ha nincs bejelentkezve, ne próbáljuk meg
+      if (!isAuthenticated) {
         setIsLoading(false);
+        setError('Bejelentkezés szükséges az élő meccsek megtekintéséhez');
+        return;
+      }
+
+      try {
+        setError(null);
+        if (retryCount === 0) setIsLoading(true);
+
+        const data = await fetchLiveMatches(3);
+
+        if (mounted) {
+          setMatches(data || []);
+          setRetryCount(0); // Reset retry count on success
+        }
+      } catch (err: any) {
+        console.error('Error fetching live matches:', err);
+
+        if (mounted) {
+          const errorMessage =
+            err?.response?.status === 400
+              ? 'Szerver hiba: helytelen kérés formátum'
+              : err?.response?.status === 401
+                ? 'Nincs jogosultság - próbálj újra bejelentkezni'
+                : err?.response?.status === 404
+                  ? 'Az élő meccsek szolgáltatás jelenleg nem elérhető'
+                  : 'Nem sikerült betölteni az élő meccseket';
+
+          setError(errorMessage);
+
+          // Retry logic: max 3 attempts with exponential backoff
+          if (retryCount < 3) {
+            const delay = Math.pow(2, retryCount) * 2000; // 2s, 4s, 8s
+            setTimeout(() => {
+              if (mounted) {
+                setRetryCount(prev => prev + 1);
+              }
+            }, delay);
+          }
+        }
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
     };
 
+    // Initial load
     loadLiveMatches();
 
-    // Refresh live matches every 30 seconds
-    const interval = setInterval(loadLiveMatches, 30000);
+    // Set up interval only if authenticated and no error
+    if (isAuthenticated && !error) {
+      intervalId = setInterval(() => {
+        if (mounted && retryCount === 0) {
+          // Only refresh if not in retry mode
+          loadLiveMatches();
+        }
+      }, 30000); // 30 seconds
+    }
 
-    return () => clearInterval(interval);
-  }, []);
+    return () => {
+      mounted = false;
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [isAuthenticated, retryCount]);
 
   const liveMatchesCount = matches.filter(m => m.status === 'live').length;
 
@@ -90,11 +101,22 @@ export default function LiveMatches() {
       liveIndicator={liveMatchesCount > 0}
       badge={matches.length}
     >
-      <div className='space-y-3'>
-        {matches.map(match => (
-          <LiveMatchItem key={match.id} match={match} />
-        ))}
-      </div>
+      {!error && matches.length > 0 ? (
+        <div className='space-y-3'>
+          {matches.map(match => (
+            <LiveMatchItem key={match.id} match={match} />
+          ))}
+        </div>
+      ) : !error && matches.length === 0 && !isLoading ? (
+        <div className='text-sm text-gray-400 text-center py-4'>Jelenleg nincsenek élő meccsek</div>
+      ) : error ? (
+        <div className='text-sm text-gray-400 text-center py-4'>
+          <p className='mb-2'>{error}</p>
+          {retryCount > 0 && (
+            <p className='text-xs text-gray-500'>Újrapróbálkozás {retryCount}/3...</p>
+          )}
+        </div>
+      ) : null}
     </CardWrapper>
   );
 }

@@ -715,3 +715,10 @@ backend/src/
 
 - Fixed import path for `League` in `app.module.ts` to use `league.entity` file
 - Prevented TypeScript and TypeORM errors due to incorrect import
+
+## 2025-05-31 – Élő meccsek sport típus javítás
+
+- League entitás bővítve sport_type mezővel (enum: football, basketball, tennis, baseball)
+- /matches/live endpoint mostantól a sport mezőt a ligához tartozó sport_type alapján adja vissza
+- Seed script frissítve: ligák sport_type mezője helyesen töltődik
+- LiveMatchResponseDto és frontend LiveMatch típus teljesen szinkronban

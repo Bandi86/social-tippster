@@ -124,13 +124,42 @@ export const getMockLiveMatches = (): LiveMatch[] => [
 // API hívások (real implementation)
 export const fetchLiveMatches = async (limit: number = 5): Promise<LiveMatch[]> => {
   try {
+    // Dynamic import to ensure client-side execution
     const { apiClient } = await import('./api-client');
-    const response = await apiClient.get<LiveMatch[]>('/matches/live');
+
+    // Check if we're in browser environment
+    if (typeof window === 'undefined') {
+      throw new Error('fetchLiveMatches can only be called on client side');
+    }
+
+    const response = await apiClient.get<LiveMatch[]>('/matches/live', {
+      timeout: 10000, // 10 second timeout
+      params: limit ? { limit } : undefined,
+    });
+
+    console.log('Live matches response:', response.data);
+
+    // Validate response data
+    if (!Array.isArray(response.data)) {
+      throw new Error('Invalid response format: expected array');
+    }
+
     return response.data.slice(0, limit);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching live matches from API:', error);
-    // Fallback to mock data in case of error
-    return getMockLiveMatches().slice(0, limit);
+
+    // In development, provide more detailed error info
+    if (process.env.NODE_ENV === 'development') {
+      console.error('API Error details:', {
+        status: error?.response?.status,
+        statusText: error?.response?.statusText,
+        data: error?.response?.data,
+        url: error?.config?.url,
+      });
+    }
+
+    // Don't fallback to mock data, let the component handle the error
+    throw error;
   }
 };
 

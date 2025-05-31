@@ -389,15 +389,27 @@ The goal of this database plan is to outline the structure and organization of t
   - match_id (PK)
   - home_team_id (FK)
   - away_team_id (FK)
-  - sport_type (enum)
-  - league (varchar)
-  - match_date (timestamp)
-  - venue (varchar, nullable)
+  - league_id (FK)
   - status (enum: scheduled, live, finished, postponed, cancelled)
   - home_score (integer, nullable)
   - away_score (integer, nullable)
   - created_at
   - updated_at
+- API: /matches/live endpoint mostantól a sport mezőt a league.sport_type alapján adja vissza (LiveMatchResponseDto)
+
+### LiveMatchResponseDto mezők (API output):
+
+- id
+- home_team
+- away_team
+- home_score
+- away_score
+- status
+- current_time
+- league
+- sport (league.sport_type)
+- start_time
+- venue
 
 20. **Follow**
 
@@ -579,9 +591,8 @@ The goal of this database plan is to outline the structure and organization of t
 - Attributes:
   - league_id (PK)
   - name (unique)
-  - short_name (varchar, nullable)
   - country (varchar)
-  - sport_type (enum)
+  - sport_type (enum: football, basketball, tennis, baseball) # ÚJ, kötelező mező
   - tier (integer, nullable)
   - logo_url (varchar, nullable)
   - season (varchar, nullable)

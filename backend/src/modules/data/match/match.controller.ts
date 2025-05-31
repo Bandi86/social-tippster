@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -7,9 +8,10 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { UserRole } from '../../auth/enums/user-role.enum';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
@@ -18,7 +20,7 @@ import { CreateMatchEventDto } from './dto/create-match-event.dto';
 import { CreateMatchDto } from './dto/create-match.dto';
 import { LiveMatchResponseDto } from './dto/live-match-response.dto';
 import { UpdateMatchDto } from './dto/update-match.dto';
-import { MatchStat } from './entities/match-stat.entity'; // Adjust path if needed
+import { MatchStat } from './entities/match-stat.entity';
 import { MatchService } from './match.service';
 
 @ApiTags('matches')
@@ -44,6 +46,66 @@ export class MatchController {
     return this.matchService.findAll();
   }
 
+  // LIVE MATCHES - FONTOS: Ez a `:id` route ELŐTT kell legyen!
+  @Get('live')
+  @ApiOperation({ summary: 'Get all live matches' })
+  @ApiResponse({
+    status: 200,
+    description: 'Return all currently live matches.',
+    type: [LiveMatchResponseDto],
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Limit number of matches (1-50)',
+  })
+  async getLiveMatches(@Query('limit') limit?: string) {
+    try {
+      console.log('getLiveMatches called with limit:', limit);
+
+      // Safely parse and validate the limit parameter
+      let parsedLimit: number | undefined = undefined;
+      if (limit) {
+        const numericLimit = parseInt(limit, 10);
+        if (isNaN(numericLimit)) {
+          throw new BadRequestException('Limit must be a valid number');
+        }
+        // Validate that limit is between 1 and 50
+        if (numericLimit < 1 || numericLimit > 50) {
+          throw new BadRequestException('Limit must be between 1 and 50');
+        }
+        parsedLimit = numericLimit;
+      }
+
+      const matches = await this.matchService.getLiveMatches(parsedLimit);
+      console.log('Live matches found:', matches?.length || 0);
+      return matches;
+    } catch (error) {
+      console.error('Error in getLiveMatches controller:', error);
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new BadRequestException('Failed to fetch live matches');
+    }
+  }
+
+  // További specific routes ide jöhetnek...
+  @Get('team/:teamId')
+  @ApiOperation({ summary: 'Get matches by team' })
+  @ApiResponse({ status: 200, description: 'Return matches for the team.' })
+  findByTeam(@Param('teamId', ParseUUIDPipe) teamId: string) {
+    return this.matchService.findByTeam(teamId);
+  }
+
+  @Get('season/:seasonId')
+  @ApiOperation({ summary: 'Get matches by season' })
+  @ApiResponse({ status: 200, description: 'Return matches for the season.' })
+  findBySeason(@Param('seasonId', ParseUUIDPipe) seasonId: string) {
+    return this.matchService.findBySeason(seasonId);
+  }
+
+  // ÁLTALÁNOS :id ROUTE - Ez MINDIG utolsó kell legyen a GET routes között!
   @Get(':id')
   @ApiOperation({ summary: 'Get a match by id' })
   @ApiResponse({ status: 200, description: 'Return the match.' })
@@ -70,20 +132,6 @@ export class MatchController {
   @ApiResponse({ status: 403, description: 'Forbidden.' })
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.matchService.remove(id);
-  }
-
-  @Get('team/:teamId')
-  @ApiOperation({ summary: 'Get matches by team' })
-  @ApiResponse({ status: 200, description: 'Return matches for the team.' })
-  findByTeam(@Param('teamId', ParseUUIDPipe) teamId: string) {
-    return this.matchService.findByTeam(teamId);
-  }
-
-  @Get('season/:seasonId')
-  @ApiOperation({ summary: 'Get matches by season' })
-  @ApiResponse({ status: 200, description: 'Return matches for the season.' })
-  findBySeason(@Param('seasonId', ParseUUIDPipe) seasonId: string) {
-    return this.matchService.findBySeason(seasonId);
   }
 
   @Post(':id/events')
@@ -124,19 +172,8 @@ export class MatchController {
   updateStats(
     @Param('id', ParseUUIDPipe) id: string,
     @Param('side') side: 'home' | 'away',
-    @Body() stats: Partial<MatchStat>, // Use correct type instead of any
+    @Body() stats: Partial<MatchStat>,
   ) {
     return this.matchService.updateStats(id, side, stats);
-  }
-
-  @Get('live')
-  @ApiOperation({ summary: 'Get all live matches' })
-  @ApiResponse({
-    status: 200,
-    description: 'Return all currently live matches.',
-    type: [LiveMatchResponseDto],
-  })
-  getLiveMatches() {
-    return this.matchService.getLiveMatches();
   }
 }
