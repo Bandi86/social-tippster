@@ -409,6 +409,17 @@ backend/src/
 - ✅ **PUT** `/api/admin/users/:id/role` - Change user role (USER/ADMIN/MODERATOR)
 - ✅ **DELETE** `/api/admin/users/:id` - Delete user account
 
+#### Comments Management Admin API
+
+- ✅ **GET** `/api/admin/comments` - Get paginated comments with advanced filtering
+- ✅ **GET** `/api/admin/comments/stats` - Get comprehensive comment statistics (CommentStatsDto)
+- ✅ **GET** `/api/admin/comments/:id` - Get single comment details (admin view)
+- ✅ **PATCH** `/api/admin/comments/:id` - Update comment (admin only)
+- ✅ **DELETE** `/api/admin/comments/:id` - Delete comment (admin only)
+- ✅ **POST** `/api/admin/comments/:id/ban` - Ban comment (admin only)
+- ✅ **POST** `/api/admin/comments/:id/unban` - Unban comment (admin only)
+- ✅ **POST** `/api/admin/comments/:id/verify` - Verify comment (admin only)
+
 #### Legacy Admin Operations (Deprecated - Use /api/admin/\* instead)
 
 - ✅ **PATCH** `/api/users/:id/ban` - Ban user (Admin only)
@@ -686,3 +697,21 @@ backend/src/
 - Service method creates PostView entity and increments views_count
 - Error handling for missing post (404)
 - Swagger docs updated
+
+## 2025-05-31 – Admin Comments API Integration
+
+- Integrated real API endpoints for admin comment management in backend and frontend
+- `/admin/comments`, `/admin/comments/stats`, and related endpoints now fully used by frontend Zustand store
+- Data transformation and error handling improved for admin comment operations
+- Manual testing completed for all admin comment moderation features
+
+## 2025-05-31 – League Entity Import Consistency
+
+- Fixed imports in `League` entity to use only `season.entity` and `team.entity` files
+- Ensured all entity references are consistent and error-free
+- Prevented TypeORM relation errors due to mismatched or duplicate entity imports
+
+## 2025-05-31 – League Import Path Fix in app.module.ts
+
+- Fixed import path for `League` in `app.module.ts` to use `league.entity` file
+- Prevented TypeScript and TypeORM errors due to incorrect import

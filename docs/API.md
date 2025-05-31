@@ -93,3 +93,32 @@ Response: { "success": true }
 ```
 
 Utolsó frissítés: 2025-05-30
+
+---
+
+## Admin Comments API (2025-05-31)
+
+### Endpoints
+
+- `GET /admin/comments` – List all comments for admin with filtering, sorting, and pagination
+- `GET /admin/comments/stats` – Get comment statistics for admin dashboard
+- `GET /admin/comments/:id` – Get a specific comment by ID (admin view)
+- `POST /admin/comments/:id/flag` – Flag a comment (admin moderation)
+- `POST /admin/comments/:id/unflag` – Unflag a comment (admin moderation)
+- `POST /admin/comments/bulk-action` – Bulk actions on comments (delete, flag, etc.)
+
+### Query Parameters for `/admin/comments`
+
+- `page`, `limit`, `search`, `status`, `postId`, `authorId`, `sortBy`
+
+### Response DTOs
+
+- `CommentResponseDto` (see backend)
+- `CommentStatsDto` (see backend)
+
+### Frontend Integration
+
+- Zustand comments store now uses these endpoints for all admin comment management
+- Data transformation is handled in the store for admin UI compatibility
+
+_Last updated: 2025-05-31_

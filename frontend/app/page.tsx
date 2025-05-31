@@ -1,7 +1,7 @@
 'use client';
 
-import CreatePostForm from '@/components/user/posts/CreatePostForm';
-import PostList from '@/components/user/PostList';
+import CreatePostForm from '@/components/features/posts/CreatePostForm';
+import PostList from '@/components/features/posts/PostList';
 import { useAuth } from '@/hooks/useAuth';
 import { useState } from 'react';
 
@@ -27,7 +27,9 @@ import WelcomeHeader from '@/components/root/WelcomeHeader';
  */
 export default function Home() {
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState<
+    'all' | 'tips' | 'discussion' | 'analysis' | 'trending' | 'recent' | 'popular'
+  >('all');
   const { isAuthenticated, user } = useAuth();
 
   return (
@@ -41,16 +43,13 @@ export default function Home() {
           {/* Bal oldali menü */}
           <div className='lg:col-span-3 space-y-6'>
             {/* Felhasználói profil gyors áttekintő */}
-            {isAuthenticated && user && <UserProfileQuickView user={user} />}
+            <UserProfileQuickView />
 
             {/* Fő navigáció */}
             <MainNavigation isAuthenticated={isAuthenticated} />
 
             {/* Gyors műveletek */}
-            <QuickActions
-              isAuthenticated={isAuthenticated}
-              onCreatePost={() => setShowCreateForm(!showCreateForm)}
-            />
+            <QuickActions onCreatePost={() => setShowCreateForm(!showCreateForm)} />
 
             {/* Közösségi statisztikák */}
             <CommunityStats />
@@ -59,14 +58,10 @@ export default function Home() {
           {/* Fő tartalom */}
           <div className='lg:col-span-6 space-y-6'>
             {/* Üdvözlő fejléc */}
-            <WelcomeHeader isAuthenticated={isAuthenticated} user={user || undefined} />
+            <WelcomeHeader />
 
             {/* Poszt létrehozási terület */}
-            <PostCreationArea
-              isAuthenticated={isAuthenticated}
-              user={user || undefined}
-              onCreatePost={() => setShowCreateForm(true)}
-            />
+            <PostCreationArea onCreatePost={() => setShowCreateForm(true)} />
 
             {/* Kibővíthető poszt létrehozó űrlap */}
             {showCreateForm && isAuthenticated && (

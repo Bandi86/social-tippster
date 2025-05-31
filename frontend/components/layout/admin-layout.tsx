@@ -1,8 +1,8 @@
 'use client';
 
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
-import AdminNavbar from './AdminNavbar';
-import AdminSidebar from './AdminSidebar';
+import AdminNavbar from '@/components/features/admin/AdminNavbar';
+import AdminSidebar from '@/components/features/admin/AdminSidebar';
 
 interface AdminLayoutProps {
   children: React.ReactNode;

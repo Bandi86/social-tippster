@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import UserNavbar from '../header/Navbar';
+import UserNavbar from '../layout/Navbar';
 
 const UserLayout = () => {
   const pathname = usePathname();

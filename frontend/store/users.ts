@@ -365,64 +365,76 @@ export const useUsersStore = create<UsersState & UsersActions>()(
             limit: params.limit || adminPagination.limit,
           };
 
-          // Mock API hívás - élesben valódi API hívás lesz itt
-          await new Promise(resolve => setTimeout(resolve, 500));
+          // Build query parameters
+          const searchParams = new URLSearchParams();
+          Object.entries(finalParams).forEach(([key, value]) => {
+            if (value && value !== 'all' && value !== '') {
+              searchParams.append(key, value.toString());
+            }
+          });
 
-          // Mock válasz - élesben, cseréld le valódi API hívásra
-          const mockAdminUsers: AdminUser[] = [
-            {
-              id: '1',
-              user_id: '1',
-              username: 'john_doe',
-              email: 'john.doe@example.com',
-              password_hash: 'hashed_password',
-              first_name: 'John',
-              last_name: 'Doe',
-              role: 'user',
-              is_active: true,
-              is_verified: true,
-              is_banned: false,
-              created_at: '2024-01-15T10:30:00Z',
-              updated_at: '2024-01-15T10:30:00Z',
-              login_count: 45,
-              reputation_score: 850,
-              follower_count: 12,
-              following_count: 25,
-              post_count: 8,
-              badge_count: 3,
-              total_tips: 15,
-              successful_tips: 12,
-              tip_success_rate: 80,
-              total_profit: 250.5,
-              current_streak: 3,
-              best_streak: 8,
-              two_factor_enabled: false,
-              language_preference: 'en',
-              is_premium: false,
-              referral_count: 2,
-              last_login: '2024-01-20T14:30:00Z',
-            },
-            // További mock felhasználók hozzáadása szükség szerint
-          ];
+          // Call real API endpoint
+          const response = await axiosWithAuth({
+            method: 'GET',
+            url: `${API_BASE_URL}/admin/users?${searchParams.toString()}`,
+          });
 
-          const response: AdminUsersResponse = {
-            users: mockAdminUsers,
-            meta: {
-              total: mockAdminUsers.length,
+          // Transform backend UserResponseDto[] to AdminUser[] format
+          const adminUsers: AdminUser[] = response.users.map((user: any) => ({
+            id: user.user_id,
+            user_id: user.user_id,
+            username: user.username,
+            email: user.email,
+            password_hash: '', // Not returned by backend for security
+            first_name: user.first_name || '',
+            last_name: user.last_name || '',
+            role: user.role || 'user',
+            is_active: user.is_active || false,
+            is_verified: user.is_verified || false,
+            is_banned: user.is_banned || false,
+            created_at: user.created_at,
+            updated_at: user.updated_at,
+            login_count: user.login_count || 0,
+            reputation_score: user.reputation_score || 0,
+            follower_count: user.follower_count || 0,
+            following_count: user.following_count || 0,
+            post_count: user.post_count || 0,
+            badge_count: user.badge_count || 0,
+            total_tips: user.total_tips || 0,
+            successful_tips: user.successful_tips || 0,
+            tip_success_rate: user.tip_success_rate || 0,
+            total_profit: user.total_profit || 0,
+            current_streak: user.current_streak || 0,
+            best_streak: user.best_streak || 0,
+            two_factor_enabled: user.two_factor_enabled || false,
+            language_preference: user.language_preference || 'en',
+            is_premium: user.is_premium || false,
+            referral_count: user.referral_count || 0,
+            last_login: user.last_login || null,
+          }));
+
+          const adminUsersResponse: AdminUsersResponse = {
+            users: adminUsers,
+            meta: response.meta || {
+              total: adminUsers.length,
               page: finalParams.page || 1,
               limit: finalParams.limit || 20,
-              totalPages: Math.ceil(mockAdminUsers.length / (finalParams.limit || 20)),
+              totalPages: Math.ceil(adminUsers.length / (finalParams.limit || 20)),
             },
           };
 
           set({
-            adminUsers: response.users,
-            adminPagination: response.meta,
+            adminUsers: adminUsersResponse.users,
+            adminPagination: adminUsersResponse.meta,
             adminFilters: finalParams,
             isLoadingAdminUsers: false,
           });
         } catch (error: any) {
-          set({ error: error.message, isLoadingAdminUsers: false });
+          console.error('Error fetching admin users:', error);
+          set({
+            error: error.message || 'Failed to fetch admin users',
+            isLoadingAdminUsers: false,
+          });
         }
       },
 
@@ -430,24 +442,32 @@ export const useUsersStore = create<UsersState & UsersActions>()(
       async fetchAdminUserStats() {
         set({ isLoadingAdminStats: true, error: null });
         try {
-          // Mock API hívás - cseréld le valódi implementációra
-          await new Promise(resolve => setTimeout(resolve, 300));
+          // Call real API endpoint
+          const stats = await axiosWithAuth({
+            method: 'GET',
+            url: `${API_BASE_URL}/admin/users/stats`,
+          });
 
-          const mockStats: AdminUserStats = {
-            total: 1250,
-            active: 1180,
-            banned: 25,
-            unverified: 45,
-            admins: 3,
-            moderators: 8,
-            premium: 120,
-            verified: 1205,
-            recentRegistrations: 89,
+          // Transform backend AdminStatsDto to AdminUserStats format
+          const adminUserStats: AdminUserStats = {
+            total: stats.total || 0,
+            active: stats.active || 0,
+            banned: stats.banned || 0,
+            unverified: stats.unverified || 0,
+            admins: stats.admins || 0,
+            moderators: stats.moderators || 0, // May not be in backend response
+            premium: stats.premium || 0, // May not be in backend response
+            verified: stats.total - stats.unverified || 0, // Calculate verified users
+            recentRegistrations: stats.recentRegistrations || 0,
           };
 
-          set({ adminUserStats: mockStats, isLoadingAdminStats: false });
+          set({ adminUserStats, isLoadingAdminStats: false });
         } catch (error: any) {
-          set({ error: error.message, isLoadingAdminStats: false });
+          console.error('Error fetching admin user stats:', error);
+          set({
+            error: error.message || 'Failed to fetch admin user statistics',
+            isLoadingAdminStats: false,
+          });
         }
       },
 

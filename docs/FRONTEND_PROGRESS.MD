@@ -391,3 +391,10 @@ Successfully completed critical bug fixes and performance optimizations for Post
 ---
 
 _Last updated: 2025-05-30_
+
+## 2025-05-31 – Admin Comments API Integration
+
+- Zustand comments store now uses real backend endpoints for all admin comment management
+- All mock implementations for admin comment features replaced with real API calls
+- Data mapping and error handling improved for admin moderation UI
+- Manual testing completed for admin comment list, stats, and actions

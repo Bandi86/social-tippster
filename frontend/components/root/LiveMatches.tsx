@@ -1,50 +1,100 @@
 'use client';
 
+import CardWrapper from '@/components/shared/CardWrapper';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  LiveMatch,
+  fetchLiveMatches,
+  formatScore,
+  getMatchStatus,
+  getSportIcon,
+  shortenTeamName,
+} from '@/lib/matches-utils';
 import { Activity } from 'lucide-react';
+import { useEffect, useState } from 'react';
+
+/**
+ * Élő meccs komponens
+ * Individual live match display component
+ */
+function LiveMatchItem({ match }: { match: LiveMatch }) {
+  const status = getMatchStatus(match);
+
+  return (
+    <div className='p-3 bg-gray-800/50 rounded-lg border border-gray-700'>
+      <div className='flex justify-between items-center mb-2'>
+        <span className='text-sm font-semibold text-white flex items-center gap-2'>
+          <span>{getSportIcon(match.sport)}</span>
+          <span className='truncate'>
+            {shortenTeamName(match.home_team)} vs {shortenTeamName(match.away_team)}
+          </span>
+        </span>
+        <Badge className={status.color_class}>{status.display_text}</Badge>
+      </div>
+
+      <div className='text-center'>
+        <span className='text-2xl font-bold text-amber-400'>
+          {formatScore(match.home_score, match.away_score)}
+        </span>
+      </div>
+
+      <div className='text-xs text-gray-400 text-center mt-2'>
+        {match.current_time && `${match.current_time} - `}
+        {match.league}
+      </div>
+    </div>
+  );
+}
 
 /**
  * Élő meccsek komponens
  * Valós idejű sportesemények eredményeinek megjelenítése
  */
 export default function LiveMatches() {
-  return (
-    <Card className='bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700'>
-      <CardHeader className='pb-3'>
-        <CardTitle className='text-lg text-white flex items-center gap-2'>
-          <Activity className='h-5 w-5 text-red-500' />
-          Élő meccsek
-          <div className='w-2 h-2 bg-red-500 rounded-full animate-pulse ml-1'></div>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className='space-y-3'>
-        <div className='space-y-3'>
-          <div className='p-3 bg-gray-800/50 rounded-lg border border-gray-700'>
-            <div className='flex justify-between items-center mb-2'>
-              <span className='text-sm font-semibold text-white'>
-                Manchester United vs Liverpool
-              </span>
-              <Badge className='bg-red-600 text-white'>LIVE</Badge>
-            </div>
-            <div className='text-center'>
-              <span className='text-2xl font-bold text-amber-400'>2 - 1</span>
-            </div>
-            <div className='text-xs text-gray-400 text-center mt-2'>67' - Premier League</div>
-          </div>
+  const [matches, setMatches] = useState<LiveMatch[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-          <div className='p-3 bg-gray-800/50 rounded-lg border border-gray-700'>
-            <div className='flex justify-between items-center mb-2'>
-              <span className='text-sm font-semibold text-white'>Lakers vs Warriors</span>
-              <Badge className='bg-red-600 text-white'>LIVE</Badge>
-            </div>
-            <div className='text-center'>
-              <span className='text-2xl font-bold text-amber-400'>89 - 92</span>
-            </div>
-            <div className='text-xs text-gray-400 text-center mt-2'>Q3 8:45 - NBA</div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+  useEffect(() => {
+    const loadLiveMatches = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const data = await fetchLiveMatches(3);
+        setMatches(data);
+      } catch (err) {
+        setError('Nem sikerült betölteni az élő meccseket');
+        console.error('Error fetching live matches:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadLiveMatches();
+
+    // Refresh live matches every 30 seconds
+    const interval = setInterval(loadLiveMatches, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const liveMatchesCount = matches.filter(m => m.status === 'live').length;
+
+  return (
+    <CardWrapper
+      title='Élő meccsek'
+      icon={Activity}
+      iconColor='text-red-500'
+      isLoading={isLoading}
+      error={error}
+      liveIndicator={liveMatchesCount > 0}
+      badge={matches.length}
+    >
+      <div className='space-y-3'>
+        {matches.map(match => (
+          <LiveMatchItem key={match.id} match={match} />
+        ))}
+      </div>
+    </CardWrapper>
   );
 }

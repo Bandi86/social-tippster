@@ -12,6 +12,11 @@ import { AnalyticsModule } from './modules/admin/analytics-dashboard/analytics.m
 import { AuthModule } from './modules/auth/auth.module';
 import { CsrfProtectionMiddleware } from './modules/auth/middleware/csrf-protection.middleware';
 import { CommentsModule } from './modules/comments/comments.module';
+import { LeagueModule } from './modules/data/league/league.module';
+import { MatchModule } from './modules/data/match/match.module';
+import { PlayerModule } from './modules/data/player/player.module';
+import { SeasonModule } from './modules/data/season/season.module';
+import { TeamModule } from './modules/data/team/team.module';
 import { PostsModule } from './modules/posts/posts.module';
 import { UsersModule } from './modules/users/users.module';
 
@@ -29,6 +34,11 @@ import { UsersModule } from './modules/users/users.module';
     CommentsModule,
     AdminModule,
     AnalyticsModule,
+    MatchModule,
+    LeagueModule,
+    TeamModule,
+    PlayerModule,
+    SeasonModule,
   ],
   controllers: [AppController],
   providers: [

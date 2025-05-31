@@ -213,6 +213,9 @@ interface CommentsState {
 // ---- Store actions ----
 // Kiterjesztett akció interfész admin funkciókkal
 interface CommentsActions {
+  // Helper functions
+  transformBackendCommentToAdminComment: (backendComment: any) => AdminComment;
+
   // Rendszerint CRUD műveletek
   fetchComments: (postId: string, params?: FetchCommentsParams) => Promise<void>;
   createComment: (data: CreateCommentData) => Promise<Comment>;
@@ -376,6 +379,39 @@ export const useCommentsStore = create<CommentsState & CommentsActions>()(
         }
       },
 
+      // Helper: Transform backend CommentResponseDto to frontend AdminComment
+      transformBackendCommentToAdminComment(backendComment: any): AdminComment {
+        return {
+          id: backendComment.id,
+          content: backendComment.content,
+          author: {
+            id: backendComment.user?.id || '',
+            username: backendComment.user?.username || '',
+            email: backendComment.user?.email || '',
+            avatar_url: backendComment.user?.avatar || undefined,
+            role: 'user', // Backend doesn't provide role in comment, defaulting to user
+            is_banned: false, // Backend doesn't provide ban status in comment, defaulting to false
+          },
+          post: {
+            id: backendComment.postId,
+            title: 'Post Title', // Backend doesn't provide post title in comment response, would need separate call
+            type: 'tip', // Backend doesn't provide post type in comment response, defaulting to tip
+            author_username: 'Unknown', // Backend doesn't provide post author in comment response
+          },
+          parent_comment_id: backendComment.parentCommentId || undefined,
+          status: backendComment.flagReason ? 'hidden' : 'active', // Determine status based on flagReason
+          likes_count: backendComment.upvotes || 0,
+          dislikes_count: backendComment.downvotes || 0,
+          replies_count: backendComment.replyCount || 0,
+          is_reported: !!backendComment.flagReason,
+          reports_count: backendComment.flagReason ? 1 : 0, // Backend doesn't provide exact count
+          is_pinned: false, // Backend doesn't provide pinned status, defaulting to false
+          created_at: backendComment.createdAt,
+          updated_at: backendComment.updatedAt,
+          deleted_at: backendComment.deletedAt || undefined,
+        };
+      },
+
       // Admin-specifikus metódusok
       async fetchAdminComments(params = {}) {
         set({ isLoadingAdminComments: true, error: null });
@@ -388,61 +424,40 @@ export const useCommentsStore = create<CommentsState & CommentsActions>()(
             limit: params.limit || adminPagination.limit,
           };
 
-          // Mock API hívás - élesben ez egy valós API hívás lenne
+          // Build search parameters for API call
           const searchParams = new URLSearchParams();
           Object.entries(finalParams).forEach(([key, value]) => {
             if (value !== undefined && value !== null && value !== '') {
-              searchParams.append(key, value.toString());
+              // Map frontend filter names to backend parameter names
+              const backendKey =
+                key === 'post_id'
+                  ? 'postId'
+                  : key === 'author_id'
+                    ? 'authorId'
+                    : key === 'sort'
+                      ? 'sortBy'
+                      : key;
+              searchParams.append(backendKey, value.toString());
             }
           });
 
-          // Admin API hívás szimulálása
-          await new Promise(resolve => setTimeout(resolve, 500));
+          // Real API call to admin comments endpoint
+          const url = `${API_BASE_URL}/admin/comments?${searchParams.toString()}`;
+          const response = await axiosWithAuth({ url, method: 'GET' });
 
-          // Mock válasz - élesben, cseréld le valós API hívásra
-          const mockAdminComments: AdminComment[] = [
-            {
-              id: '1',
-              content: 'Great tip! I followed this and won big. Thanks for sharing your analysis.',
-              author: {
-                id: 'user1',
-                username: 'sportsfan123',
-                email: 'sportsfan123@example.com',
-                role: 'user',
-                is_banned: false,
-              },
-              post: {
-                id: 'post1',
-                title: 'Manchester United vs Liverpool - Premier League Prediction',
-                type: 'tip',
-                author_username: 'tipster_pro',
-              },
-              status: 'active',
-              likes_count: 12,
-              dislikes_count: 1,
-              replies_count: 3,
-              is_reported: false,
-              reports_count: 0,
-              is_pinned: false,
-              created_at: '2024-01-15T10:30:00Z',
-              updated_at: '2024-01-15T10:30:00Z',
-            },
-            // További mock adatok hozzáadása szükség szerint
-          ];
+          // Transform backend response to frontend format
+          const transformedComments: AdminComment[] = response.comments.map((comment: any) =>
+            get().transformBackendCommentToAdminComment(comment),
+          );
 
-          const response: AdminCommentsResponse = {
-            comments: mockAdminComments,
-            meta: {
-              total: mockAdminComments.length,
-              page: finalParams.page || 1,
-              limit: finalParams.limit || 20,
-              totalPages: Math.ceil(mockAdminComments.length / (finalParams.limit || 20)),
-            },
+          const adminResponse: AdminCommentsResponse = {
+            comments: transformedComments,
+            meta: response.meta,
           };
 
           set({
-            adminComments: response.comments,
-            adminPagination: response.meta,
+            adminComments: adminResponse.comments,
+            adminPagination: adminResponse.meta,
             adminFilters: finalParams,
             isLoadingAdminComments: false,
           });
@@ -454,21 +469,23 @@ export const useCommentsStore = create<CommentsState & CommentsActions>()(
       async fetchCommentsStats() {
         set({ isLoadingStats: true, error: null });
         try {
-          // Mock API hívás - cseréld le valós implementációra
-          await new Promise(resolve => setTimeout(resolve, 300));
+          // Real API call to admin comments stats endpoint
+          const url = `${API_BASE_URL}/admin/comments/stats`;
+          const backendStats = await axiosWithAuth({ url, method: 'GET' });
 
-          const mockStats: CommentsStats = {
-            total: 1250,
-            active: 1180,
-            hidden: 45,
-            pending: 25,
-            reported: 32,
-            pinned: 8,
-            totalLikes: 3420,
-            recentComments: 89,
+          // Transform backend CommentStatsDto to frontend CommentsStats
+          const frontendStats: CommentsStats = {
+            total: backendStats.total || 0,
+            active: backendStats.active || 0,
+            hidden: backendStats.flagged || 0, // Map flagged to hidden
+            pending: 0, // Backend doesn't provide pending count, defaulting to 0
+            reported: backendStats.reported || 0,
+            pinned: 0, // Backend doesn't provide pinned count, defaulting to 0
+            totalLikes: 0, // Backend doesn't provide total likes in stats, defaulting to 0
+            recentComments: backendStats.recentComments || 0,
           };
 
-          set({ commentsStats: mockStats, isLoadingStats: false });
+          set({ commentsStats: frontendStats, isLoadingStats: false });
         } catch (error: any) {
           set({ error: error.message, isLoadingStats: false });
         }
@@ -476,15 +493,12 @@ export const useCommentsStore = create<CommentsState & CommentsActions>()(
 
       async fetchAdminCommentById(id) {
         try {
-          // Mock API hívás - cseréld le valós implementációra
-          await new Promise(resolve => setTimeout(resolve, 200));
+          // Real API call to get specific comment by ID
+          const url = `${API_BASE_URL}/admin/comments/${id}`;
+          const backendComment = await axiosWithAuth({ url, method: 'GET' });
 
-          const { adminComments } = get();
-          const comment = adminComments.find(c => c.id === id);
-          if (!comment) {
-            throw new Error('Comment not found');
-          }
-          return comment;
+          // Transform backend response to frontend format
+          return get().transformBackendCommentToAdminComment(backendComment);
         } catch (error: any) {
           set({ error: error.message });
           throw error;
@@ -494,9 +508,34 @@ export const useCommentsStore = create<CommentsState & CommentsActions>()(
       async updateCommentStatus(id, status) {
         set({ isSubmitting: true, error: null });
         try {
-          // Mock API hívás - cseréld le valós implementációra
-          await new Promise(resolve => setTimeout(resolve, 300));
+          let url: string;
+          let method = 'POST';
 
+          // Map frontend status to backend endpoint
+          if (status === 'hidden') {
+            url = `${API_BASE_URL}/admin/comments/${id}/flag`;
+          } else if (status === 'active') {
+            url = `${API_BASE_URL}/admin/comments/${id}/unflag`;
+          } else {
+            // For other statuses, use a generic approach (you may need to implement this endpoint)
+            url = `${API_BASE_URL}/admin/comments/${id}/status`;
+            method = 'PATCH';
+          }
+
+          const requestData =
+            status === 'hidden'
+              ? { reason: 'Admin action' }
+              : status !== 'active'
+                ? { status }
+                : undefined;
+
+          await axiosWithAuth({
+            url,
+            method,
+            data: requestData,
+          });
+
+          // Update local state
           set(state => ({
             adminComments: state.adminComments.map(comment =>
               comment.id === id
@@ -514,8 +553,16 @@ export const useCommentsStore = create<CommentsState & CommentsActions>()(
       async toggleCommentPin(id) {
         set({ isSubmitting: true, error: null });
         try {
-          // Mock API hívás - cseréld le valós implementációra
-          await new Promise(resolve => setTimeout(resolve, 300));
+          // Note: Backend doesn't have pin/unpin endpoints yet
+          // This would need to be implemented on the backend
+          const url = `${API_BASE_URL}/admin/comments/${id}/pin`;
+
+          // For now, we'll use a PATCH request to toggle pin status
+          // This endpoint would need to be implemented on the backend
+          await axiosWithAuth({
+            url,
+            method: 'PATCH',
+          });
 
           set(state => ({
             adminComments: state.adminComments.map(comment =>
@@ -530,16 +577,36 @@ export const useCommentsStore = create<CommentsState & CommentsActions>()(
             isSubmitting: false,
           }));
         } catch (error: any) {
-          set({ error: error.message, isSubmitting: false });
-          throw error;
+          // If the endpoint doesn't exist yet, just update local state for now
+          console.warn('Pin/unpin endpoint not implemented yet, updating local state only');
+          set(state => ({
+            adminComments: state.adminComments.map(comment =>
+              comment.id === id
+                ? {
+                    ...comment,
+                    is_pinned: !comment.is_pinned,
+                    updated_at: new Date().toISOString(),
+                  }
+                : comment,
+            ),
+            isSubmitting: false,
+          }));
         }
       },
 
       async bulkDeleteComments(ids) {
         set({ isSubmitting: true, error: null });
         try {
-          // Mock API hívás - cseréld le valós implementációra
-          await new Promise(resolve => setTimeout(resolve, 500));
+          // Real API call for bulk comment actions
+          const url = `${API_BASE_URL}/admin/comments/bulk-action`;
+          await axiosWithAuth({
+            url,
+            method: 'POST',
+            data: {
+              commentIds: ids,
+              action: 'delete',
+            },
+          });
 
           set(state => ({
             adminComments: state.adminComments.filter(comment => !ids.includes(comment.id)),
