@@ -68,6 +68,51 @@ export class UsersService {
     return plainToInstance(UserResponseDto, savedUser);
   }
 
+  // Internal method for auth service - returns actual User entity
+  async createUserEntity(createUserDto: CreateUserDto): Promise<User> {
+    // Check if user already exists
+    const existingUser = await this.userRepository.findOne({
+      where: [{ email: createUserDto.email }, { username: createUserDto.username }],
+    });
+
+    if (existingUser) {
+      if (existingUser.email === createUserDto.email) {
+        throw new ConflictException('Ez az email cím már regisztrálva van');
+      }
+      if (existingUser.username === createUserDto.username) {
+        throw new ConflictException('Ez a felhasználónév már foglalt');
+      }
+    }
+
+    // Hash password
+    const saltRounds = 12;
+    const hashedPassword = await bcrypt.hash(createUserDto.password, saltRounds);
+
+    // Create user entity
+    const user = this.userRepository.create({
+      ...createUserDto,
+      password_hash: hashedPassword,
+      is_active: true,
+      is_verified: false,
+      is_banned: false,
+      is_premium: false,
+      follower_count: 0,
+      following_count: 0,
+      post_count: 0,
+      reputation_score: 0,
+      total_tips: 0,
+      successful_tips: 0,
+      tip_success_rate: 0,
+      current_streak: 0,
+      best_streak: 0,
+      total_profit: 0,
+      created_at: new Date(),
+      updated_at: new Date(),
+    });
+
+    return await this.userRepository.save(user);
+  }
+
   async findAll(queryDto: GetUsersQueryDto): Promise<{
     users: UserResponseDto[];
     meta: { total: number; page: number; limit: number; totalPages: number };

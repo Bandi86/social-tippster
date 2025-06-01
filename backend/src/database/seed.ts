@@ -1,6 +1,7 @@
 // Seed script for Social Tippster database
 // Usage: npx ts-node backend/src/database/seed.ts
 
+import * as bcrypt from 'bcrypt';
 import * as dotenv from 'dotenv';
 import { DeepPartial, Repository } from 'typeorm';
 dotenv.config();
@@ -20,6 +21,11 @@ import { PostVote, VoteType } from '../modules/posts/entities/post-vote.entity';
 import { Post, PostStatus, PostType, PostVisibility } from '../modules/posts/entities/posts.entity';
 import { BadgeTier, Gender, User, UserRole } from '../modules/users/entities/user.entity';
 import dataSource from './data-source';
+
+async function hashPassword(password: string): Promise<string> {
+  const saltRounds = 12; // Same as used in auth service
+  return await bcrypt.hash(password, saltRounds);
+}
 
 async function seed() {
   try {
@@ -43,12 +49,16 @@ async function seed() {
     `);
     console.log('🧹 Cleared existing data (CASCADE)');
 
-    // USERS (csak a létező mezőkkel!)
+    // USERS (със правилно хеширани пароли!)
+    const hashedPassword1 = await hashPassword('password123'); // Alice's password
+    const hashedPassword2 = await hashPassword('password123'); // Bob's password (admin)
+    const hashedPassword3 = await hashPassword('password123'); // Carol's password (moderator)
+
     const users = await dataSource.getRepository(User).save([
       {
         username: 'alice',
         email: 'alice@example.com',
-        password_hash: 'hashedpassword1',
+        password_hash: hashedPassword1,
         first_name: 'Alice',
         last_name: 'Smith',
         phone_number: '+3612345678',
@@ -78,7 +88,7 @@ async function seed() {
       {
         username: 'bob',
         email: 'bob@example.com',
-        password_hash: 'hashedpassword2',
+        password_hash: hashedPassword2,
         first_name: 'Bob',
         last_name: 'Brown',
         phone_number: '+36701234567',
@@ -108,7 +118,7 @@ async function seed() {
       {
         username: 'carol',
         email: 'carol@example.com',
-        password_hash: 'hashedpassword3',
+        password_hash: hashedPassword3,
         first_name: 'Carolina',
         last_name: 'Jones',
         phone_number: '+36301239876',
@@ -133,6 +143,36 @@ async function seed() {
         badge_count: 3,
         highest_badge_tier: BadgeTier.GOLD,
         role: UserRole.MODERATOR,
+      },
+      {
+        // Test admin user for easy testing
+        username: 'testadmin',
+        email: 'testadmin@test.com',
+        password_hash: hashedPassword2, // Same as Bob's - password123
+        first_name: 'Test',
+        last_name: 'Admin',
+        phone_number: '+36301234567',
+        date_of_birth: new Date('1980-01-01'),
+        gender: Gender.MALE,
+        bio: 'Test admin account for development and testing.',
+        location: 'Budapest, Hungary',
+        is_active: true,
+        is_verified: true,
+        is_banned: false,
+        verified_at: new Date('2024-01-01T00:00:00Z'),
+        last_login: new Date('2024-05-30T10:00:00Z'),
+        login_count: 1,
+        is_premium: true,
+        premium_expiration: new Date('2025-12-31T23:59:59Z'),
+        referral_code: 'TESTADMIN',
+        referral_count: 0,
+        follower_count: 0,
+        following_count: 0,
+        post_count: 0,
+        reputation_score: 1000,
+        badge_count: 1,
+        highest_badge_tier: BadgeTier.SILVER,
+        role: UserRole.ADMIN,
       },
     ]);
     console.log(`✅ Created ${users.length} users`);
