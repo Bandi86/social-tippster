@@ -7,9 +7,9 @@ export class CreateAnalyticsEntities1733580000000 implements MigrationInterface 
     // Ensure uuid-ossp extension exists
     await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`);
 
-    // Create user_logins table
+    // Create user_logins table only if it doesn't exist
     await queryRunner.query(`
-      CREATE TABLE "user_logins" (
+      CREATE TABLE IF NOT EXISTS "user_logins" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "user_id" uuid NOT NULL,
         "login_date" TIMESTAMP NOT NULL DEFAULT now(),
@@ -25,7 +25,7 @@ export class CreateAnalyticsEntities1733580000000 implements MigrationInterface 
 
     // Create daily_stats table
     await queryRunner.query(`
-      CREATE TABLE "daily_stats" (
+      CREATE TABLE IF NOT EXISTS "daily_stats" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "date" date NOT NULL,
         "new_users" integer NOT NULL DEFAULT 0,
@@ -49,7 +49,7 @@ export class CreateAnalyticsEntities1733580000000 implements MigrationInterface 
 
     // Create monthly_stats table
     await queryRunner.query(`
-      CREATE TABLE "monthly_stats" (
+      CREATE TABLE IF NOT EXISTS "monthly_stats" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "year" integer NOT NULL,
         "month" integer NOT NULL,
@@ -76,11 +76,11 @@ export class CreateAnalyticsEntities1733580000000 implements MigrationInterface 
 
     // Create system_metrics table
     await queryRunner.query(`
-      CREATE TYPE "system_metrics_metric_type_enum" AS ENUM('performance', 'usage', 'error', 'security')
+      CREATE TYPE IF NOT EXISTS "system_metrics_metric_type_enum" AS ENUM('performance', 'usage', 'error', 'security')
     `);
 
     await queryRunner.query(`
-      CREATE TABLE "system_metrics" (
+      CREATE TABLE IF NOT EXISTS "system_metrics" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "metric_type" "system_metrics_metric_type_enum" NOT NULL,
         "metric_name" character varying(100) NOT NULL,
@@ -92,23 +92,27 @@ export class CreateAnalyticsEntities1733580000000 implements MigrationInterface 
       )
     `);
 
-    // Create indexes
-    await queryRunner.query(`CREATE INDEX "IDX_user_logins_user_id" ON "user_logins" ("user_id")`);
+    // Create indexes if they don't exist
     await queryRunner.query(
-      `CREATE INDEX "IDX_user_logins_login_date" ON "user_logins" ("login_date")`,
+      `CREATE INDEX IF NOT EXISTS "IDX_user_logins_user_id" ON "user_logins" ("user_id")`,
     );
     await queryRunner.query(
-      `CREATE INDEX "IDX_user_logins_ip_address" ON "user_logins" ("ip_address")`,
-    );
-    await queryRunner.query(`CREATE INDEX "IDX_daily_stats_date" ON "daily_stats" ("date")`);
-    await queryRunner.query(
-      `CREATE INDEX "IDX_monthly_stats_year_month" ON "monthly_stats" ("year", "month")`,
+      `CREATE INDEX IF NOT EXISTS "IDX_user_logins_login_date" ON "user_logins" ("login_date")`,
     );
     await queryRunner.query(
-      `CREATE INDEX "IDX_system_metrics_metric_type" ON "system_metrics" ("metric_type")`,
+      `CREATE INDEX IF NOT EXISTS "IDX_user_logins_ip_address" ON "user_logins" ("ip_address")`,
     );
     await queryRunner.query(
-      `CREATE INDEX "IDX_system_metrics_recorded_at" ON "system_metrics" ("recorded_at")`,
+      `CREATE INDEX IF NOT EXISTS "IDX_daily_stats_date" ON "daily_stats" ("date")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "IDX_monthly_stats_year_month" ON "monthly_stats" ("year", "month")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "IDX_system_metrics_metric_type" ON "system_metrics" ("metric_type")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "IDX_system_metrics_recorded_at" ON "system_metrics" ("recorded_at")`,
     );
 
     // Add foreign key constraints - check if users table exists first

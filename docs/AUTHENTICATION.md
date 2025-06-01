@@ -1,5 +1,15 @@
 # 🔐 Biztonságos Authentication Rendszer - ✅ **IMPLEMENTÁLVA**
 
+## 🚀 Recent Updates (2025-01-06)
+
+### Token Management Fix ✅
+
+- **Issue Resolved**: Fixed "Érvénytelen refresh token" errors during user registration
+- **Root Cause**: TypeScript compilation errors where `usersService.create()` returned `UserResponseDto` but token generation methods expected `User` entity
+- **Solution**: Added `createUserEntity()` method in UsersService that returns actual User entity for token generation
+- **Result**: Authentication flow now works properly with type-safe token generation
+- **Status**: Backend compiles successfully with 0 errors, both servers running
+
 ## 📋 Implementált Funkciók ✅
 
 ### 🛡️ Biztonsági Funkciók

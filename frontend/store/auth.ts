@@ -39,10 +39,24 @@ export const useAuthStore = create<AuthStore>()(
         const currentTokens = get().tokens;
         const tokens = accessToken ? { ...currentTokens, accessToken } : null;
         set({ tokens });
+
+        // Sync with API client
+        if (typeof window !== 'undefined') {
+          import('../lib/api-client').then(({ apiClient }) => {
+            apiClient.setAccessToken(accessToken);
+          });
+        }
       },
 
       setTokens: (tokens: AuthTokens | null) => {
         set({ tokens, isAuthenticated: !!tokens?.accessToken });
+
+        // Sync with API client
+        if (typeof window !== 'undefined') {
+          import('../lib/api-client').then(({ apiClient }) => {
+            apiClient.setAccessToken(tokens?.accessToken || null);
+          });
+        }
       },
 
       setLoading: (isLoading: boolean) => {
@@ -92,6 +106,13 @@ export const useAuthStore = create<AuthStore>()(
             isLoading: false,
             lastActivity: new Date().toISOString(),
           });
+
+          // Sync with API client
+          if (typeof window !== 'undefined') {
+            import('../lib/api-client').then(({ apiClient }) => {
+              apiClient.setAccessToken(authResponse.tokens.accessToken);
+            });
+          }
         } catch (error) {
           console.error('Login error:', error);
           set({
@@ -116,6 +137,13 @@ export const useAuthStore = create<AuthStore>()(
             isLoading: false,
             lastActivity: new Date().toISOString(),
           });
+
+          // Sync with API client
+          if (typeof window !== 'undefined') {
+            import('../lib/api-client').then(({ apiClient }) => {
+              apiClient.setAccessToken(authResponse.tokens.accessToken);
+            });
+          }
         } catch (error) {
           console.error('Registration error:', error);
           set({
@@ -152,10 +180,26 @@ export const useAuthStore = create<AuthStore>()(
             tokens: refreshResponse.tokens,
             lastActivity: new Date().toISOString(),
           });
+
+          // Sync with API client
+          if (typeof window !== 'undefined') {
+            import('../lib/api-client').then(({ apiClient }) => {
+              apiClient.setAccessToken(refreshResponse.tokens.accessToken);
+            });
+          }
+
           set({ isLoading: false });
           return true;
         } catch (error) {
           get().clearAuth();
+
+          // Clear API client token
+          if (typeof window !== 'undefined') {
+            import('../lib/api-client').then(({ apiClient }) => {
+              apiClient.clearAuth();
+            });
+          }
+
           set({ isLoading: false });
           return false;
         }

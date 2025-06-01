@@ -445,7 +445,8 @@ export class AuthService {
 
   async register(
     registerDto: RegisterDto,
-  ): Promise<{ message: string; user: UserResponseDto; accessToken: string }> {
+    response?: Response,
+  ): Promise<{ message: string; user: UserResponseDto; access_token: string }> {
     // Set default language_preference to 'hu' if not provided
     if (!registerDto.language_preference) {
       registerDto.language_preference = 'hu';
@@ -456,25 +457,39 @@ export class AuthService {
       registerDto.timezone = 'Europe/Budapest';
     }
 
-    const user = await this.usersService.create(registerDto);
+    // Create user entity for token generation
+    const userEntity = await this.usersService.createUserEntity(registerDto);
 
-    // Generate access token for the new user
-    const payload: JwtPayload = {
-      sub: user.user_id,
-      type: 'access',
-      email: user.email,
-      username: user.username,
-    };
+    // Generate access token (short-lived)
+    const accessToken = this.generateAccessToken(userEntity);
 
-    const accessToken = this.jwtService.sign(payload, {
-      secret: this.configService.get<string>('jwt.accessSecret'),
-      expiresIn: this.configService.get<string>('jwt.accessExpiresIn'),
-    });
+    // Generate refresh token (long-lived)
+    const refreshTokenValue = this.generateRefreshToken(userEntity);
+
+    // Save refresh token to database
+    await this.saveRefreshToken(userEntity.user_id, refreshTokenValue);
+
+    // Set refresh token as HttpOnly cookie if response object is provided
+    if (response) {
+      const isProduction = process.env.NODE_ENV === 'production';
+
+      response.cookie('refresh_token', refreshTokenValue, {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? 'strict' : 'lax',
+        path: '/', // Make cookie available for all paths
+        maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+        domain: isProduction ? undefined : 'localhost', // Allow cross-port access in development
+      });
+    }
+
+    // Convert user entity to DTO for response
+    const userResponseDto = await this.usersService.create(registerDto);
 
     return {
       message: 'Sikeres regisztráció',
-      user: user,
-      accessToken: accessToken,
+      user: userResponseDto,
+      access_token: accessToken,
     };
   }
 

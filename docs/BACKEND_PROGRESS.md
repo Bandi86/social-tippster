@@ -1,5 +1,14 @@
 # Social Tippster Backend Development Progress
 
+## 2025-01-06 – Authentication Token Management Fix
+
+- ✅ **Token Generation Fix**: Resolved TypeScript compilation errors in auth service register method
+- ✅ **Enhanced UsersService**: Added `createUserEntity()` method returning actual User entity for internal auth operations
+- ✅ **Type Safety Improvement**: Separated User entity creation from DTO conversion for proper token generation
+- ✅ **Authentication Flow**: Fixed "Érvénytelen refresh token" errors during user registration
+- ✅ **Compilation Success**: Backend now compiles and starts without errors (0 TypeScript errors)
+- ✅ **Application Status**: Both frontend (http://localhost:3000) and backend (http://localhost:3001) running successfully
+
 ## 2025-05-30 – Notification rendszer backend
 
 - Notification entity, DTO-k (create, update) létrehozva
@@ -79,6 +88,8 @@
 - ✅ **JWT Strategy & Guards**: Token validation and route protection
 - ✅ **CurrentUser Decorator**: Extract authenticated user from request
 - ✅ **Database Migration**: RefreshToken table created and applied
+- ✅ **Token Management Fix**: Resolved TypeScript compilation errors in register flow
+- ✅ **Type-Safe Token Generation**: Enhanced UsersService with createUserEntity() method
 - ✅ **Swagger Documentation**: Full API docs at `/api/docs`
 
 ### 4. Security & Validation ✅
