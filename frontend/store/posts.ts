@@ -200,6 +200,10 @@ interface PostsState {
 
   // Cache for performance
   postsCache: Map<string, { posts: Post[]; meta: any; timestamp: number }>;
+
+  // View tracking state
+  viewedPosts: Set<string>;
+  viewTrackingQueue: Map<string, number>; // post_id -> timestamp
 }
 
 // ---- Store actions ----
@@ -252,6 +256,7 @@ interface PostsActions {
   clearError: () => void;
   clearAdminError: () => void;
   clearCache: () => void;
+  clearViewTracking: () => void;
   reset: () => void;
 }
 
@@ -266,6 +271,18 @@ const generateCacheKey = (params: FetchPostsParams = {}) => {
     page: params.page || 1,
     limit: params.limit || 10,
   });
+};
+
+// Helper function to initialize viewed posts from localStorage
+const initializeViewedPosts = (): Set<string> => {
+  if (typeof window === 'undefined') return new Set();
+  try {
+    const stored = localStorage.getItem('viewedPosts');
+    return stored ? new Set(JSON.parse(stored)) : new Set();
+  } catch (error) {
+    console.warn('Failed to load viewed posts from localStorage:', error);
+    return new Set();
+  }
 };
 
 // ---- Zustand store létrehozása ----
@@ -303,6 +320,10 @@ export const usePostsStore = create<PostsState & PostsActions>()(
       isLoadingStats: false,
       adminError: null,
       postsCache: new Map(),
+
+      // View tracking state
+      viewedPosts: initializeViewedPosts(),
+      viewTrackingQueue: new Map(),
 
       // Actions
       fetchPosts: async (params = {}, append = false) => {
@@ -624,13 +645,117 @@ export const usePostsStore = create<PostsState & PostsActions>()(
 
       trackPostView: async (id: string) => {
         try {
-          await axiosWithAuth({
-            method: 'POST',
-            url: `${API_BASE_URL}/posts/${id}/view`,
+          const state = get();
+          const now = Date.now();
+
+          // Load viewed posts from localStorage for session persistence
+          const storedViewedPosts =
+            typeof window !== 'undefined'
+              ? JSON.parse(localStorage.getItem('viewedPosts') || '[]')
+              : [];
+          const sessionViewedPosts = new Set([...state.viewedPosts, ...storedViewedPosts]);
+
+          // Check if post was already viewed in this session or previously stored
+          if (sessionViewedPosts.has(id)) {
+            return;
+          }
+
+          // Check if tracking is already queued/throttled for this post
+          const lastTracked = state.viewTrackingQueue.get(id);
+
+          // Enhanced throttle: Only track once per post per 2 minutes (120 seconds)
+          if (lastTracked && now - lastTracked < 120000) {
+            return;
+          }
+
+          // Debounce rapid successive calls - delay execution
+          if (state.viewTrackingQueue.has(id)) {
+            const pendingTime = state.viewTrackingQueue.get(id);
+            if (pendingTime && now - pendingTime < 5000) {
+              // 5 second debounce
+              return;
+            }
+          }
+
+          // Mark as pending in tracking queue first (prevents race conditions)
+          set(currentState => {
+            currentState.viewTrackingQueue.set(id, now);
+            return { viewTrackingQueue: new Map(currentState.viewTrackingQueue) };
           });
+
+          // Clean up old entries from tracking queue (older than 10 minutes)
+          const cleanupQueue = new Map(state.viewTrackingQueue);
+          for (const [postId, timestamp] of cleanupQueue.entries()) {
+            if (now - timestamp > 600000) {
+              // 10 minutes
+              cleanupQueue.delete(postId);
+            }
+          }
+
+          // Implement exponential backoff for rate limited requests
+          let retryDelay = 1000; // Start with 1 second
+          let maxRetries = 3;
+          let attempt = 0;
+
+          while (attempt < maxRetries) {
+            try {
+              await axiosWithAuth({
+                method: 'POST',
+                url: `${API_BASE_URL}/posts/${id}/view`,
+              });
+
+              // Success: Mark as viewed and persist to localStorage
+              set(currentState => {
+                const newViewedPosts = new Set([...currentState.viewedPosts, id]);
+                if (typeof window !== 'undefined') {
+                  localStorage.setItem('viewedPosts', JSON.stringify([...newViewedPosts]));
+                }
+                return {
+                  viewedPosts: newViewedPosts,
+                  viewTrackingQueue: cleanupQueue,
+                };
+              });
+
+              break; // Success, exit retry loop
+            } catch (error: any) {
+              attempt++;
+
+              if (error.response?.status === 429) {
+                // Rate limited - implement exponential backoff
+                if (attempt < maxRetries) {
+                  console.warn(
+                    `Post view tracking rate limited, retrying in ${retryDelay}ms (attempt ${attempt}/${maxRetries})`,
+                  );
+                  await new Promise(resolve => setTimeout(resolve, retryDelay));
+                  retryDelay *= 2; // Exponential backoff
+                } else {
+                  // Max retries reached, give up for this post
+                  console.warn(
+                    `Post view tracking failed after ${maxRetries} attempts, giving up for post ${id}`,
+                  );
+                  set(currentState => {
+                    currentState.viewTrackingQueue.delete(id);
+                    return { viewTrackingQueue: new Map(currentState.viewTrackingQueue) };
+                  });
+                }
+              } else {
+                // Other error - don't retry
+                console.warn('Failed to track post view:', error);
+                set(currentState => {
+                  currentState.viewTrackingQueue.delete(id);
+                  return { viewTrackingQueue: new Map(currentState.viewTrackingQueue) };
+                });
+                break;
+              }
+            }
+          }
         } catch (error) {
-          // Silently fail view tracking
           console.warn('Failed to track post view:', error);
+          // Clean up tracking queue on error
+          set(currentState => {
+            currentState.viewTrackingQueue.delete(id);
+            return { viewTrackingQueue: new Map(currentState.viewTrackingQueue) };
+          });
         }
       },
 
@@ -925,6 +1050,17 @@ export const usePostsStore = create<PostsState & PostsActions>()(
         set({ postsCache: new Map() });
       },
 
+      // Clear view tracking data from localStorage and state
+      clearViewTracking: () => {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('viewedPosts');
+        }
+        set({
+          viewedPosts: new Set(),
+          viewTrackingQueue: new Map(),
+        });
+      },
+
       reset: () => {
         set({
           posts: [],
@@ -957,6 +1093,8 @@ export const usePostsStore = create<PostsState & PostsActions>()(
           isLoadingStats: false,
           adminError: null,
           postsCache: new Map(),
+          viewedPosts: new Set(),
+          viewTrackingQueue: new Map(),
         });
       },
     }),

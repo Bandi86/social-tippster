@@ -5,6 +5,15 @@ import * as cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
+  // Initialize Sentry before creating the app
+  const Sentry = require('@sentry/node');
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN || 'https://placeholder-dsn@sentry.io/placeholder-project-id',
+    environment: process.env.NODE_ENV || 'development',
+    tracesSampleRate: 1.0,
+    debug: process.env.NODE_ENV === 'development',
+  });
+
   const app = await NestFactory.create(AppModule);
 
   // Global validation pipe

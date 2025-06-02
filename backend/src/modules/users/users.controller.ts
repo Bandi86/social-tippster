@@ -12,6 +12,7 @@ import {
   Patch,
   Post,
   Query,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -22,6 +23,8 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { Response } from 'express';
+import { AnalyticsService } from '../admin/analytics-dashboard/analytics.service';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UserListPaginatedResponseDto } from './dto';
@@ -36,7 +39,10 @@ import { UsersService } from './users.service';
 @ApiTags('users')
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly analyticsService: AnalyticsService,
+  ) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -214,5 +220,35 @@ export class UsersController {
       throw new ForbiddenException('Nem szüntetheted meg önmagad követését');
     }
     await this.usersService.decrementFollowerCount(id);
+  }
+
+  @Get('login-history')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Get current user login history' })
+  @ApiResponse({ status: 200, description: 'User login history retrieved successfully' })
+  async getLoginHistory(@CurrentUser() user: User) {
+    return this.analyticsService.getUserLoginHistory(user.user_id);
+  }
+
+  @Get('login-history/export')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Export current user login history as CSV' })
+  @ApiResponse({ status: 200, description: 'CSV export of user login history' })
+  async exportLoginHistory(@CurrentUser() user: User, @Res() res: Response) {
+    const csv = await this.analyticsService.exportUserLoginHistoryCsv(user.user_id);
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="login-history.csv"');
+    res.send(csv);
+  }
+
+  @Get('sessions')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Get current user sessions' })
+  @ApiResponse({ status: 200, description: 'User sessions retrieved successfully' })
+  async getUserSessions(@CurrentUser() user: User) {
+    return this.analyticsService.getUserSessions(user.user_id);
   }
 }

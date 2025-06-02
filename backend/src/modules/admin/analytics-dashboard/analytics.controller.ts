@@ -1,4 +1,4 @@
-import { Controller, ForbiddenException, Get, UseGuards } from '@nestjs/common';
+import { Controller, ForbiddenException, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
@@ -140,5 +140,81 @@ export class AnalyticsController {
   async getComprehensiveAnalytics(@CurrentUser() user: User) {
     this.checkAdminRole(user);
     return await this.analyticsService.getComprehensiveAnalytics();
+  }
+
+  @Get('live-login-stats')
+  @ApiOperation({ summary: 'Get live login and failure statistics for real-time monitoring' })
+  @ApiResponse({
+    status: 200,
+    description: 'Live login statistics retrieved successfully',
+    schema: {
+      example: {
+        currentActiveUsers: 42,
+        todaySuccessfulLogins: 158,
+        todayFailedLogins: 23,
+        last24HoursActivity: {
+          successfulLogins: 234,
+          failedLogins: 31,
+          uniqueUsers: 89,
+        },
+        realTimeStats: {
+          last5MinutesLogins: 7,
+          last5MinutesFailures: 2,
+          averageSessionDuration: 1800, // seconds
+        },
+        suspiciousActivity: {
+          multipleFailedAttemptsToday: 5,
+          unusualLocationLogins: 2,
+          rapidLoginAttempts: 1,
+        },
+        topFailureReasons: [
+          { reason: 'invalid_password', count: 18 },
+          { reason: 'user_not_found', count: 5 },
+        ],
+      },
+    },
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized - JWT token required' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Admins only' })
+  async getLiveLoginStats(@CurrentUser() user: User) {
+    this.checkAdminRole(user);
+    return await this.analyticsService.getLiveLoginStats();
+  }
+
+  @Get('sessions')
+  @ApiOperation({ summary: 'Get all user sessions (admin only)' })
+  @ApiResponse({ status: 200, description: 'All user sessions retrieved successfully' })
+  async getAllUserSessions(@CurrentUser() user: User): Promise<unknown[]> {
+    this.checkAdminRole(user);
+    return await this.analyticsService.getAllUserSessions();
+  }
+
+  @Get('sessions/:userId')
+  @ApiOperation({ summary: 'Get sessions for a specific user (admin only)' })
+  @ApiResponse({ status: 200, description: 'User sessions retrieved successfully' })
+  async getUserSessionsByUser(
+    @CurrentUser() user: User,
+    @Param('userId') userId: string,
+  ): Promise<unknown[]> {
+    this.checkAdminRole(user);
+    return await this.analyticsService.getUserSessions(userId);
+  }
+
+  @Post('sessions/:sessionId/force-logout')
+  @ApiOperation({ summary: 'Force logout a session (admin only)' })
+  @ApiResponse({ status: 200, description: 'Session force-logged out successfully' })
+  async forceLogoutSession(@CurrentUser() user: User, @Param('sessionId') sessionId: string) {
+    this.checkAdminRole(user);
+    await this.analyticsService.endUserSessionById(sessionId);
+    return { message: 'Session force-logged out' };
+  }
+
+  @Post('sessions/invalidate-all/:userId')
+  @ApiOperation({ summary: 'Invalidate all sessions for a user (admin only)' })
+  @ApiResponse({ status: 200, description: 'All sessions invalidated for user' })
+  async invalidateAllSessionsForUser(@CurrentUser() user: User, @Param('userId') userId: string) {
+    this.checkAdminRole(user);
+    await this.analyticsService.endAllUserSessions(userId);
+    return { message: 'All sessions invalidated for user' };
   }
 }

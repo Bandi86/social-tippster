@@ -5,7 +5,7 @@ const path = require('path');
 async function testConnection() {
   const client = new Client({
     host: 'localhost',
-    port: 5432,
+    port: 5433,
     user: 'postgres',
     password: 'techno',
     database: 'tippmix',

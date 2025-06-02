@@ -6,13 +6,19 @@
 
 ### Important to know
 
-- frontend uses `next.js` framework please read the [next.js documentation](https://nextjs.org/docs) for more information. Follow the latest patterns and practices.
-- backend uses nestjs framework please read the [nestjs documentation](https://docs.nestjs.com/) for more information.
+- frontend uses `next.js` framework. Please read the [next.js documentation](https://nextjs.org/docs) for more information. Follow the latest patterns and practices.
+- backend uses `nestjs` framework. Please read the [nestjs documentation](https://docs.nestjs.com/) for more information.
 - All test files, images, and documentation must be organized in specific folders to maintain a clean project structure.
 
 ## File Organization Guidelines
 
-- **Test Files**: All test files (e.g., `*.spec.ts`, `*.test.js`, and all test scripts) must be placed in the `tests/` folder at the root. If there are many files, use subfolders (e.g., `tests/backend/`, `tests/frontend/`, `tests/examples/`).
+- **Test Files**: All test files (e.g., `*.spec.ts`, `*.test.js`, and all test scripts) must be placed in the `tests/` folder at the root. If there are many files, use subfolders:
+  - `tests/backend/` (backend tests)
+  - `tests/frontend/` (frontend tests)
+  - `tests/examples/` (example tests)
+  - `tests/images/` (test screenshots)
+  - `tests/playwright-report/` (E2E test reports)
+- No test files are present in the root of `frontend/` or `backend/` directories. This structure is up-to-date and compliant with project documentation standards.
 - **Test Images**: All test-generated images (screenshots, PNGs) must be placed in `tests/images/`, including those from any subproject or test folder.
 - **Documentation**: All Markdown files (`*.md`) must be placed in the `docs/` folder, not in the root or any other folder (except for the main `README.md`, which stays in root).
 - **Debug Files**: All debug PNGs and scripts (e.g., `debug-*.png`, `check-admin-status.js`) must be placed in `docs/debug/`, not in the root or other folders.
@@ -24,27 +30,32 @@
 
 ## Development Server Guidelines
 
-- **Single Command**: Use `npm run dev` from root to start both frontend (localhost:3000) and backend (localhost:3001)
-- **No Separate Terminals**: Do not create separate start scripts or terminals for backend/frontend
-- **One Terminal Rule**: Run only one terminal with both servers - close unused terminals
-- **Restart Process**: If servers need restarting, use `npm run dev` again in root directory
+- **Single Command**: Use `npm run dev` from root to start both frontend (localhost:3000) and backend (localhost:3001).
+- **No Separate Terminals**: Do not create separate start scripts or terminals for backend/frontend.
+- **Single Terminal Rule**: Always use a single integrated terminal in VS Code to run the development server.
+  - Do **not** open a new terminal or start another instance if ports 3000 (frontend) and 3001 (backend) are already in use.
+  - Starting multiple servers in separate terminals will cause port conflicts or crashes.
+  - If you need to restart, stop the current process and run `npm run dev` again in the same terminal.
+  - The server will automatically use ports 3000 and 3001 unless they are occupied. If these ports are in use, a new instance may start on a different port, but running multiple instances is not supported and will cause issues.
+  - You do **not** need to create a new terminal for chat or any other feature; always reuse the existing terminal session.
+- **Restart Process**: If servers need restarting, use `npm run dev` again in root directory.
 - **Alternative Commands**:
   - `npm run backend` (not recommended - frontend won't start)
   - `npm run frontend` (not recommended - backend won't start)
 
 ## Terminal Best Practices
 
-- **Terminal Type**: Use `bash` or `zsh` for script compatibility
-- **Encoding**: Ensure UTF-8 encoding for special characters
-- **IDE Integration**: Use integrated terminal in VSCode for better development experience
-- **Port Management**: If port conflicts occur, close conflicting processes before restarting
-- **Error Handling**: Check terminal logs for errors and reset terminal if needed
+- **Terminal Type**: Use `bash` or `zsh` for script compatibility.
+- **Encoding**: Ensure UTF-8 encoding for special characters.
+- **IDE Integration**: Use integrated terminal in VSCode for better development experience.
+- **Port Management**: If port conflicts occur, close conflicting processes before restarting.
+- **Error Handling**: Check terminal logs for errors and reset terminal if needed.
 
 ## Testing & Documentation
 
-- **E2E Testing**: Use Playwright for end-to-end testing
-- **API Documentation**: Use Swagger UI accessible at `http://localhost:3001/api/docs`
-- **Task Focus**: Complete requested tasks and end conversation after updating documentation
+- **E2E Testing**: Use Playwright for end-to-end testing.
+- **API Documentation**: Use Swagger UI accessible at `http://localhost:3001/api/docs`.
+- **Task Focus**: Complete requested tasks and end conversation after updating documentation.
 
 ## Documentation Update Requirements
 
@@ -144,19 +155,19 @@ When updating documentation, **first check these locations**:
 
 ### Documentation Standards
 
-- Maintain consistent style with existing files
-- Include relevant code examples
-- Add timestamps for updates
-- Group related changes together
-- Be concise yet thorough
-- Update implementation summaries for significant changes
-- Ensure documentation consistency with code changes
-- **Always check the organized subfolder structure before creating or updating files**
+- Maintain consistent style with existing files.
+- Include relevant code examples.
+- Add timestamps for updates.
+- Group related changes together.
+- Be concise yet thorough.
+- Update implementation summaries for significant changes.
+- Ensure documentation consistency with code changes.
+- **Always check the organized subfolder structure before creating or updating files.**
 
 ## Quality Assurance
 
-- Review all changes before committing
-- Verify documentation accuracy
-- Test functionality after changes
-- Maintain high-quality standards throughout development
-- Ensure files are placed in the correct organized subfolder structure
+- Review all changes before committing.
+- Verify documentation accuracy.
+- Test functionality after changes.
+- Maintain high-quality standards throughout development.
+- Ensure files are placed in the correct organized subfolder structure.

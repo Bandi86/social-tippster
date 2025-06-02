@@ -3,12 +3,8 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
-/* import {
-  fetchComprehensiveAnalytics,
-  fetchUserStats,
-  type ComprehensiveAnalytics,
-  type UserStats,
-} from '@/lib/api/admin-apis/analytics'; */
+import { fetchComprehensiveAnalytics, fetchUserStats } from '@/lib/api/analytics';
+import { type ComprehensiveAnalytics, type UserStats } from '@/types/analytics';
 import {
   Activity,
   BarChart3,

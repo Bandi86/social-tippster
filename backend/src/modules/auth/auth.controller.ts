@@ -75,8 +75,18 @@ export class AuthController {
   @ApiOperation({ summary: 'Logout user' })
   @ApiResponse({ status: 200, description: 'User successfully logged out' })
   @ApiResponse({ status: 401, description: 'Unauthorized - JWT token required' })
-  async logout(@CurrentUser() user: User, @Res({ passthrough: true }) res: Response) {
-    return await this.authService.logout(user.user_id, res);
+  async logout(
+    @CurrentUser() user: User,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    // Extract access token from Authorization header
+    let sessionToken: string | undefined = undefined;
+    const authHeader = req.headers['authorization'] || req.headers['Authorization'];
+    if (typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
+      sessionToken = authHeader.slice(7);
+    }
+    return await this.authService.logout(user.user_id, res, sessionToken);
   }
 
   @UseGuards(JwtAuthGuard)

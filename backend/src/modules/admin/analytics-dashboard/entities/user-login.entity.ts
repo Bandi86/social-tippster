@@ -44,4 +44,13 @@ export class UserLogin {
 
   @Column({ type: 'boolean', default: true })
   is_successful: boolean;
+
+  @Column({ type: 'text', nullable: true })
+  failure_reason: string;
+
+  @Column({ type: 'timestamp', nullable: true })
+  session_start: Date;
+
+  @Column({ type: 'timestamp', nullable: true })
+  session_end: Date;
 }

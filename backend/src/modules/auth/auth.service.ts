@@ -159,8 +159,22 @@ export class AuthService {
   ): Promise<LoginResponseDto> {
     // Validate credentials
     const authenticatedUser = await this.validateUser(loginDto.email, loginDto.password);
-
+    const ip = this.extractIpAddress(request);
+    const userAgent = this.extractUserAgent(request);
+    const deviceType = this.getDeviceType(userAgent);
+    const browser = this.getBrowser(userAgent);
     if (!authenticatedUser) {
+      // Track failed login (no userId)
+      await this.analyticsService.trackUserLogin(
+        '', // userId is empty string for failed login
+        ip,
+        userAgent,
+        deviceType,
+        browser,
+        undefined,
+        false,
+        'Invalid credentials',
+      );
       throw new UnauthorizedException('Hibás email vagy jelszó');
     }
 
@@ -228,6 +242,64 @@ export class AuthService {
         // Don't fail login if analytics tracking fails
         console.error('Failed to track user login:', error);
       }
+    }
+
+    // Track successful login
+    await this.analyticsService.trackUserLogin(
+      authenticatedUser.user_id,
+      ip,
+      userAgent,
+      deviceType,
+      browser,
+      undefined,
+      true,
+      undefined,
+      new Date(),
+      undefined,
+    );
+
+    // After successful authentication and token generation
+    if (authenticatedUser && accessToken) {
+      // Find the latest refresh token for this user (assume just created)
+      const latestRefreshToken = await this.refreshTokenRepository.findOne({
+        where: { user_id: authenticatedUser.user_id },
+        order: { created_at: 'DESC' },
+      });
+      // Parse OS from user agent
+      const os = this.getOsFromUserAgent(userAgent);
+      // Real geolocation lookup (example using ip-api.com, replace with production service as needed)
+      let country: string | undefined = undefined;
+      let city: string | undefined = undefined;
+      if (ip) {
+        try {
+          const geoRes = await fetch(`http://ip-api.com/json/${ip}?fields=status,country,city`);
+          if (geoRes.ok) {
+            const geo = (await geoRes.json()) as Record<string, unknown>;
+            if (
+              geo &&
+              typeof geo === 'object' &&
+              Object.prototype.hasOwnProperty.call(geo, 'status') &&
+              geo.status === 'success'
+            ) {
+              country = typeof geo.country === 'string' ? geo.country : undefined;
+              city = typeof geo.city === 'string' ? geo.city : undefined;
+            }
+          }
+        } catch {
+          // Ignore geolocation errors
+        }
+      }
+      await this.analyticsService.createUserSession(
+        authenticatedUser.user_id,
+        accessToken,
+        this.getDeviceType(userAgent),
+        this.getBrowser(userAgent),
+        undefined, // location (optional)
+        latestRefreshToken?.id ?? null,
+        os,
+        country,
+        city,
+      );
     }
 
     return {
@@ -381,7 +453,7 @@ export class AuthService {
     );
   }
 
-  async logout(userId: string, response?: Response): Promise<LogoutDto> {
+  async logout(userId: string, response?: Response, sessionToken?: string): Promise<LogoutDto> {
     // Revoke all refresh tokens for this user
     await this.refreshTokenRepository.update(
       { user_id: userId, is_revoked: false },
@@ -396,6 +468,16 @@ export class AuthService {
         domain: isProduction ? undefined : 'localhost',
       });
       response.clearCookie('refreshToken', { path: '/' }); // Clear old cookie name for compatibility
+    }
+
+    // End the active session for this user (if session token is available)
+    if (sessionToken) {
+      try {
+        await this.analyticsService.endUserSession(sessionToken);
+      } catch (err) {
+        // Log but do not block logout on analytics failure
+        console.warn('Failed to end user session:', err);
+      }
     }
 
     return {
@@ -591,5 +673,16 @@ export class AuthService {
 
     const userAgent = request.headers['user-agent'];
     return typeof userAgent === 'string' ? userAgent : undefined;
+  }
+
+  // Add helper for OS parsing
+  private getOsFromUserAgent(userAgent?: string): string {
+    if (!userAgent) return 'unknown';
+    if (/windows/i.test(userAgent)) return 'Windows';
+    if (/macintosh|mac os x/i.test(userAgent)) return 'MacOS';
+    if (/linux/i.test(userAgent)) return 'Linux';
+    if (/android/i.test(userAgent)) return 'Android';
+    if (/iphone|ipad|ipod/i.test(userAgent)) return 'iOS';
+    return 'Other';
   }
 }
