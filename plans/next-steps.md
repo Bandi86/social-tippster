@@ -61,18 +61,29 @@ To address point 2 (**Audit & Monitoring**):
 4. (Optionally) Add a stub for Datadog metrics.
 5. Document the new monitoring integration and endpoint.
 
-I'll start by adding Sentry integration and logging for suspicious activity in the backend.
-````
 
-````
-
-
-Made changes.
-
-
-````
-
-````
-
-
-Made changes.
+2025.06.02:
+Issues in Flow:
+Strategy registration mismatch
+Inconsistent JWT validation
+Session lifecycle not fully integrated
+ Could Be Improved:
+Add session cleanup on logout
+Implement token rotation on refresh
+Add device fingerprinting:
+Missing:
+Browser fingerprinting (screen resolution, timezone, language)
+Canvas/WebGL fingerprinting
+Device hardware fingerprinting
+Geolocation integration
+Better session expiry handling:
+Missing:
+Dynamic session expiry based on activity
+Configurable expiry policies
+Idle timeout detection
+Session extension on activity
+💡 Immediate Action Plan
+Fix Strategy Registration (5 minutes)
+Remove Duplicate AccessTokenStrategy (2 minutes)
+Add LocalStrategy to providers (1 minute)
+Test authentication flow (10 minutes)

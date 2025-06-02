@@ -374,4 +374,26 @@ export class UsersService {
   mapToResponseDto(user: User): UserResponseDto {
     return plainToInstance(UserResponseDto, user);
   }
+
+  // Add getUserById method for auth service
+  async getUserById(id: string): Promise<UserResponseDto> {
+    const user = await this.userRepository.findOne({ where: { user_id: id } });
+
+    if (!user) {
+      throw new NotFoundException('Felhasználó nem található');
+    }
+
+    return plainToInstance(UserResponseDto, user);
+  }
+
+  // Add findById method that returns User entity for internal use
+  async findById(id: string): Promise<User> {
+    const user = await this.userRepository.findOne({ where: { user_id: id } });
+
+    if (!user) {
+      throw new NotFoundException('Felhasználó nem található');
+    }
+
+    return user;
+  }
 }

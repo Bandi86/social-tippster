@@ -37,4 +37,13 @@ export class LoginDto {
   @IsOptional()
   @IsString()
   language_preference?: string;
+
+  @ApiProperty({
+    description: 'Megjegyez engem opció',
+    example: false,
+    required: false,
+    default: false,
+  })
+  @IsOptional()
+  remember_me?: boolean;
 }

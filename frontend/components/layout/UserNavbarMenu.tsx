@@ -1,6 +1,5 @@
 'use client';
 
-import { NotificationsBell } from '@/components/features/notifications/NotificationsBell';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/useAuth';
-import { LogOut, Settings, Shield, User } from 'lucide-react';
+import { LogOut, Mail, Settings, Shield, User } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -29,6 +28,8 @@ const UserNavbarMenu = () => {
   if (isLoading) {
     return (
       <div className='flex items-center space-x-2'>
+        <div className='h-8 w-8 rounded-full bg-amber-500/20 animate-pulse' />
+        <div className='h-8 w-8 rounded-full bg-amber-500/20 animate-pulse' />
         <div className='h-10 w-10 rounded-full bg-amber-500/20 animate-pulse' />
       </div>
     );
@@ -44,13 +45,13 @@ const UserNavbarMenu = () => {
       : user.username?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || 'U';
 
   return (
-    <div className='flex items-center gap-2'>
-      <NotificationsBell />
+    <div className='flex items-center gap-3'>
+      {/* User Profile Dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
             variant='ghost'
-            className='relative h-10 w-10 rounded-full hover:bg-amber-500/10 border border-amber-500/30 hover:border-amber-400/50 transition-all duration-200'
+            className='relative h-10 w-10 rounded-full hover:bg-amber-500/10 border border-amber-500/30 hover:border-amber-400/50 transition-all duration-200 ring-amber-500/20 hover:ring-2'
           >
             <Avatar className='h-9 w-9'>
               <AvatarImage src={user.profile_image} alt={user.username} />
@@ -61,7 +62,7 @@ const UserNavbarMenu = () => {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent
-          className='w-64 bg-black/95 backdrop-blur-sm border border-amber-500/20 shadow-xl'
+          className='w-64 bg-black/95 backdrop-blur-sm border border-amber-500/20 shadow-xl animate-in fade-in zoom-in duration-300'
           align='end'
           forceMount
         >
@@ -93,7 +94,7 @@ const UserNavbarMenu = () => {
           >
             <Link href='/profile'>
               <User className='mr-2 h-4 w-4' />
-              <span>Profile</span>
+              <span>Profil</span>
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem
@@ -102,7 +103,16 @@ const UserNavbarMenu = () => {
           >
             <Link href='/dashboard'>
               <Settings className='mr-2 h-4 w-4' />
-              <span>Dashboard</span>
+              <span>Vezérlőpult</span>
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            asChild
+            className='text-amber-300 hover:text-amber-100 hover:bg-amber-500/10 focus:bg-amber-500/10 focus:text-amber-100'
+          >
+            <Link href='/messages'>
+              <Mail className='mr-2 h-4 w-4' />
+              <span>Üzenetek</span>
             </Link>
           </DropdownMenuItem>
           {hasAdminAccess && (
@@ -125,7 +135,7 @@ const UserNavbarMenu = () => {
             className='text-red-400 hover:text-red-300 hover:bg-red-500/10 focus:bg-red-500/10 focus:text-red-300'
           >
             <LogOut className='mr-2 h-4 w-4' />
-            <span>Log out</span>
+            <span>Kijelentkezés</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

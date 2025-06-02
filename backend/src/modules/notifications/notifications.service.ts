@@ -1,13 +1,29 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DeleteResult, Repository } from 'typeorm';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { UpdateNotificationDto } from './dto/update-notification.dto';
 import { Notification } from './entities/notification.entity';
 import { NotificationsGateway, WebSocketNotificationPayload } from './notifications.gateway';
 
+// --- Interfaces for method signatures ---
+export interface INotificationsService {
+  create(createNotificationDto: CreateNotificationDto): Promise<Notification>;
+  findAll(userId: string): Promise<Notification[]>;
+  findOne(id: string, userId?: string): Promise<Notification | null>;
+  update(
+    id: string,
+    updateNotificationDto: UpdateNotificationDto,
+    userId?: string,
+  ): Promise<Notification | null>;
+  markAsRead(id: string, userId?: string): Promise<Notification | null>;
+  markAllAsRead(userId: string): Promise<number>;
+  remove(id: string, userId?: string): Promise<void>;
+  removeAll(userId: string): Promise<number>;
+}
+
 @Injectable()
-export class NotificationsService {
+export class NotificationsService implements INotificationsService {
   constructor(
     @InjectRepository(Notification)
     private readonly notificationRepository: Repository<Notification>,
@@ -16,8 +32,8 @@ export class NotificationsService {
 
   // Új értesítés létrehozása és real-time küldése websocketen
   async create(createNotificationDto: CreateNotificationDto): Promise<Notification> {
-    const notification = this.notificationRepository.create(createNotificationDto);
-    const saved = await this.notificationRepository.save(notification);
+    const notification: Notification = this.notificationRepository.create(createNotificationDto);
+    const saved: Notification = await this.notificationRepository.save(notification);
     // Valós idejű push websocketen keresztül
     if (this.notificationsGateway && typeof this.notificationsGateway.notifyUser === 'function') {
       const payload: WebSocketNotificationPayload = {
@@ -38,24 +54,50 @@ export class NotificationsService {
     });
   }
 
-  // Egy értesítés lekérdezése ID alapján
-  async findOne(id: string): Promise<Notification | null> {
-    return this.notificationRepository.findOne({ where: { notification_id: id } });
+  // Egy értesítés lekérdezése ID alapján (csak saját értesítés)
+  async findOne(id: string, userId?: string): Promise<Notification | null> {
+    const notification: Notification | null = await this.notificationRepository.findOne({
+      where: { notification_id: id },
+    });
+
+    if (!notification) {
+      throw new NotFoundException('Notification not found');
+    }
+
+    // Ha userId megvan adva, ellenőrizzük, hogy saját értesítés-e
+    if (userId && notification.user_id !== userId) {
+      throw new ForbiddenException('You can only access your own notifications');
+    }
+
+    return notification;
   }
 
-  // Értesítés frissítése
+  // Értesítés frissítése (csak saját értesítés)
   async update(
     id: string,
     updateNotificationDto: UpdateNotificationDto,
+    userId?: string,
   ): Promise<Notification | null> {
+    // Először ellenőrizzük, hogy létezik és saját értesítés-e
+    const existing: Notification | null = await this.findOne(id, userId);
+    if (!existing) {
+      return null;
+    }
+
     await this.notificationRepository.update(id, updateNotificationDto);
     return this.findOne(id);
   }
 
-  // Egy értesítés olvasottra állítása és websocket értesítés küldése
-  async markAsRead(id: string): Promise<Notification | null> {
+  // Egy értesítés olvasottra állítása és websocket értesítés küldése (csak saját értesítés)
+  async markAsRead(id: string, userId?: string): Promise<Notification | null> {
+    // Először ellenőrizzük, hogy létezik és saját értesítés-e
+    const existing: Notification | null = await this.findOne(id, userId);
+    if (!existing) {
+      return null;
+    }
+
     await this.notificationRepository.update(id, { read_status: true, read_at: new Date() });
-    const notif = await this.findOne(id);
+    const notif: Notification | null = await this.findOne(id);
     if (
       notif &&
       this.notificationsGateway &&
@@ -73,7 +115,7 @@ export class NotificationsService {
 
   // Összes nem olvasott értesítés olvasottra állítása és websocket értesítés küldése
   async markAllAsRead(userId: string): Promise<number> {
-    const result = await this.notificationRepository.update(
+    const result: { affected?: number } = await this.notificationRepository.update(
       { user_id: userId, read_status: false },
       { read_status: true, read_at: new Date() },
     );
@@ -88,8 +130,31 @@ export class NotificationsService {
     return result.affected || 0;
   }
 
-  // Értesítés törlése
-  async remove(id: string): Promise<void> {
+  // Értesítés törlése (csak saját értesítés)
+  async remove(id: string, userId?: string): Promise<void> {
+    // Először ellenőrizzük, hogy létezik és saját értesítés-e
+    const existing: Notification | null = await this.findOne(id, userId);
+    if (!existing) {
+      return;
+    }
+
     await this.notificationRepository.delete(id);
+  }
+
+  // Összes értesítés törlése (csak saját értesítések)
+  async removeAll(userId: string): Promise<number> {
+    const result: DeleteResult = await this.notificationRepository.delete({
+      user_id: userId,
+    });
+    // Opcionális: websocket értesítés küldése törlésről
+    if (this.notificationsGateway && typeof this.notificationsGateway.notifyUser === 'function') {
+      const payload: WebSocketNotificationPayload = {
+        type: 'all_deleted',
+        notification: null,
+        timestamp: new Date().toISOString(),
+      };
+      this.notificationsGateway.notifyUser(userId, payload);
+    }
+    return result.affected ?? 0;
   }
 }

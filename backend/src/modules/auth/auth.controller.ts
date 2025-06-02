@@ -16,7 +16,7 @@ import { User } from '../users/entities/user.entity';
 import { AuthService } from './auth.service';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { LoginDto } from './dto/login.dto';
-import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { LogoutDto, RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
@@ -80,13 +80,20 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    // Extract access token from Authorization header
-    let sessionToken: string | undefined = undefined;
-    const authHeader = req.headers['authorization'] || req.headers['Authorization'];
-    if (typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
-      sessionToken = authHeader.slice(7);
+    // Extract refresh token from request or cookie
+    const cookies = req.cookies as Record<string, unknown> | undefined;
+    const body = req.body as Record<string, unknown> | undefined;
+    const refreshToken =
+      (typeof cookies?.refresh_token === 'string' ? cookies.refresh_token : '') ||
+      (typeof body?.refresh_token === 'string' ? body.refresh_token : '');
+
+    if (!refreshToken) {
+      return { message: 'Már ki van jelentkezve' };
     }
-    return await this.authService.logout(user.user_id, res, sessionToken);
+
+    const logoutDto: LogoutDto = { refresh_token: refreshToken };
+
+    return await this.authService.logout(logoutDto, user.user_id, res);
   }
 
   @UseGuards(JwtAuthGuard)

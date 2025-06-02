@@ -209,47 +209,81 @@ export class AnalyticsService {
     return days;
   }
 
-  // TRACK USER LOGIN (success/failure)
-  async trackUserLogin(
-    userId: string,
-    ipAddress?: string,
-    userAgent?: string,
-    deviceType?: string,
-    browser?: string,
-    location?: string,
-    isSuccessful: boolean = true,
-    failureReason?: string,
-    sessionStart?: Date,
-    sessionEnd?: Date,
-  ): Promise<UserLogin> {
+  /**
+   * Find login record by user and session start time
+   */
+  async findLoginByUserAndTime(userId: string, sessionStart: Date) {
+    return await this.userLoginRepository.findOne({
+      where: {
+        user_id: userId,
+        session_start: sessionStart,
+      },
+    });
+  }
+
+  /**
+   * Update login record with session end time
+   */
+  async updateLoginSessionEnd(loginId: string, sessionEnd: Date) {
+    return await this.userLoginRepository.update(loginId, {
+      session_end: sessionEnd,
+    });
+  }
+
+  /**
+   * Enhanced trackUserLogin to support new fields - SINGLE VERSION
+   */
+  async trackUserLogin(loginData: {
+    user_id: string | null;
+    login_date?: Date;
+    ip_address?: string;
+    user_agent?: string;
+    device_type?: string;
+    browser?: string;
+    location?: string;
+    is_successful: boolean;
+    failure_reason?: string;
+    session_start?: Date;
+    session_end?: Date;
+    session_id?: string;
+  }): Promise<UserLogin> {
     try {
       const login = this.userLoginRepository.create({
-        user_id: userId,
-        ip_address: ipAddress,
-        user_agent: userAgent,
-        device_type: deviceType,
-        browser: browser,
-        location: location,
-        is_successful: isSuccessful,
-        failure_reason: failureReason,
-        session_start: sessionStart,
-        session_end: sessionEnd,
+        user_id: loginData.user_id ?? undefined,
+        login_date: loginData.login_date || new Date(),
+        ip_address: loginData.ip_address,
+        user_agent: loginData.user_agent,
+        device_type: loginData.device_type,
+        browser: loginData.browser,
+        location: loginData.location,
+        is_successful: loginData.is_successful,
+        failure_reason: loginData.failure_reason,
+        session_start: loginData.session_start,
+        session_end: loginData.session_end,
       });
 
       const savedLogin = await this.userLoginRepository.save(login);
 
       // Monitor for suspicious activity if this is a failed login
-      if (!isSuccessful && userId) {
-        await this.checkAndLogSuspiciousActivity(userId, ipAddress, userAgent, failureReason);
+      if (!loginData.is_successful && loginData.user_id) {
+        await this.checkAndLogSuspiciousActivity(
+          loginData.user_id,
+          loginData.ip_address,
+          loginData.user_agent,
+          loginData.failure_reason,
+        );
       }
 
       // Log auth event to monitoring service
-      this.monitoringService.logAuthEvent(isSuccessful ? 'login_success' : 'login_failure', {
-        userId: userId || undefined,
-        ipAddress,
-        userAgent,
-        timestamp: new Date(),
-      });
+      this.monitoringService.logAuthEvent(
+        loginData.is_successful ? 'login_success' : 'login_failure',
+        {
+          userId: loginData.user_id || undefined,
+          ipAddress: loginData.ip_address,
+          userAgent: loginData.user_agent,
+          timestamp: new Date(),
+        },
+      );
 
       return savedLogin;
     } catch (error) {

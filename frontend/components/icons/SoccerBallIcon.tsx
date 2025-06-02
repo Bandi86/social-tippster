@@ -2,13 +2,7 @@
 import { SVGProps } from 'react';
 
 export const SoccerBallIcon = (props: SVGProps<SVGSVGElement>) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    {...props}
-  >
-    {/* Itt helyezd el a kiválasztott SVG path-ját */}
-    <path d="../../svg/ball"></path>
+  <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor' {...props}>
+    <path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1.06 3.5l2.12 1.5 2.12-1.5c.44.32.85.69 1.22 1.09L15.17 8l1.23 1.91c-.37.4-.78.77-1.22 1.09L13.06 9.5 11 11l-2.12-1.5L7.65 11c-.44-.32-.85-.69-1.22-1.09L7.83 8l-1.23-1.91c.37-.4.78-.77 1.22-1.09L10.94 5.5zm0 13L13.06 17l2.12 1.5c-.44.32-.85.69-1.22 1.09L12.83 18l-1.23 1.91c-.37-.4-.78-.77-1.22-1.09L12.94 17l-2.12-1.5zm-5.11-6.5L7.06 13l2.12-1.5L11 13l-2.12 1.5L7.65 13c-.44-.32-.85-.69-1.22-1.09zm12.34 0c.37.4.78.77 1.22 1.09L17.35 13l-1.23-1.5L18.24 10l1.23 1.5c-.37.4-.78.77-1.22 1.09z' />
   </svg>
 );

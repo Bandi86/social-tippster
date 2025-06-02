@@ -17,8 +17,18 @@ import { MatchModule } from './modules/data/match/match.module';
 import { PlayerModule } from './modules/data/player/player.module';
 import { SeasonModule } from './modules/data/season/season.module';
 import { TeamModule } from './modules/data/team/team.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 import { PostsModule } from './modules/posts/posts.module';
 import { UsersModule } from './modules/users/users.module';
+
+// Only apply ThrottlerGuard in production
+const guards: Array<{ provide: typeof APP_GUARD; useClass: typeof ThrottlerGuard }> = [];
+if (process.env.NODE_ENV !== 'development') {
+  guards.push({
+    provide: APP_GUARD,
+    useClass: ThrottlerGuard,
+  });
+}
 
 @Module({
   imports: [
@@ -32,6 +42,7 @@ import { UsersModule } from './modules/users/users.module';
     AuthModule,
     PostsModule,
     CommentsModule,
+    NotificationsModule,
     AdminModule,
     AnalyticsModule,
     MatchModule,
@@ -40,14 +51,11 @@ import { UsersModule } from './modules/users/users.module';
     PlayerModule,
     SeasonModule,
   ],
-  controllers: [AppController],
-  providers: [
-    AppService,
-    {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard,
-    },
+  controllers: [
+    AppController,
+    // Add any additional controllers here
   ],
+  providers: [AppService, ...guards],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {

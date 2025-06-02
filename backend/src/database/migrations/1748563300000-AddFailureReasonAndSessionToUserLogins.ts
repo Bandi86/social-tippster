@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddFailureReasonAndSessionToUserLogins20250601 implements MigrationInterface {
-  name = 'AddFailureReasonAndSessionToUserLogins20250601';
+export class AddFailureReasonAndSessionToUserLogins1748563300000 implements MigrationInterface {
+  name = 'AddFailureReasonAndSessionToUserLogins1748563300000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(

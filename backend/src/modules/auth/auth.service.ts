@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -6,45 +6,33 @@ import * as bcrypt from 'bcrypt';
 import { Request, Response } from 'express';
 import { Repository } from 'typeorm';
 import { AnalyticsService } from '../admin/analytics-dashboard/analytics.service';
-import { UpdateUserDto } from '../users/dto/update-user.dto';
+import { UserSession } from '../admin/analytics-dashboard/entities/user-session.entity';
 import { UserResponseDto } from '../users/dto/user-response.dto';
 import { User } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
-import { LogoutAllDevicesDto, LogoutDto, RefreshTokenDto } from './dto/refresh-token.dto';
+import { LogoutDto, RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
 import { RefreshToken } from './entities/refresh-token.entity';
-import { RefreshTokenPayload } from './strategies/refresh-token.strategy';
-
-export interface JwtPayload {
-  sub: string;
-  type: string;
-  email?: string;
-  username?: string;
-  [key: string]: unknown;
-}
+import { JwtPayload } from './interfaces/jwt-payload.interface';
+import {
+  DeviceFingerprint,
+  DeviceFingerprintingService,
+} from './services/device-fingerprinting.service';
+import { SessionExpiryPolicy, SessionExpiryService } from './services/session-expiry.service';
+import { SessionLifecycleService } from './services/session-lifecycle.service';
 
 export interface LoginResponse {
   access_token: string;
   user: UserResponseDto;
 }
 
-export interface LoginResponseDto {
-  access_token: string;
-  user: UserResponseDto;
+export interface RefreshTokenPayload {
+  sub: string;
+  type: 'refresh';
+  iat?: number;
+  exp?: number;
 }
-
-// Enhanced request interface for better type safety
-/* interface AuthRequest extends Request {
-  headers: {
-    'user-agent'?: string;
-    'x-forwarded-for'?: string;
-    'x-real-ip'?: string;
-    'x-timezone'?: string;
-    timezone?: string;
-    [key: string]: string | string[] | undefined;
-  };
-} */
 
 @Injectable()
 export class AuthService {
@@ -56,8 +44,27 @@ export class AuthService {
     private readonly configService: ConfigService,
     @InjectRepository(RefreshToken)
     private readonly refreshTokenRepository: Repository<RefreshToken>,
+    @InjectRepository(UserSession)
+    private readonly userSessionRepository: Repository<UserSession>,
     private readonly analyticsService: AnalyticsService,
+    private readonly sessionLifecycleService: SessionLifecycleService,
+    private readonly deviceFingerprintingService: DeviceFingerprintingService,
+    private readonly sessionExpiryService: SessionExpiryService,
   ) {}
+
+  /**
+   * Register a new user
+   */
+  async register(registerDto: RegisterDto): Promise<UserResponseDto> {
+    try {
+      return await this.usersService.create(registerDto);
+    } catch (error) {
+      if (error instanceof ConflictException) {
+        throw error;
+      }
+      throw new ConflictException('Regisztráció sikertelen');
+    }
+  }
 
   /**
    * Validate refresh token for refresh token strategy
@@ -152,203 +159,306 @@ export class AuthService {
     return user;
   }
 
+  /**
+   * Enhanced login method with session tracking
+   */
   async login(
     loginDto: LoginDto,
     request?: Request,
     response?: Response,
-  ): Promise<LoginResponseDto> {
-    // Validate credentials
-    const authenticatedUser = await this.validateUser(loginDto.email, loginDto.password);
-    const ip = this.extractIpAddress(request);
-    const userAgent = this.extractUserAgent(request);
-    const deviceType = this.getDeviceType(userAgent);
-    const browser = this.getBrowser(userAgent);
-    if (!authenticatedUser) {
-      // Track failed login (no userId)
-      await this.analyticsService.trackUserLogin(
-        '', // userId is empty string for failed login
-        ip,
-        userAgent,
-        deviceType,
-        browser,
-        undefined,
-        false,
-        'Invalid credentials',
-      );
+    clientFingerprint?: Partial<DeviceFingerprint>,
+  ): Promise<LoginResponse> {
+    const user = await this.validateUser(loginDto.email, loginDto.password);
+
+    if (!user) {
+      // Track failed login with enhanced details
+      await this.trackFailedLogin(loginDto.email, 'Invalid credentials', request);
       throw new UnauthorizedException('Hibás email vagy jelszó');
     }
 
-    // Update last_login, timezone, and language_preference
-    const updateData: Partial<UpdateUserDto> = {
-      // last_login: new Date().toISOString(), // Removed because it's not in UpdateUserDto
-    };
+    // Generate device fingerprint
+    const deviceFingerprint = request
+      ? this.deviceFingerprintingService.generateDeviceFingerprint(request, clientFingerprint)
+      : this.deviceFingerprintingService.generateFallbackFingerprint(clientFingerprint);
 
-    // Set timezone if provided, otherwise detect from request or use default
-    if (loginDto.timezone) {
-      updateData.timezone = loginDto.timezone;
-    } else {
-      // Try to detect timezone from request headers or use default
-      updateData.timezone = this.extractTimezone(request) || 'Europe/Budapest';
-    }
+    // Check for suspicious login patterns
+    await this.checkSuspiciousLogin(user.user_id, deviceFingerprint);
 
-    // Set language preference, default to Hungarian
-    updateData.language_preference = loginDto.language_preference || 'hu';
-
-    // Update user in database using the update method
-    await this.usersService.update(authenticatedUser.user_id, updateData);
-
-    // Generate access token (short-lived)
-    const accessToken = this.generateAccessToken(authenticatedUser);
-
-    // Generate refresh token (long-lived)
-    const refreshTokenValue = this.generateRefreshToken(authenticatedUser);
-
-    // Save refresh token to database
-    await this.saveRefreshToken(authenticatedUser.user_id, refreshTokenValue);
-
-    // Set refresh token as HttpOnly cookie if response object is provided
-    if (response) {
-      const isProduction = process.env.NODE_ENV === 'production';
-
-      response.cookie('refresh_token', refreshTokenValue, {
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: isProduction ? 'strict' : 'lax',
-        path: '/', // Make cookie available for all paths
-        maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
-        domain: isProduction ? undefined : 'localhost', // Allow cross-port access in development
-      });
-    }
-
-    // Get updated user data
-    const userResponse = await this.usersService.findOne(authenticatedUser.user_id);
-
-    // Track login after successful authentication
-    if (authenticatedUser && request) {
-      try {
-        // Extract IP address safely
-        const ip: string | undefined = this.extractIpAddress(request);
-
-        // Safely access user-agent header
-        const userAgent: string | undefined = this.extractUserAgent(request);
-        await this.analyticsService.trackUserLogin(
-          authenticatedUser.user_id,
-          ip,
-          userAgent,
-          this.getDeviceType(userAgent),
-          this.getBrowser(userAgent),
-        );
-      } catch (error) {
-        // Don't fail login if analytics tracking fails
-        console.error('Failed to track user login:', error);
-      }
-    }
-
-    // Track successful login
-    await this.analyticsService.trackUserLogin(
-      authenticatedUser.user_id,
-      ip,
-      userAgent,
-      deviceType,
-      browser,
-      undefined,
-      true,
-      undefined,
-      new Date(),
-      undefined,
+    // Generate tokens with dynamic expiry
+    const policy = this.sessionExpiryService.getSessionExpiryPolicy(
+      user.role,
+      loginDto.remember_me,
     );
 
-    // After successful authentication and token generation
-    if (authenticatedUser && accessToken) {
-      // Find the latest refresh token for this user (assume just created)
-      const latestRefreshToken = await this.refreshTokenRepository.findOne({
-        where: { user_id: authenticatedUser.user_id },
-        order: { created_at: 'DESC' },
-      });
-      // Parse OS from user agent
-      const os = this.getOsFromUserAgent(userAgent);
-      // Real geolocation lookup (example using ip-api.com, replace with production service as needed)
-      let country: string | undefined = undefined;
-      let city: string | undefined = undefined;
-      if (ip) {
-        try {
-          const geoRes = await fetch(`http://ip-api.com/json/${ip}?fields=status,country,city`);
-          if (geoRes.ok) {
-            const geo = (await geoRes.json()) as Record<string, unknown>;
-            if (
-              geo &&
-              typeof geo === 'object' &&
-              Object.prototype.hasOwnProperty.call(geo, 'status') &&
-              geo.status === 'success'
-            ) {
-              country = typeof geo.country === 'string' ? geo.country : undefined;
-              city = typeof geo.city === 'string' ? geo.city : undefined;
-            }
-          }
-        } catch {
-          // Ignore geolocation errors
-        }
-      }
-      await this.analyticsService.createUserSession(
-        authenticatedUser.user_id,
-        accessToken,
-        this.getDeviceType(userAgent),
-        this.getBrowser(userAgent),
-        undefined, // location (optional)
-        latestRefreshToken?.id ?? null,
-        os,
-        country,
-        city,
-      );
+    const { access_token, refresh_token } = this.generateTokensWithPolicy(user, policy);
+
+    // Save refresh token
+    const refreshTokenEntity = await this.saveRefreshToken(user.user_id, refresh_token, request);
+
+    // Create session with fingerprint
+    await this.sessionLifecycleService.createSessionWithFingerprint(
+      user.user_id,
+      refreshTokenEntity.id,
+      deviceFingerprint,
+    );
+
+    // Set refresh token cookie
+    if (response) {
+      this.setRefreshTokenCookie(response, refresh_token);
     }
 
+    // Get user response DTO
+    const userEntity = await this.usersService.getUserById(user.user_id);
+    if (!userEntity) {
+      throw new UnauthorizedException('Felhasználó nem található');
+    }
+    const userResponseDto = new UserResponseDto(userEntity);
+
     return {
-      access_token: accessToken,
-      user: userResponse,
+      access_token,
+      user: userResponseDto,
     };
   }
 
-  private generateAccessToken(user: User): string {
+  private async checkSuspiciousLogin(
+    userId: string,
+    currentFingerprint: DeviceFingerprint,
+  ): Promise<void> {
+    // Get recent session fingerprints
+    const recentSessions = await this.userSessionRepository.find({
+      where: { user_id: userId },
+      order: { session_start: 'DESC' },
+      take: 5,
+    });
+
+    for (const session of recentSessions) {
+      if (session.device_fingerprint) {
+        const comparison = this.deviceFingerprintingService.compareFingerprints(
+          currentFingerprint,
+          session.device_fingerprint as DeviceFingerprint,
+        );
+
+        if (comparison.is_suspicious) {
+          // Log suspicious activity
+          console.warn(`Suspicious login detected for user ${userId}:`, {
+            similarity_score: comparison.similarity_score,
+            suspicious_changes: comparison.suspicious_changes,
+          });
+
+          // Optional: Send security alert, require additional verification
+          // await this.sendSecurityAlert(userId, comparison);
+        }
+      }
+    }
+  }
+
+  /**
+   * Validate JWT payload for JWT strategy
+   */
+  async validateJwtPayload(payload: JwtPayload): Promise<User | null> {
+    try {
+      const user = await this.usersService.findById(payload.sub);
+
+      if (!user || !user.is_active) {
+        return null;
+      }
+
+      return user;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Generate access and refresh tokens - UNIFIED METHOD
+   */
+  private generateTokens(user: User): { access_token: string; refresh_token: string } {
     const payload: JwtPayload = {
       sub: user.user_id,
       email: user.email,
-      username: user.username,
       type: 'access',
     };
 
-    return this.jwtService.sign(payload, {
-      secret: this.configService.get<string>('jwt.accessSecret'),
-      expiresIn: this.configService.get<string>('jwt.accessExpiresIn'),
-    });
-  }
-
-  private generateRefreshToken(user: User): string {
-    const payload: Partial<JwtPayload> = {
+    const refreshPayload: JwtPayload = {
       sub: user.user_id,
+      email: user.email,
       type: 'refresh',
     };
 
-    return this.jwtService.sign(payload, {
+    const access_token = this.jwtService.sign(payload, {
+      secret: this.configService.get<string>('jwt.accessSecret'),
+      expiresIn: this.configService.get<string>('jwt.accessExpiresIn'),
+    });
+
+    const refresh_token = this.jwtService.sign(refreshPayload, {
       secret: this.configService.get<string>('jwt.refreshSecret'),
       expiresIn: this.configService.get<string>('jwt.refreshExpiresIn'),
     });
+
+    return { access_token, refresh_token };
   }
 
-  private async saveRefreshToken(userId: string, token: string): Promise<void> {
+  /**
+   * Generate tokens with dynamic expiry policy
+   */
+  private generateTokensWithPolicy(
+    user: User,
+    policy: SessionExpiryPolicy,
+  ): { access_token: string; refresh_token: string } {
+    const payload: JwtPayload = {
+      sub: user.user_id,
+      email: user.email,
+      type: 'access',
+    };
+
+    const refreshPayload: JwtPayload = {
+      sub: user.user_id,
+      email: user.email,
+      type: 'refresh',
+    };
+
+    const access_token = this.jwtService.sign(payload, {
+      secret: this.configService.get<string>('jwt.accessSecret'),
+      expiresIn:
+        policy.access_token_expiry ||
+        this.configService.get<string>('jwt.accessExpiresIn') ||
+        '15m',
+    });
+
+    const refresh_token = this.jwtService.sign(refreshPayload, {
+      secret: this.configService.get<string>('jwt.refreshSecret'),
+      expiresIn:
+        policy.refresh_token_expiry ||
+        this.configService.get<string>('jwt.refreshExpiresIn') ||
+        '7d',
+    });
+
+    return { access_token, refresh_token };
+  }
+
+  /**
+   * Create and track user session
+   */
+  private async createUserSession(
+    userId: string,
+    refreshTokenId: string,
+    request?: Request,
+  ): Promise<UserSession> {
+    const sessionToken = this.generateSessionToken();
+    const deviceInfo = this.extractDeviceInfo(request);
+
+    const session = this.userSessionRepository.create({
+      user_id: userId,
+      session_token: sessionToken,
+      device_type: deviceInfo.device_type || undefined,
+      browser: deviceInfo.browser || undefined,
+      os: deviceInfo.os || undefined,
+      location: deviceInfo.location || undefined,
+      country: deviceInfo.country || undefined,
+      city: deviceInfo.city || undefined,
+      refresh_token_id: refreshTokenId,
+      session_start: new Date(),
+      is_active: true,
+    });
+
+    return await this.userSessionRepository.save(session);
+  }
+
+  /**
+   * Track successful login with session details
+   */
+  private async trackSuccessfulLogin(
+    userId: string,
+    sessionId: string,
+    request?: Request,
+  ): Promise<void> {
+    const deviceInfo = this.extractDeviceInfo(request);
+
+    await this.analyticsService.trackUserLogin({
+      user_id: userId,
+      login_date: new Date(),
+      ip_address: deviceInfo.ip_address || undefined,
+      user_agent: request?.get('User-Agent') || undefined,
+      device_type: deviceInfo.device_type || undefined,
+      browser: deviceInfo.browser || undefined,
+      location: deviceInfo.location || undefined,
+      is_successful: true,
+      session_start: new Date(),
+      session_id: sessionId,
+    });
+  }
+
+  /**
+   * Track failed login attempts
+   */
+  private async trackFailedLogin(
+    email: string,
+    failureReason: string,
+    request?: Request,
+  ): Promise<void> {
+    const deviceInfo = this.extractDeviceInfo(request);
+
+    // Try to get user_id from email for tracking
+    let userId: string | null = null;
+    try {
+      const user = await this.usersService.findByEmail(email);
+      userId = user?.user_id || null;
+    } catch {
+      // User doesn't exist, track with null user_id
+    }
+
+    await this.analyticsService.trackUserLogin({
+      user_id: userId,
+      login_date: new Date(),
+      ip_address: deviceInfo.ip_address || undefined,
+      user_agent: request?.get('User-Agent') || undefined,
+      device_type: deviceInfo.device_type || undefined,
+      browser: deviceInfo.browser || undefined,
+      location: deviceInfo.location || undefined,
+      is_successful: false,
+      failure_reason: failureReason,
+    });
+  }
+
+  /**
+   * Save refresh token
+   */
+  private async saveRefreshToken(
+    userId: string,
+    token: string,
+    request?: Request,
+  ): Promise<RefreshToken> {
     // Hash the refresh token before storing
     const saltRounds = 12;
     const hashedToken = await bcrypt.hash(token, saltRounds);
 
-    // Remove old refresh tokens for this user (optional - for single device login)
-    // await this.refreshTokenRepository.delete({ user_id: userId });
+    const deviceInfo = this.extractDeviceInfo(request);
 
     const refreshToken = this.refreshTokenRepository.create({
       user_id: userId,
       token_hash: hashedToken,
       expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+      ip_address: deviceInfo.ip_address || undefined,
+      device_info: request?.get('User-Agent') || undefined,
     });
 
-    await this.refreshTokenRepository.save(refreshToken);
+    return await this.refreshTokenRepository.save(refreshToken);
+  }
+
+  /**
+   * Set refresh token cookie
+   */
+  private setRefreshTokenCookie(response: Response, refreshToken: string): void {
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    response.cookie('refresh_token', refreshToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? 'strict' : 'lax',
+      path: '/',
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+      domain: isProduction ? undefined : 'localhost',
+    });
   }
 
   async refreshToken(refreshTokenValue: string, response?: Response): Promise<RefreshTokenDto> {
@@ -408,35 +518,26 @@ export class AuthService {
         throw new UnauthorizedException('A fiók inaktív');
       }
 
-      // Update token usage
-      await this.refreshTokenRepository.update(validToken.id, { used_at: new Date() });
+      // Generate new tokens
+      const { access_token, refresh_token } = this.generateTokens(user);
+      const newRefreshToken = await this.saveRefreshToken(user.user_id, refresh_token);
 
-      // Generate new access token
-      const newAccessToken = this.generateAccessToken(user);
+      // Update session BEFORE revoking old token (for smoother transition)
+      await this.sessionLifecycleService.updateSessionOnTokenRefresh(
+        validToken.id,
+        newRefreshToken.id,
+      );
 
-      // Optionally generate new refresh token and update cookie (token rotation)
-      const newRefreshToken = this.generateRefreshToken(user);
-      await this.saveRefreshToken(user.user_id, newRefreshToken);
+      // Optional: Add grace period before revoking old token
+      setTimeout(() => {
+        void this.refreshTokenRepository.update(validToken.id, { is_revoked: true });
+      }, 30000); // 30 second grace period
 
       if (response) {
-        const isProduction = process.env.NODE_ENV === 'production';
-
-        response.cookie('refresh_token', newRefreshToken, {
-          httpOnly: true,
-          secure: isProduction,
-          sameSite: isProduction ? 'strict' : 'lax',
-          path: '/', // Make cookie available for all paths
-          maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
-          domain: isProduction ? undefined : 'localhost', // Allow cross-port access in development
-        });
+        this.setRefreshTokenCookie(response, refresh_token);
       }
 
-      // Revoke old refresh token
-      await this.refreshTokenRepository.update(validToken.id, { is_revoked: true });
-
-      return {
-        access_token: newAccessToken,
-      };
+      return { access_token };
     } catch {
       throw new UnauthorizedException('Érvénytelen refresh token');
     }
@@ -453,236 +554,203 @@ export class AuthService {
     );
   }
 
-  async logout(userId: string, response?: Response, sessionToken?: string): Promise<LogoutDto> {
-    // Revoke all refresh tokens for this user
-    await this.refreshTokenRepository.update(
-      { user_id: userId, is_revoked: false },
-      { is_revoked: true },
-    );
+  /**
+   * Enhanced logout with session termination
+   */
+  async logout(
+    logoutDto: LogoutDto,
+    userId: string,
+    response?: Response,
+  ): Promise<{ message: string }> {
+    const refreshTokenValue = logoutDto.refresh_token;
+
+    if (refreshTokenValue) {
+      // Find and revoke the refresh token
+      const storedTokens = await this.refreshTokenRepository.find({
+        where: { user_id: userId, is_revoked: false },
+      });
+
+      for (const token of storedTokens) {
+        const isValid = await bcrypt.compare(refreshTokenValue, token.token_hash);
+        if (isValid) {
+          // End session through lifecycle service
+          await this.sessionLifecycleService.endSessionByRefreshToken(token.id);
+
+          // Revoke token
+          await this.refreshTokenRepository.update(token.id, { is_revoked: true });
+          break;
+        }
+      }
+    }
 
     // Clear refresh token cookie
     if (response) {
-      const isProduction = process.env.NODE_ENV === 'production';
       response.clearCookie('refresh_token', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
         path: '/',
-        domain: isProduction ? undefined : 'localhost',
       });
-      response.clearCookie('refreshToken', { path: '/' }); // Clear old cookie name for compatibility
     }
 
-    // End the active session for this user (if session token is available)
-    if (sessionToken) {
-      try {
-        await this.analyticsService.endUserSession(sessionToken);
-      } catch (err) {
-        // Log but do not block logout on analytics failure
-        console.warn('Failed to end user session:', err);
-      }
-    }
-
-    return {
-      message: 'Sikeres kijelentkezés',
-    };
+    return { message: 'Sikeres kijelentkezés' };
   }
 
-  async logoutAllDevices(userId: string): Promise<LogoutAllDevicesDto> {
-    // Count active tokens
-    const activeTokensCount = await this.refreshTokenRepository.count({
+  /**
+   * Logout user from all devices
+   */
+  async logoutAllDevices(userId: string): Promise<{ message: string; devicesLoggedOut: number }> {
+    // Find all active refresh tokens for this user
+    const activeTokens = await this.refreshTokenRepository.find({
       where: { user_id: userId, is_revoked: false },
     });
 
-    // Revoke all refresh tokens for this user
+    // Revoke all refresh tokens
     await this.refreshTokenRepository.update(
       { user_id: userId, is_revoked: false },
-      { is_revoked: true },
+      {
+        is_revoked: true,
+        used_at: new Date(),
+      },
+    );
+
+    // End all active sessions
+    await this.userSessionRepository.update(
+      { user_id: userId, is_active: true },
+      {
+        session_end: new Date(),
+        is_active: false,
+        updated_at: new Date(),
+      },
     );
 
     return {
-      message: 'Sikeres kijelentkezés minden eszközről',
-      devices_logged_out: activeTokensCount,
+      message: 'Sikeresen kijelentkezve minden eszközről',
+      devicesLoggedOut: activeTokens.length,
     };
   }
 
-  async validateJwtPayload(payload: JwtPayload): Promise<User> {
-    if (!payload.email) {
-      throw new UnauthorizedException('Érvénytelen token: hiányzó email');
+  /**
+   * End user session by refresh token
+   */
+  private async endUserSessionByRefreshToken(refreshTokenId: string): Promise<void> {
+    const session = await this.userSessionRepository.findOne({
+      where: {
+        refresh_token_id: refreshTokenId,
+        is_active: true,
+      },
+    });
+
+    if (session) {
+      await this.userSessionRepository.update(session.id, {
+        session_end: new Date(),
+        is_active: false,
+        updated_at: new Date(),
+      });
+
+      // Update the corresponding login record
+      await this.updateLoginSessionEnd(session.user_id, session.session_start);
     }
-
-    const user = await this.usersService.findByEmail(payload.email);
-
-    if (!user) {
-      throw new UnauthorizedException('Felhasználó nem található');
-    }
-
-    if (user.is_banned) {
-      throw new UnauthorizedException('A fiók tiltva van');
-    }
-
-    if (!user.is_active) {
-      throw new UnauthorizedException('A fiók inaktív');
-    }
-
-    return user;
   }
 
-  async register(
-    registerDto: RegisterDto,
-    response?: Response,
-  ): Promise<{ message: string; user: UserResponseDto; access_token: string }> {
-    // Set default language_preference to 'hu' if not provided
-    if (!registerDto.language_preference) {
-      registerDto.language_preference = 'hu';
+  /**
+   * Update login record with session end time
+   */
+  private async updateLoginSessionEnd(userId: string, sessionStart: Date): Promise<void> {
+    const loginRecord = await this.analyticsService.findLoginByUserAndTime(userId, sessionStart);
+
+    if (loginRecord) {
+      await this.analyticsService.updateLoginSessionEnd(loginRecord.id, new Date());
+    }
+  }
+
+  /**
+   * Generate session token
+   */
+  private generateSessionToken(): string {
+    return this.jwtService.sign(
+      { type: 'session', timestamp: Date.now() },
+      {
+        secret: this.configService.get('jwt.accessSecret'),
+        expiresIn: '24h',
+      },
+    );
+  }
+
+  /**
+   * Extract device information from request
+   */
+  private extractDeviceInfo(request?: Request) {
+    if (!request) {
+      return {
+        ip_address: null,
+        device_type: null,
+        browser: null,
+        os: null,
+        location: null,
+        country: null,
+        city: null,
+      };
     }
 
-    // Set default timezone if not provided
-    if (!registerDto.timezone) {
-      registerDto.timezone = 'Europe/Budapest';
-    }
-
-    // Create user entity for token generation
-    const userEntity = await this.usersService.createUserEntity(registerDto);
-
-    // Generate access token (short-lived)
-    const accessToken = this.generateAccessToken(userEntity);
-
-    // Generate refresh token (long-lived)
-    const refreshTokenValue = this.generateRefreshToken(userEntity);
-
-    // Save refresh token to database
-    await this.saveRefreshToken(userEntity.user_id, refreshTokenValue);
-
-    // Set refresh token as HttpOnly cookie if response object is provided
-    if (response) {
-      const isProduction = process.env.NODE_ENV === 'production';
-
-      response.cookie('refresh_token', refreshTokenValue, {
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: isProduction ? 'strict' : 'lax',
-        path: '/', // Make cookie available for all paths
-        maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
-        domain: isProduction ? undefined : 'localhost', // Allow cross-port access in development
-      });
-    }
-
-    // Convert user entity to DTO for response
-    const userResponseDto = await this.usersService.create(registerDto);
+    const userAgent = request.get('User-Agent') || '';
+    const ip =
+      request.ip ||
+      request.get('X-Forwarded-For') ||
+      request.get('X-Real-IP') ||
+      request.connection?.remoteAddress;
 
     return {
-      message: 'Sikeres regisztráció',
-      user: userResponseDto,
-      access_token: accessToken,
+      ip_address: ip,
+      device_type: this.detectDeviceType(userAgent),
+      browser: this.detectBrowser(userAgent),
+      os: this.detectOS(userAgent),
+      location: null, // Can be enhanced with IP geolocation
+      country: null,
+      city: null,
     };
   }
 
-  private getDeviceType(userAgent?: string): string {
-    if (!userAgent) return 'unknown';
-    if (/mobile/i.test(userAgent)) return 'mobile';
-    if (/tablet/i.test(userAgent)) return 'tablet';
+  /**
+   * Simple device type detection
+   */
+  private detectDeviceType(userAgent: string): string | null {
+    if (!userAgent) return null;
+
+    if (/Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent)) {
+      return 'mobile';
+    } else if (/Tablet|iPad/i.test(userAgent)) {
+      return 'tablet';
+    }
     return 'desktop';
   }
 
-  private getBrowser(userAgent?: string): string {
-    if (!userAgent) return 'unknown';
-    if (/chrome/i.test(userAgent)) return 'Chrome';
-    if (/firefox/i.test(userAgent)) return 'Firefox';
-    if (/safari/i.test(userAgent)) return 'Safari';
-    if (/edge/i.test(userAgent)) return 'Edge';
-    return 'other';
+  /**
+   * Simple browser detection
+   */
+  private detectBrowser(userAgent: string): string | null {
+    if (!userAgent) return null;
+
+    if (userAgent.includes('Chrome')) return 'Chrome';
+    if (userAgent.includes('Firefox')) return 'Firefox';
+    if (userAgent.includes('Safari')) return 'Safari';
+    if (userAgent.includes('Edge')) return 'Edge';
+
+    return 'Unknown';
   }
 
   /**
-   * Extract timezone from request headers or client data
+   * Simple OS detection
    */
-  private extractTimezone(request?: Request): string | undefined {
-    if (!request) {
-      return undefined;
-    }
+  private detectOS(userAgent: string): string | null {
+    if (!userAgent) return null;
 
-    // Check if timezone is in request headers
-    const headers = request.headers as Record<string, string | string[] | undefined>;
-    const timezoneHeader = headers['x-timezone'] || headers['timezone'];
-    if (typeof timezoneHeader === 'string') {
-      return timezoneHeader;
-    }
+    if (userAgent.includes('Windows')) return 'Windows';
+    if (userAgent.includes('Mac OS')) return 'macOS';
+    if (userAgent.includes('Linux')) return 'Linux';
+    if (userAgent.includes('Android')) return 'Android';
+    if (userAgent.includes('iOS')) return 'iOS';
 
-    // Check if timezone is in request body
-    if (request.body && typeof request.body === 'object') {
-      const body = request.body as Record<string, unknown>;
-      if ('timezone' in body && typeof body.timezone === 'string') {
-        return body.timezone;
-      }
-    }
-
-    return undefined;
-  }
-
-  /**
-   * Safely extract IP address from request object
-   */
-  private extractIpAddress(request?: Request): string | undefined {
-    if (!request) {
-      return undefined;
-    }
-
-    // Try to get IP from request.ip first
-    if (request.ip) {
-      return request.ip;
-    }
-
-    // Check connection.remoteAddress
-    if (request.connection && 'remoteAddress' in request.connection) {
-      const connection = request.connection as { remoteAddress?: string };
-      if (connection.remoteAddress) {
-        return connection.remoteAddress;
-      }
-    }
-
-    // Check socket.remoteAddress
-    if (request.socket && 'remoteAddress' in request.socket) {
-      const socket = request.socket as { remoteAddress?: string };
-      if (socket.remoteAddress) {
-        return socket.remoteAddress;
-      }
-    }
-
-    // Check for forwarded headers
-    const headers = request.headers as Record<string, string | string[] | undefined>;
-    const forwardedFor = headers['x-forwarded-for'];
-    if (typeof forwardedFor === 'string') {
-      // Take the first IP if there are multiple
-      const firstIp = forwardedFor.split(',')[0]?.trim();
-      return firstIp;
-    }
-
-    const realIp = headers['x-real-ip'];
-    if (typeof realIp === 'string') {
-      return realIp;
-    }
-
-    return undefined;
-  }
-
-  /**
-   * Safely extract user agent from request object
-   */
-  private extractUserAgent(request?: Request): string | undefined {
-    if (!request) {
-      return undefined;
-    }
-
-    const userAgent = request.headers['user-agent'];
-    return typeof userAgent === 'string' ? userAgent : undefined;
-  }
-
-  // Add helper for OS parsing
-  private getOsFromUserAgent(userAgent?: string): string {
-    if (!userAgent) return 'unknown';
-    if (/windows/i.test(userAgent)) return 'Windows';
-    if (/macintosh|mac os x/i.test(userAgent)) return 'MacOS';
-    if (/linux/i.test(userAgent)) return 'Linux';
-    if (/android/i.test(userAgent)) return 'Android';
-    if (/iphone|ipad|ipod/i.test(userAgent)) return 'iOS';
-    return 'Other';
+    return 'Unknown';
   }
 }

@@ -24,7 +24,7 @@ export class UserSession {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
+  @Column({ type: 'varchar', length: 512, nullable: true })
   session_token: string;
 
   @Column({ type: 'varchar', length: 100, nullable: true })
@@ -59,4 +59,25 @@ export class UserSession {
 
   @Column({ type: 'varchar', length: 100, nullable: true })
   city: string; // Geolocation city
+
+  @Column({ type: 'text', nullable: true })
+  fingerprint_hash?: string;
+
+  @Column({ type: 'json', nullable: true })
+  device_fingerprint?: any;
+
+  @Column({ type: 'timestamp', nullable: true })
+  last_activity?: Date;
+
+  @Column({ type: 'int', default: 0 })
+  activity_count?: number;
+
+  @Column({ type: 'timestamp', nullable: true })
+  extended_at?: Date;
+
+  @Column({ type: 'int', default: 0 })
+  extension_count?: number;
+
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  expiry_reason?: string;
 }

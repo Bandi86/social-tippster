@@ -1,14 +1,14 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class CreateUserSessions20250601 implements MigrationInterface {
-  name = 'CreateUserSessions20250601';
+export class CreateUserSessions1748563200000 implements MigrationInterface {
+  name = 'CreateUserSessions1748563200000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
       CREATE TABLE IF NOT EXISTS "user_sessions" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "user_id" uuid NOT NULL,
-        "session_token" character varying(255),
+        "session_token" character varying(512),
         "refresh_token_id" uuid,
         "device_type" character varying(100),
         "browser" character varying(100),

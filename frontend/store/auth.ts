@@ -45,6 +45,11 @@ export const useAuthStore = create<AuthStore>()(
           import('../lib/api-client').then(({ apiClient }) => {
             apiClient.setAccessToken(accessToken);
           });
+          if (accessToken) {
+            localStorage.setItem('authToken', accessToken);
+          } else {
+            localStorage.removeItem('authToken');
+          }
         }
       },
 
@@ -56,6 +61,11 @@ export const useAuthStore = create<AuthStore>()(
           import('../lib/api-client').then(({ apiClient }) => {
             apiClient.setAccessToken(tokens?.accessToken || null);
           });
+          if (tokens?.accessToken) {
+            localStorage.setItem('authToken', tokens.accessToken);
+          } else {
+            localStorage.removeItem('authToken');
+          }
         }
       },
 
@@ -84,6 +94,9 @@ export const useAuthStore = create<AuthStore>()(
           lastActivity: null,
           sessionExpiry: null,
         });
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('authToken');
+        }
       },
 
       clearError: () => {
@@ -112,6 +125,11 @@ export const useAuthStore = create<AuthStore>()(
             import('../lib/api-client').then(({ apiClient }) => {
               apiClient.setAccessToken(authResponse.tokens.accessToken);
             });
+            if (authResponse.tokens.accessToken) {
+              localStorage.setItem('authToken', authResponse.tokens.accessToken);
+            } else {
+              localStorage.removeItem('authToken');
+            }
           }
         } catch (error) {
           console.error('Login error:', error);
@@ -186,6 +204,11 @@ export const useAuthStore = create<AuthStore>()(
             import('../lib/api-client').then(({ apiClient }) => {
               apiClient.setAccessToken(refreshResponse.tokens.accessToken);
             });
+            if (refreshResponse.tokens.accessToken) {
+              localStorage.setItem('authToken', refreshResponse.tokens.accessToken);
+            } else {
+              localStorage.removeItem('authToken');
+            }
           }
 
           set({ isLoading: false });

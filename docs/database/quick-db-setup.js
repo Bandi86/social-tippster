@@ -48,7 +48,9 @@ async function quickDbTest() {
         INSERT INTO migrations (timestamp, name) VALUES
         (1733580000000, 'CreateAnalyticsEntities1733580000000'),
         (1733826267000, 'CreateRefreshTokensTable1733826267000'),
-        (1737738000000, 'AddUserRoleField1737738000000')
+        (1737738000000, 'AddUserRoleField1737738000000'),
+        (1748476800000, 'CreateUserSessions1748476800000'),
+        (1748476900000, 'AddFailureReasonAndSessionToUserLogins1748476900000')
         ON CONFLICT DO NOTHING
       `);
       console.log('📋 Added migration entries');

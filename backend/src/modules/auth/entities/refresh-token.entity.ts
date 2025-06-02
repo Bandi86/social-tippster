@@ -35,6 +35,12 @@ export class RefreshToken {
   @Column({ type: 'boolean', default: false })
   is_revoked: boolean;
 
+  @Column({ type: 'timestamp', nullable: true })
+  revoked_at: Date;
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  revoke_reason: string;
+
   @CreateDateColumn()
   created_at: Date;
 

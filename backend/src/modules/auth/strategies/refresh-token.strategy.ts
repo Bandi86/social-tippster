@@ -3,47 +3,55 @@ import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { Request } from 'express';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { User } from '../../users/entities/user.entity';
 import { AuthService } from '../auth.service';
-
-export interface RefreshTokenPayload {
-  sub: string;
-  type: string;
-  iat?: number;
-  exp?: number;
-}
+import { JwtPayload } from '../interfaces/jwt-payload.interface';
+import { JwtValidationService } from '../services/jwt-validation.service';
 
 @Injectable()
-export class RefreshTokenStrategy extends PassportStrategy(Strategy, 'jwt-refresh') {
+export class RefreshTokenStrategy extends PassportStrategy(Strategy, 'refresh-token') {
   constructor(
-    private readonly authService: AuthService,
     private readonly configService: ConfigService,
+    private readonly authService: AuthService,
+    private readonly jwtValidationService: JwtValidationService,
   ) {
+    const secret = configService.get<string>('jwt.refreshSecret');
+    if (!secret) {
+      throw new Error('JWT refreshSecret is not defined in configuration');
+    }
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
-        (req: Request): string | null => {
-          const cookies = req?.cookies as Record<string, unknown> | undefined;
-          const token = cookies?.refresh_token;
-          return typeof token === 'string' ? token : null;
+        (request: Request): string | null => {
+          const cookies = request?.cookies as Record<string, unknown> | undefined;
+          const token = typeof cookies?.refreshToken === 'string' ? cookies.refreshToken : null;
+          return token;
         },
       ]),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>('jwt.refreshSecret') || 'fallback-refresh-secret',
-      passReqToCallback: true, // Pass request to validate method
+      secretOrKey: secret,
+      passReqToCallback: true,
     });
   }
 
-  async validate(req: Request, payload: RefreshTokenPayload): Promise<User> {
-    const refreshToken = req.cookies?.refresh_token as string;
+  async validate(req: Request, payload: JwtPayload): Promise<any> {
+    const cookies = req?.cookies as Record<string, unknown> | undefined;
+    const refreshTokenValue =
+      typeof cookies?.refreshToken === 'string' ? cookies.refreshToken : undefined;
 
-    if (!refreshToken) {
+    if (!refreshTokenValue) {
       throw new UnauthorizedException('Refresh token hiányzik');
     }
 
-    if (payload.type !== 'refresh') {
-      throw new UnauthorizedException('Érvénytelen token típus');
-    }
+    // Use unified validation
+    await this.jwtValidationService.validateRefreshToken(payload);
 
-    return this.authService.validateRefreshToken(refreshToken, payload);
+    // Then validate the actual token
+    await this.authService.validateRefreshToken(refreshTokenValue, {
+      sub: payload.sub,
+      type: 'refresh',
+      iat: payload.iat,
+      exp: payload.exp,
+    });
+
+    return { userId: payload.sub, email: payload.email };
   }
 }
