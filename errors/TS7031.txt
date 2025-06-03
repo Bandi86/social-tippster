@@ -1,0 +1,4 @@
+frontend/components/ui/toaster.tsx(18,31): error TS7031: Binding element 'id' implicitly has an 'any' type.
+frontend/components/ui/toaster.tsx(18,35): error TS7031: Binding element 'title' implicitly has an 'any' type.
+frontend/components/ui/toaster.tsx(18,42): error TS7031: Binding element 'description' implicitly has an 'any' type.
+frontend/components/ui/toaster.tsx(18,55): error TS7031: Binding element 'action' implicitly has an 'any' type.

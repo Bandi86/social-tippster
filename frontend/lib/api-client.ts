@@ -27,7 +27,7 @@ class ApiClient {
   private setupInterceptors(): void {
     // Request interceptor to add auth token
     this.client.interceptors.request.use(
-      (config: InternalAxiosRequestConfig) => {
+      async (config: InternalAxiosRequestConfig) => {
         console.log('Making request to:', config.url, 'with token:', !!this.accessToken);
 
         // Do not add Authorization header for refresh token requests
@@ -35,6 +35,12 @@ class ApiClient {
           console.log('Refresh request - not adding Authorization header');
           return config;
         }
+
+        // Check and refresh token proactively before making the request
+        if (this.accessToken && config.url !== '/auth/refresh') {
+          await this.checkAndRefreshToken();
+        }
+
         if (this.accessToken && config.headers) {
           config.headers.Authorization = `Bearer ${this.accessToken}`;
           console.log('Added Authorization header');
@@ -202,6 +208,39 @@ class ApiClient {
    */
   async patch<T>(url: string, data?: any, config?: any): Promise<AxiosResponse<T>> {
     return this.client.patch<T>(url, data, config);
+  }
+
+  /**
+   * Check if token is near expiry and proactively refresh it
+   */
+  private async checkAndRefreshToken(): Promise<void> {
+    if (!this.accessToken) {
+      return;
+    }
+
+    try {
+      // Decode JWT to check expiry
+      const base64Url = this.accessToken.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join(''),
+      );
+
+      const decoded = JSON.parse(jsonPayload);
+      const now = Math.floor(Date.now() / 1000);
+      const timeUntilExpiry = decoded.exp - now;
+
+      // If token expires in less than 5 minutes, refresh it proactively
+      if (timeUntilExpiry < 300 && timeUntilExpiry > 0) {
+        console.log('Token near expiry, proactively refreshing...');
+        await this.refreshToken();
+      }
+    } catch (error) {
+      console.error('Error checking token expiry:', error);
+    }
   }
 }
 

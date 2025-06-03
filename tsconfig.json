@@ -19,11 +19,20 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "moduleResolution": "node",
+    "types": ["jest"],
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"]
     }
   },
-  "include": ["frontend/**/*", "backend/**/*", "*.ts", "eslint.config.js", "tests/update-admin-role.js", "tests/update-user-role.js"],
+  "include": [
+    "frontend/**/*",
+    "backend/**/*",
+    "*.ts",
+    "eslint.config.js",
+    "tests/update-admin-role.js",
+    "tests/update-user-role.js",
+    "tests/backend/auth-integration.spec.ts"
+  ],
   "exclude": ["node_modules", "dist", "**/*.test.ts"]
 }

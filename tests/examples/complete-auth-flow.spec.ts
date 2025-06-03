@@ -10,8 +10,8 @@ test.describe('Complete Authentication Flow', () => {
     await page.fill('input[name="email"]', 'testadmin@test.com');
     await page.fill('input[name="password"]', 'password123');
     await page.click('button[type="submit"]');
-    await page.waitForURL('**/dashboard');
-    console.log('✅ Login successful, redirected to dashboard');
+    await page.waitForURL('http://localhost:3000/');
+    console.log('✅ Login successful, redirected to home page');
 
     // Step 2: Check authentication state
     console.log('2️⃣ Checking authentication state...');

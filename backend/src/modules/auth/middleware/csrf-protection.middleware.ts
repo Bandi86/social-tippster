@@ -1,8 +1,11 @@
 import { Injectable, NestMiddleware, UnauthorizedException } from '@nestjs/common';
 import { NextFunction, Request, Response } from 'express';
+import { SentryService } from '../services/sentry.service';
 
 @Injectable()
 export class CsrfProtectionMiddleware implements NestMiddleware {
+  constructor(private readonly sentryService: SentryService) {}
+
   use(req: Request, res: Response, next: NextFunction): void {
     // Skip CSRF protection for safe methods
     if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
@@ -35,6 +38,18 @@ export class CsrfProtectionMiddleware implements NestMiddleware {
       console.log('CSRF Debug - allowedOrigins:', allowedOrigins);
 
       if (!isValidOrigin && !isValidReferer) {
+        // Log CSRF protection violation to Sentry
+        this.sentryService.logSecurityEvent('csrf_violation', {
+          endpoint: req.path,
+          method: req.method,
+          origin: origin || 'missing',
+          referer: referer || 'missing',
+          userAgent: req.get('User-Agent') || 'unknown',
+          ipAddress: req.ip || 'unknown',
+          allowedOrigins,
+          timestamp: new Date().toISOString(),
+        });
+
         console.log('CSRF Debug - BLOCKING REQUEST');
         throw new UnauthorizedException('CSRF protection: Invalid origin or referer');
       }

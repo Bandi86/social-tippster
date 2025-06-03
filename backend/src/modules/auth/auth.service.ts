@@ -19,6 +19,8 @@ import {
   DeviceFingerprint,
   DeviceFingerprintingService,
 } from './services/device-fingerprinting.service';
+import { SecurityMonitoringService } from './services/security-monitoring.service';
+import { SentryService } from './services/sentry.service';
 import { SessionExpiryPolicy, SessionExpiryService } from './services/session-expiry.service';
 import { SessionLifecycleService } from './services/session-lifecycle.service';
 
@@ -50,6 +52,8 @@ export class AuthService {
     private readonly sessionLifecycleService: SessionLifecycleService,
     private readonly deviceFingerprintingService: DeviceFingerprintingService,
     private readonly sessionExpiryService: SessionExpiryService,
+    private readonly securityMonitoringService: SecurityMonitoringService,
+    private readonly sentryService: SentryService,
   ) {}
 
   /**
@@ -124,6 +128,23 @@ export class AuthService {
       const timeDiff = new Date().getTime() - failedAttempts.lastAttempt.getTime();
       if (timeDiff < 15 * 60 * 1000) {
         // 15 minutes lockout
+        // Log brute force attempt
+        await this.securityMonitoringService.logBruteForceAttempt(
+          email,
+          'unknown', // IP will be logged in login method
+          'unknown', // UserAgent will be logged in login method
+          failedAttempts.count,
+          true,
+        );
+
+        // Log brute force detection to Sentry
+        this.sentryService.logSecurityEvent('brute_force_detection', {
+          email,
+          attemptCount: failedAttempts.count,
+          lockoutDuration: '15 minutes',
+          timestamp: new Date().toISOString(),
+        });
+
         throw new UnauthorizedException(
           'Túl sok sikertelen bejelentkezési kísérlet. Próbálja újra 15 perc múlva.',
         );
@@ -142,6 +163,10 @@ export class AuthService {
         count: current.count + 1,
         lastAttempt: new Date(),
       });
+
+      // Log authentication failure to Sentry
+      this.sentryService.logFailedAuth(email, 'Invalid credentials');
+
       return null;
     }
 
@@ -149,10 +174,25 @@ export class AuthService {
     this.failedAttempts.delete(email);
 
     if (user.is_banned) {
+      // Log banned user login attempt to Sentry
+      this.sentryService.logSecurityEvent('banned_user_login_attempt', {
+        userId: user.user_id,
+        email: user.email,
+        banReason: user.ban_reason || 'Unspecified',
+        timestamp: new Date().toISOString(),
+      });
+
       throw new UnauthorizedException('A fiók tiltva van');
     }
 
     if (!user.is_active) {
+      // Log inactive user login attempt to Sentry
+      this.sentryService.logSecurityEvent('inactive_user_login_attempt', {
+        userId: user.user_id,
+        email: user.email,
+        timestamp: new Date().toISOString(),
+      });
+
       throw new UnauthorizedException('A fiók inaktív');
     }
 
@@ -173,6 +213,17 @@ export class AuthService {
     if (!user) {
       // Track failed login with enhanced details
       await this.trackFailedLogin(loginDto.email, 'Invalid credentials', request);
+
+      // Log failed login to security monitoring
+      const deviceInfo = this.extractDeviceInfo(request);
+      await this.securityMonitoringService.logFailedLogin(
+        loginDto.email,
+        deviceInfo.ip_address || 'unknown',
+        request?.get('User-Agent') || 'unknown',
+        'Invalid credentials',
+        this.failedAttempts.get(loginDto.email)?.count,
+      );
+
       throw new UnauthorizedException('Hibás email vagy jelszó');
     }
 
@@ -214,6 +265,14 @@ export class AuthService {
     }
     const userResponseDto = new UserResponseDto(userEntity);
 
+    // Log successful authentication to Sentry
+    const deviceInfo = this.extractDeviceInfo(request);
+    this.sentryService.logSuccessfulAuth(
+      user.user_id,
+      user.email,
+      deviceInfo.ip_address || undefined,
+    );
+
     return {
       access_token,
       user: userResponseDto,
@@ -239,7 +298,27 @@ export class AuthService {
         );
 
         if (comparison.is_suspicious) {
-          // Log suspicious activity
+          // Log suspicious activity to security monitoring
+          const user = await this.usersService.findById(userId);
+          await this.securityMonitoringService.logSuspiciousLogin(
+            userId,
+            user?.email || 'unknown',
+            currentFingerprint.ip_address || 'unknown',
+            currentFingerprint.user_agent || 'unknown',
+            comparison.suspicious_changes,
+            comparison.similarity_score,
+          );
+
+          // Log suspicious activity to Sentry
+          this.sentryService.logSuspiciousActivity('unusual_location', {
+            userId,
+            email: user?.email,
+            similarityScore: comparison.similarity_score,
+            suspiciousChanges: comparison.suspicious_changes,
+            ipAddress: currentFingerprint.ip_address,
+            userAgent: currentFingerprint.user_agent,
+          });
+
           console.warn(`Suspicious login detected for user ${userId}:`, {
             similarity_score: comparison.similarity_score,
             suspicious_changes: comparison.suspicious_changes,
@@ -470,10 +549,21 @@ export class AuthService {
 
       // Type guard for payload
       if (!this.isValidRefreshTokenPayload(rawPayload)) {
+        // Log token validation failure to Sentry
+        this.sentryService.logTokenEvent('refresh_failed', 'unknown', {
+          reason: 'Invalid token format',
+          tokenType: 'refresh',
+        });
         throw new UnauthorizedException('Érvénytelen token formátum');
       }
 
       if (rawPayload.type !== 'refresh') {
+        // Log token validation failure to Sentry
+        this.sentryService.logTokenEvent('refresh_failed', rawPayload.sub, {
+          reason: 'Invalid token type',
+          expectedType: 'refresh',
+          actualType: rawPayload.type,
+        });
         throw new UnauthorizedException('Érvénytelen token típus');
       }
 
@@ -484,6 +574,11 @@ export class AuthService {
       });
 
       if (!storedTokens.length) {
+        // Log token validation failure to Sentry
+        this.sentryService.logTokenEvent('refresh_failed', rawPayload.sub, {
+          reason: 'No valid tokens found in database',
+          tokenType: 'refresh',
+        });
         throw new UnauthorizedException('Érvénytelen refresh token');
       }
 
@@ -498,12 +593,24 @@ export class AuthService {
       }
 
       if (!validToken) {
+        // Log token validation failure to Sentry
+        this.sentryService.logTokenEvent('refresh_failed', rawPayload.sub, {
+          reason: 'Token hash mismatch',
+          tokenType: 'refresh',
+          storedTokensCount: storedTokens.length,
+        });
         throw new UnauthorizedException('Érvénytelen refresh token');
       }
 
       // Check if token expired
       if (validToken.expires_at < new Date()) {
         await this.refreshTokenRepository.update(validToken.id, { is_revoked: true });
+        // Log token validation failure to Sentry
+        this.sentryService.logTokenEvent('refresh_failed', rawPayload.sub, {
+          reason: 'Token expired',
+          expiresAt: validToken.expires_at.toISOString(),
+          tokenType: 'refresh',
+        });
         throw new UnauthorizedException('A refresh token lejárt');
       }
 
@@ -511,10 +618,23 @@ export class AuthService {
 
       // Check user status
       if (user.is_banned) {
+        // Log security event to Sentry
+        this.sentryService.logSecurityEvent('banned_user_token_refresh', {
+          userId: user.user_id,
+          email: user.email,
+          banReason: user.ban_reason || 'Unspecified',
+          timestamp: new Date().toISOString(),
+        });
         throw new UnauthorizedException('A fiók tiltva van');
       }
 
       if (!user.is_active) {
+        // Log security event to Sentry
+        this.sentryService.logSecurityEvent('inactive_user_token_refresh', {
+          userId: user.user_id,
+          email: user.email,
+          timestamp: new Date().toISOString(),
+        });
         throw new UnauthorizedException('A fiók inaktív');
       }
 
@@ -528,17 +648,62 @@ export class AuthService {
         newRefreshToken.id,
       );
 
-      // Optional: Add grace period before revoking old token
-      setTimeout(() => {
-        void this.refreshTokenRepository.update(validToken.id, { is_revoked: true });
-      }, 30000); // 30 second grace period
+      // Configure token rotation strategy based on environment
+      const gracePeriodEnabled = this.configService.get<boolean>('jwt.gracePeriodEnabled', true);
+      const gracePeriodMs = this.configService.get<number>('jwt.gracePeriodMs', 30000); // 30 seconds default
+
+      if (gracePeriodEnabled && gracePeriodMs > 0) {
+        // Use grace period for smoother UX in concurrent request scenarios
+        setTimeout(() => {
+          void this.refreshTokenRepository.update(validToken.id, { is_revoked: true });
+          // Log token revocation to Sentry
+          this.sentryService.logTokenEvent('token_revoked', user.user_id, {
+            tokenId: validToken.id,
+            revocationReason: 'Token rotation grace period expired',
+            gracePeriod: `${gracePeriodMs / 1000} seconds`,
+            rotationStrategy: 'grace_period',
+          });
+        }, gracePeriodMs);
+
+        // Log successful token rotation with grace period to Sentry
+        this.sentryService.logTokenEvent('token_rotation', user.user_id, {
+          oldTokenId: validToken.id,
+          newTokenId: newRefreshToken.id,
+          sessionUpdated: true,
+          rotationReason: 'Successful refresh',
+          rotationStrategy: 'grace_period',
+          gracePeriodMs,
+        });
+      } else {
+        // Immediate revocation for maximum security
+        await this.refreshTokenRepository.update(validToken.id, { is_revoked: true });
+
+        // Log immediate token rotation to Sentry
+        this.sentryService.logTokenEvent('token_rotation', user.user_id, {
+          oldTokenId: validToken.id,
+          newTokenId: newRefreshToken.id,
+          sessionUpdated: true,
+          rotationReason: 'Successful refresh',
+          rotationStrategy: 'immediate',
+          oldTokenRevoked: true,
+        });
+      }
 
       if (response) {
         this.setRefreshTokenCookie(response, refresh_token);
       }
 
       return { access_token };
-    } catch {
+    } catch (error) {
+      // Log generic refresh failure to Sentry if it's not already logged
+      if (error instanceof UnauthorizedException) {
+        throw error; // Re-throw if it's already logged above
+      }
+
+      this.sentryService.captureAuthError(error as Error, {
+        operation: 'refresh_token',
+        tokenPrefix: refreshTokenValue?.substring(0, 10) + '...',
+      });
       throw new UnauthorizedException('Érvénytelen refresh token');
     }
   }
@@ -563,6 +728,8 @@ export class AuthService {
     response?: Response,
   ): Promise<{ message: string }> {
     const refreshTokenValue = logoutDto.refresh_token;
+    let sessionTerminated = false;
+    let tokenRevoked = false;
 
     if (refreshTokenValue) {
       // Find and revoke the refresh token
@@ -575,9 +742,18 @@ export class AuthService {
         if (isValid) {
           // End session through lifecycle service
           await this.sessionLifecycleService.endSessionByRefreshToken(token.id);
+          sessionTerminated = true;
 
           // Revoke token
           await this.refreshTokenRepository.update(token.id, { is_revoked: true });
+          tokenRevoked = true;
+
+          // Log successful session termination to Sentry
+          this.sentryService.logTokenEvent('token_revoked', userId, {
+            tokenId: token.id,
+            revocationReason: 'User logout',
+            sessionTerminated: true,
+          });
           break;
         }
       }
@@ -593,6 +769,15 @@ export class AuthService {
       });
     }
 
+    // Log logout event to Sentry
+    this.sentryService.logSecurityEvent('user_logout', {
+      userId,
+      sessionTerminated,
+      tokenRevoked,
+      logoutMethod: 'single_device',
+      timestamp: new Date().toISOString(),
+    });
+
     return { message: 'Sikeres kijelentkezés' };
   }
 
@@ -603,6 +788,11 @@ export class AuthService {
     // Find all active refresh tokens for this user
     const activeTokens = await this.refreshTokenRepository.find({
       where: { user_id: userId, is_revoked: false },
+    });
+
+    // Find all active sessions for this user
+    const activeSessions = await this.userSessionRepository.find({
+      where: { user_id: userId, is_active: true },
     });
 
     // Revoke all refresh tokens
@@ -623,6 +813,24 @@ export class AuthService {
         updated_at: new Date(),
       },
     );
+
+    // Log bulk session termination to Sentry
+    this.sentryService.logSecurityEvent('bulk_session_termination', {
+      userId,
+      tokensRevoked: activeTokens.length,
+      sessionsTerminated: activeSessions.length,
+      logoutMethod: 'all_devices',
+      timestamp: new Date().toISOString(),
+    });
+
+    // Log token revocation events to Sentry
+    if (activeTokens.length > 0) {
+      this.sentryService.logTokenEvent('token_revoked', userId, {
+        tokenCount: activeTokens.length,
+        revocationReason: 'Logout from all devices',
+        bulkRevocation: true,
+      });
+    }
 
     return {
       message: 'Sikeresen kijelentkezve minden eszközről',

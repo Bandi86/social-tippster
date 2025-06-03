@@ -12,8 +12,8 @@ test.describe('Admin Users Page', () => {
     // Submit login form
     await page.click('button[type="submit"]');
 
-    // Wait for navigation to dashboard or admin area
-    await page.waitForURL(/dashboard|admin/);
+    // Wait for navigation to home page
+    await page.waitForURL('http://localhost:3000/');
 
     // Navigate to admin users page
     await page.goto('http://localhost:3000/admin/users');

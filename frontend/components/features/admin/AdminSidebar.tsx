@@ -24,6 +24,7 @@ import {
   MessageSquare,
   Settings,
   Shield,
+  ShieldAlert,
   ShieldBan,
   Users,
 } from 'lucide-react';
@@ -76,6 +77,14 @@ const AdminSidebar = () => {
       icon: BarChart3,
       description: 'System analytics',
       shortcut: '⌘5',
+    },
+    {
+      title: 'Security',
+      url: '/admin/security',
+      icon: ShieldAlert,
+      description: 'Security monitoring',
+      badge: 'NEW',
+      shortcut: '⌘6',
     },
   ];
 

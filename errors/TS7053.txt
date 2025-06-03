@@ -1,0 +1,4 @@
+backend/src/modules/auth/services/device-fingerprinting.service.ts(100,11): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type 'DeviceFingerprint'.
+backend/src/modules/auth/services/device-fingerprinting.service.ts(100,28): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type 'DeviceFingerprint'.
+backend/src/modules/auth/services/device-fingerprinting.service.ts(103,43): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type 'DeviceFingerprint'.
+backend/src/modules/auth/services/device-fingerprinting.service.ts(103,60): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type 'DeviceFingerprint'.

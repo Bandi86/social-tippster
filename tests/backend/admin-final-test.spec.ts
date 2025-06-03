@@ -14,7 +14,7 @@ test.describe('Admin Users Page - Final Test', () => {
     await page.click('button[type="submit"]');
 
     // Wait for successful login
-    await page.waitForURL(/dashboard/, { timeout: 10000 });
+    await page.waitForURL('http://localhost:3000/', { timeout: 10000 });
     console.log('✅ Successfully logged in');
 
     // Wait a moment to ensure session is established

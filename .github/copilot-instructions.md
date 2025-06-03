@@ -30,18 +30,58 @@
 
 ## Development Server Guidelines
 
-- **Single Command**: Use `npm run dev` from root to start both frontend (localhost:3000) and backend (localhost:3001).
-- **No Separate Terminals**: Do not create separate start scripts or terminals for backend/frontend.
-- **Single Terminal Rule**: Always use a single integrated terminal in VS Code to run the development server.
-  - Do **not** open a new terminal or start another instance if ports 3000 (frontend) and 3001 (backend) are already in use.
-  - Starting multiple servers in separate terminals will cause port conflicts or crashes.
-  - If you need to restart, stop the current process and run `npm run dev` again in the same terminal.
-  - The server will automatically use ports 3000 and 3001 unless they are occupied. If these ports are in use, a new instance may start on a different port, but running multiple instances is not supported and will cause issues.
-  - You do **not** need to create a new terminal for chat or any other feature; always reuse the existing terminal session.
-- **Restart Process**: If servers need restarting, use `npm run dev` again in root directory.
-- **Alternative Commands**:
-  - `npm run backend` (not recommended - frontend won't start)
-  - `npm run frontend` (not recommended - backend won't start)
+**Single Command Rule**: Start both frontend (localhost:3000) and backend (localhost:3001) using the unified root command:
+
+```bash
+npm run dev
+```
+
+**Do Not Start Servers Automatically or in Parallel**:
+If the development servers are already running on ports 3000 or 3001, do not attempt to start them again — either manually or programmatically (e.g., via Copilot task suggestions). This causes port conflicts, server duplication, or unexpected behavior.
+
+**Do Not Auto-Restart Servers**:
+Copilot or developer scripts must never attempt to "help" by starting a server just because a port is occupied. If a port is in use, it usually means the server is already running, and that’s expected.
+
+**Single Terminal Policy**:
+
+- Use only one integrated terminal in VSCode to run the dev server.
+- Do not open multiple terminals to start frontend/backend separately.
+- Do not run alternative commands like dev:frontend or dev:backend unless debugging in isolation (and even then, prefer `npm run dev`).
+
+**Restart Protocol**:
+If a server crashes or needs to be restarted, stop the current process and re-run:
+
+```bash
+npm run dev
+```
+
+**Avoid Conflicts**:
+
+- Never run separate frontend/backend instances in different terminals.
+- If port 3000 or 3001 is unavailable, check if the server is already running rather than starting a new instance.
+- Multiple concurrent servers are not supported and will break the dev environment.
+
+**No Server Boot Logic in Tasks**:
+
+- Do not attach server start logic to test or documentation tasks.
+- Do not include server bootstrap logic in test runners, file watchers, or script executions.
+
+**Alternative Commands (Use only when necessary)**:
+
+- `npm run dev:backend` – Starts backend only (not recommended)
+- `npm run dev:frontend` – Starts frontend only (not recommended)
+
+### Package.json Configuration
+
+- **Root Dependencies**: Project uses comprehensive testing and development dependencies:
+  - **Testing**: Jest (`^29.7.0`), Playwright (`^1.52.0`), ts-jest (`^29.3.4`)
+  - **Reporting**: jest-html-reporter, jest-junit for test output
+  - **TypeScript**: Full TypeScript support with ts-node and type definitions
+  - **Linting/Formatting**: ESLint, Prettier with automated commit hooks
+  - **Development**: Concurrently for running multiple processes, cross-env for environment variables
+- **Backend Dependencies**: NestJS testing framework, Supertest for HTTP testing
+- **Build Scripts**: Separate build commands for frontend and backend components
+- **Quality Assurance**: Husky pre-commit hooks, lint-staged for automated code quality checks
 
 ## Terminal Best Practices
 
@@ -53,9 +93,52 @@
 
 ## Testing & Documentation
 
-- **E2E Testing**: Use Playwright for end-to-end testing.
-- **API Documentation**: Use Swagger UI accessible at `http://localhost:3001/api/docs`.
-- **Task Focus**: Complete requested tasks and end conversation after updating documentation.
+### Test Infrastructure
+
+- **Jest Configuration**: Root `jest.config.ts` with TypeScript support, coverage reporting, and HTML/JUnit output
+- **Test Scripts**: Available npm scripts for comprehensive testing:
+  - `npm test` - Run Jest unit tests with coverage
+  - `npm run test:e2e` - Run Playwright end-to-end tests
+  - `npm run test:auth:run` - Run authentication integration test suite
+  - `npm run start:test` - Start backend in test environment
+- **Backend Testing**: NestJS testing framework with custom Jest configurations:
+  - `tests/backend/jest.auth-integration.config.js` - Authentication integration tests
+  - In-memory SQLite database for isolated testing
+  - Coverage reports in `tests/coverage/` directory
+- **Frontend Testing**: Playwright tests for UI components and auth store integration
+- **Authentication Test Suite**: Comprehensive testing framework:
+  - `tests/run-auth-tests.js` - Automated test runner script
+  - Backend API endpoint testing (security, performance, edge cases)
+  - Frontend authentication store and UI integration tests
+  - End-to-end user authentication flows
+  - Test reporting with detailed pass/fail analysis
+
+### Testing Categories
+
+- **Unit Tests**: Jest-based tests for backend modules and services
+- **Integration Tests**: Authentication system, database operations, API endpoints
+- **E2E Testing**: Playwright for complete user workflows and browser testing
+- **Performance Tests**: Authentication response times and concurrent user scenarios
+- **Security Tests**: Token validation, CSRF protection, brute force protection
+
+### Test Execution
+
+- **Development Testing**: Run `npm run dev` first, then execute test commands
+- **Isolated Testing**: Backend tests use in-memory database, no server dependency required
+- **Continuous Testing**: All test files organized in `tests/` with subfolders for different categories
+- **Test Reports**: Automatic generation of HTML reports and JUnit XML for CI/CD integration
+
+### API Documentation
+
+- **Swagger UI**: Accessible at `http://localhost:3001/api/docs`
+- **Authentication Testing**: Use Swagger's "Authorize" button to test protected endpoints
+- **API Testing Scripts**: Manual testing scripts in `tests/backend/` for validation
+
+### Task Focus
+
+- Complete requested tasks and end conversation after updating documentation.
+- Always run relevant tests after making changes to ensure system integrity.
+- Update test documentation when adding new test categories or modifying test infrastructure.
 
 ## Documentation Update Requirements
 

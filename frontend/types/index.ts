@@ -37,55 +37,55 @@ export type BadgeTier = 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond';
 export type UserRole = 'user' | 'admin' | 'moderator';
 
 export interface User {
-  user_id: string;
-  id: string; // Alias for user_id for compatibility
-  username: string;
-  email: string;
-  password_hash: string;
-  first_name?: string;
-  last_name?: string;
-  phone_number?: string;
-  date_of_birth?: string; // ISO format
-  gender?: Gender;
-  created_at: string;
-  updated_at: string;
-  favorite_team?: string;
-  profile_image?: string;
-  cover_image?: string;
-  bio?: string;
-  location?: string;
-  website?: string;
-  is_active: boolean;
-  is_verified: boolean;
-  is_banned: boolean;
+  badge_count: number;
   ban_reason?: string;
   banned_until?: string;
-  last_login?: string;
-  login_count: number;
-  is_premium: boolean;
-  premium_expiration?: string;
-  referral_code?: string;
-  referred_by?: string;
-  referral_count: number;
+  best_streak: number;
+  bio?: string;
+  cover_image?: string;
+  created_at: string;
+  created_by?: string;
+  current_streak: number;
+  date_of_birth?: string; // ISO format
+  email: string;
+  email_verified_at?: string;
+  favorite_team?: string;
+  first_name?: string;
   follower_count: number;
   following_count: number;
-  post_count: number;
-  reputation_score: number;
-  badge_count: number;
+  gender?: Gender;
   highest_badge_tier?: BadgeTier;
-  total_tips: number;
+  id: string;
+  is_active: boolean;
+  is_banned: boolean;
+  is_premium: boolean;
+  is_verified: boolean;
+  language_preference: string;
+  last_login?: string;
+  last_name?: string;
+  login_count: number;
+  location?: string;
+  password_hash: string;
+  phone_number?: string;
+  post_count: number;
+  premium_expiration?: string;
+  profile_image?: string;
+  referred_by?: string;
+  referral_code?: string;
+  referral_count: number;
+  reputation_score: number;
+  role: UserRole;
   successful_tips: number;
   tip_success_rate: number;
-  total_profit: number;
-  current_streak: number;
-  best_streak: number;
-  email_verified_at?: string;
-  two_factor_enabled: boolean;
   timezone?: string;
-  language_preference: string;
-  role: UserRole;
-  created_by?: string;
+  total_profit: number;
+  total_tips: number;
+  two_factor_enabled: boolean;
+  updated_at: string;
   updated_by?: string;
+  user_id: string;
+  username: string;
+  website?: string;
 }
 
 // =============================================================================
@@ -192,6 +192,10 @@ export interface AuthState {
   error: string | null;
   lastActivity: string | null;
   sessionExpiry: number | null;
+  // New session management fields
+  sessionId?: string;
+  deviceFingerprint?: object;
+  idleTimeout?: number;
 }
 
 // =============================================================================
@@ -221,6 +225,7 @@ export interface AuthResponse {
 export interface RefreshTokenResponse {
   tokens: AuthTokens;
   user?: User; // In case user data needs to be updated
+  sessionExpiry?: number; // Session expiration timestamp
 }
 
 export interface ResetPasswordRequest {
@@ -243,19 +248,31 @@ export interface ChangePasswordRequest {
 
 export interface BackendUser {
   user_id: string;
-  email: string;
   username: string;
-  first_name: string;
-  last_name: string;
-  role: UserRole;
-  is_active: boolean;
-  is_banned: boolean;
-  is_verified: boolean;
+  email: string;
+  password_hash?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  phone?: string | null;
   created_at: string;
   updated_at: string;
-  profile_image?: string;
+  favorite_team?: string | null;
+  profile_image?: string | null;
+  bio?: string | null;
+  location?: string | null;
+  website?: string | null;
+  is_active: boolean;
+  is_verified: boolean;
+  is_banned: boolean;
   last_login?: string;
-  [key: string]: unknown;
+  login_count?: number;
+  is_premium?: boolean;
+  premium_expiry?: string | Date | null;
+  referral_count?: number;
+  follower_count?: number;
+  following_count?: number;
+  two_factor_enabled?: boolean;
+  role: string;
 }
 
 export interface BackendAuthResponse {
@@ -305,8 +322,8 @@ export interface ValidationError {
 
 export interface AuthActions {
   // Core authentication
-  login: (credentials: LoginCredentials) => Promise<void>;
-  register: (data: RegisterData) => Promise<void>;
+  login: (credentials: LoginCredentials, clientFingerprint?: object) => Promise<void>;
+  register: (data: RegisterData, clientFingerprint?: object) => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<boolean>;
 
@@ -321,16 +338,26 @@ export interface AuthActions {
   // State management
   setUser: (user: User | null) => void;
   setAccessToken: (token: string | null) => void;
+  setTokens: (tokens: AuthTokens | null) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
+  setAuthenticated: (isAuthenticated: boolean) => void;
+  setInitialized: (isInitialized: boolean) => void;
   clearAuth: () => void;
   clearError: () => void;
+
+  // Session management actions (NEW)
+  updateSessionActivity: () => void;
+  checkSessionExpiry: () => Promise<boolean>;
+  extendSession: () => Promise<void>;
+  setSessionData: (sessionId?: string, fingerprint?: object, expiry?: number) => void;
 
   // Utility
   initialize: () => Promise<void>;
   checkAuthStatus: () => Promise<boolean>;
   refreshUserData: () => Promise<void>;
   updateLastActivity: () => void;
+  checkAndRotateToken: () => Promise<boolean>;
 }
 
 export type AuthStore = AuthState & AuthActions;

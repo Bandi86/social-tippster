@@ -44,8 +44,8 @@ test.describe('Authentication Verification', () => {
       console.log('❌ No Set-Cookie header found');
     }
 
-    // Wait for redirect to dashboard
-    await page.waitForURL('**/dashboard', { timeout: 10000 });
+    // Wait for redirect to home page
+    await page.waitForURL('http://localhost:3000/', { timeout: 10000 });
 
     // Check if we can access admin pages now
     await page.goto('http://localhost:3000/admin/users');
@@ -69,7 +69,7 @@ test.describe('Authentication Verification', () => {
     await page.fill('input[name="email"]', 'testadmin@test.com');
     await page.fill('input[name="password"]', 'password123');
     await page.click('button[type="submit"]');
-    await page.waitForURL('**/dashboard');
+    await page.waitForURL('http://localhost:3000/');
 
     // Now test refresh endpoint directly
     const refreshResponse = await page.request.post('http://localhost:3001/api/auth/refresh');

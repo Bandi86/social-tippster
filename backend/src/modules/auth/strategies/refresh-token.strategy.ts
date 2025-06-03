@@ -22,7 +22,7 @@ export class RefreshTokenStrategy extends PassportStrategy(Strategy, 'refresh-to
       jwtFromRequest: ExtractJwt.fromExtractors([
         (request: Request): string | null => {
           const cookies = request?.cookies as Record<string, unknown> | undefined;
-          const token = typeof cookies?.refreshToken === 'string' ? cookies.refreshToken : null;
+          const token = typeof cookies?.refresh_token === 'string' ? cookies.refresh_token : null;
           return token;
         },
       ]),
@@ -35,7 +35,7 @@ export class RefreshTokenStrategy extends PassportStrategy(Strategy, 'refresh-to
   async validate(req: Request, payload: JwtPayload): Promise<any> {
     const cookies = req?.cookies as Record<string, unknown> | undefined;
     const refreshTokenValue =
-      typeof cookies?.refreshToken === 'string' ? cookies.refreshToken : undefined;
+      typeof cookies?.refresh_token === 'string' ? cookies.refresh_token : undefined;
 
     if (!refreshTokenValue) {
       throw new UnauthorizedException('Refresh token hiányzik');

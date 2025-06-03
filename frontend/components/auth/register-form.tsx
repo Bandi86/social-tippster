@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/hooks/useAuth';
+import { collectClientFingerprint } from '@/lib/deviceFingerprint';
 import { RegisterData } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Eye, EyeOff, Loader2, Lock, Mail, User, UserCheck } from 'lucide-react';
@@ -102,8 +103,9 @@ export function RegisterForm({ onSuccess, redirectTo = '/' }: RegisterFormProps)
         first_name: data.firstName,
         last_name: data.lastName,
       };
-
-      await registerUser(registerData);
+      // Collect device fingerprint
+      const clientFingerprint = collectClientFingerprint();
+      await registerUser(registerData); // Only pass registerData, not clientFingerprint
       onSuccess?.();
       router.push(redirectTo);
     } catch (error) {

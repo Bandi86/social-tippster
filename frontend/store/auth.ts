@@ -29,6 +29,10 @@ export const useAuthStore = create<AuthStore>()(
       error: null,
       lastActivity: null,
       sessionExpiry: null,
+      // New session management fields
+      sessionId: undefined,
+      deviceFingerprint: undefined,
+      idleTimeout: undefined,
 
       // Actions
       setUser: (user: User | null) => {
@@ -93,6 +97,9 @@ export const useAuthStore = create<AuthStore>()(
           error: null,
           lastActivity: null,
           sessionExpiry: null,
+          sessionId: undefined,
+          deviceFingerprint: undefined,
+          idleTimeout: undefined,
         });
         if (typeof window !== 'undefined') {
           localStorage.removeItem('authToken');
@@ -107,11 +114,59 @@ export const useAuthStore = create<AuthStore>()(
         set({ lastActivity: new Date().toISOString() });
       },
 
+      // New session management actions
+      updateSessionActivity: () => {
+        const now = new Date().toISOString();
+        set({ lastActivity: now });
+
+        // Update session expiry based on activity
+        const current = get();
+        if (current.idleTimeout) {
+          const newExpiry = Date.now() + current.idleTimeout;
+          set({ sessionExpiry: newExpiry });
+        }
+      },
+
+      checkSessionExpiry: async () => {
+        const current = get();
+        if (!current.sessionExpiry) return true;
+
+        const now = Date.now();
+        if (now >= current.sessionExpiry) {
+          console.log('Session expired, logging out...');
+          await get().logout();
+          return false;
+        }
+        return true;
+      },
+
+      extendSession: async () => {
+        try {
+          const refreshed = await get().refresh();
+          if (refreshed) {
+            console.log('Session extended successfully');
+            get().updateSessionActivity();
+          } else {
+            console.log('Failed to extend session');
+          }
+        } catch (error) {
+          console.error('Error extending session:', error);
+        }
+      },
+
+      setSessionData: (sessionId?: string, fingerprint?: object, expiry?: number) => {
+        set({
+          sessionId,
+          deviceFingerprint: fingerprint,
+          sessionExpiry: expiry,
+        });
+      },
+
       // Updated API implementations
-      login: async (credentials: any) => {
+      login: async (credentials: any, clientFingerprint?: any) => {
         try {
           set({ isLoading: true, error: null });
-          const authResponse = await authService.login(credentials);
+          const authResponse = await authService.login(credentials, clientFingerprint);
           set({
             user: authResponse.user,
             tokens: authResponse.tokens,
@@ -144,10 +199,11 @@ export const useAuthStore = create<AuthStore>()(
         }
       },
 
-      register: async (data: any) => {
+      register: async (data: any, clientFingerprint?: any) => {
         try {
           set({ isLoading: true, error: null });
-          const authResponse = await authService.register(data);
+          const authResponse = await authService.register(data, clientFingerprint);
+          console.log('Registration response:', authResponse);
           set({
             user: authResponse.user,
             tokens: authResponse.tokens,
@@ -194,9 +250,13 @@ export const useAuthStore = create<AuthStore>()(
         try {
           set({ isLoading: true });
           const refreshResponse = await authService.refreshToken();
+
+          // Update session data with better integration
           set({
             tokens: refreshResponse.tokens,
             lastActivity: new Date().toISOString(),
+            // Update session expiry if backend provides it
+            sessionExpiry: refreshResponse.sessionExpiry || get().sessionExpiry,
           });
 
           // Sync with API client
@@ -316,6 +376,45 @@ export const useAuthStore = create<AuthStore>()(
           console.error('Error refreshing user data:', error);
         }
       },
+
+      // Check if token needs rotation and automatically refresh it
+      checkAndRotateToken: async () => {
+        const tokens = get().tokens;
+        if (!tokens?.accessToken) {
+          return false;
+        }
+
+        try {
+          // Decode the JWT to check expiry (client-side check)
+          const base64Url = tokens.accessToken.split('.')[1];
+          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+          const jsonPayload = decodeURIComponent(
+            atob(base64)
+              .split('')
+              .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+              .join(''),
+          );
+
+          const decoded = JSON.parse(jsonPayload);
+          const now = Math.floor(Date.now() / 1000);
+          const timeUntilExpiry = decoded.exp - now;
+
+          // If token expires in less than 5 minutes, refresh it
+          if (timeUntilExpiry < 300 && timeUntilExpiry > 0) {
+            console.log('Token near expiry, attempting automatic refresh...');
+            const refreshed = await get().refresh();
+            if (refreshed) {
+              console.log('Token automatically refreshed');
+              return true;
+            }
+          }
+
+          return false;
+        } catch (error) {
+          console.error('Error checking token expiry:', error);
+          return false;
+        }
+      },
     }),
     {
       name: 'auth-storage',
@@ -324,6 +423,9 @@ export const useAuthStore = create<AuthStore>()(
         tokens: state.tokens,
         isAuthenticated: state.isAuthenticated,
         lastActivity: state.lastActivity,
+        sessionExpiry: state.sessionExpiry,
+        sessionId: state.sessionId,
+        deviceFingerprint: state.deviceFingerprint,
       }),
     },
   ),

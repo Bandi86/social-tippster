@@ -1,0 +1,4 @@
+frontend/app/admin/analytics/page.tsx(65,15): error TS2584: Cannot find name 'document'. Do you need to change your target library? Try changing the 'lib' compiler option to include 'dom'.
+frontend/components/ui/sidebar.tsx(86,7): error TS2584: Cannot find name 'document'. Do you need to change your target library? Try changing the 'lib' compiler option to include 'dom'.
+frontend/lib/api-client.ts(120,39): error TS2584: Cannot find name 'document'. Do you need to change your target library? Try changing the 'lib' compiler option to include 'dom'.
+frontend/lib/deviceFingerprint.ts(31,20): error TS2584: Cannot find name 'document'. Do you need to change your target library? Try changing the 'lib' compiler option to include 'dom'.

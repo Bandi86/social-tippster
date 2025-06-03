@@ -1,0 +1,41 @@
+module.exports = {
+  displayName: 'Authentication Integration Tests',
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  moduleFileExtensions: ['js', 'json', 'ts'],
+  rootDir: '../../',
+  transform: {
+    '^.+\\.(t|j)s$': 'ts-jest',
+  },
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/backend/src/$1',
+  },
+  testMatch: ['<rootDir>/tests/backend/**/*.spec.ts'],
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '/tests/examples/',
+    '/tests/frontend/',
+    '/docs/external-libraries/tests/',
+    '/tests/backend/__name__\\.service\\.spec\\.ts$',
+    '/tests/backend/.*playwright.*',
+  ],
+  collectCoverageFrom: [
+    'backend/src/modules/auth/**/*.(t|j)s',
+    'backend/src/modules/users/**/*.(t|j)s',
+    '!backend/src/modules/auth/**/*.interface.ts',
+    '!backend/src/modules/auth/**/*.dto.ts',
+    '!backend/src/modules/auth/**/*.entity.ts',
+    '!backend/src/modules/users/**/*.interface.ts',
+    '!backend/src/modules/users/**/*.dto.ts',
+    '!backend/src/modules/users/**/*.entity.ts',
+  ],
+  coverageDirectory: 'tests/coverage/auth-integration',
+  testEnvironment: 'node',
+  setupFilesAfterEnv: ['<rootDir>/tests/backend/auth-test-setup.ts'],
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/backend/src/$1',
+  },
+  testTimeout: 60000,
+  maxWorkers: 1,
+  verbose: true,
+};

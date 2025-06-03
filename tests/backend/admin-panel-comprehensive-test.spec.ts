@@ -113,7 +113,7 @@ test.describe('Admin Panel Comprehensive Testing', () => {
       loginResponses.map(r => ({ url: r.url, status: r.status })),
     );
 
-    // Check if we're redirected to dashboard or admin
+    // Check if we're redirected to home page or admin
     const currentUrl = page.url();
     console.log('📍 Current URL after login:', currentUrl);
 

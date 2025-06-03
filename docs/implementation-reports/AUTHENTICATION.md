@@ -1,10 +1,10 @@
 # Authentication System – Comprehensive Fix & Security Implementation
 
-**Last updated:** 2025-06-02
+**Last updated:** 2025-06-03
 
 ## Summary
 
-This document describes the authentication system architecture, security implementation, and recent comprehensive fixes completed in June 2025. The system provides robust multi-strategy authentication with JWT tokens, comprehensive security features, and complete session management.
+This document describes the authentication system architecture, security implementation, and recent comprehensive fixes completed in June 2025. The system provides robust multi-strategy authentication with JWT tokens, comprehensive security features, complete session management, and real-time security monitoring with Sentry integration.
 
 ## System Architecture
 
@@ -13,16 +13,17 @@ This document describes the authentication system architecture, security impleme
 #### 1. Multi-Strategy Passport Authentication
 
 - **LocalStrategy**: Email/password authentication with brute force protection
-- **JwtStrategy**: Access token validation for protected routes
-- **RefreshTokenStrategy**: Refresh token validation and rotation
+- **JwtStrategy**: Access token validation for protected routes with proper user lookup
+- **RefreshTokenStrategy**: Refresh token validation and automatic rotation
 
 #### 2. Security Features
 
 - **Dual Token System**: Separate access tokens (15min) and refresh tokens (7 days)
-- **Token Rotation**: Automatic refresh token rotation on use
+- **Token Rotation**: Automatic refresh token rotation with configurable grace periods
 - **Brute Force Protection**: 5 failed attempts trigger 15-minute lockout
 - **Rate Limiting**: Configurable request limits per time window
 - **Session Tracking**: Complete user session management with device/location tracking
+- **Real-time Monitoring**: Comprehensive Sentry integration for security events
 
 #### 3. Database Integration
 
@@ -30,7 +31,60 @@ This document describes the authentication system architecture, security impleme
 - **UserSession Entity**: Session tracking with device fingerprinting
 - **UserLogin Entity**: Comprehensive login attempt logging
 
-## Recent Fixes (June 2, 2025)
+## Critical Fixes Completed (June 3, 2025)
+
+### 1. JWT Strategy Validation Fix ✅ COMPLETED
+
+- **Problem**: JwtStrategy was calling `authService.validateUser(payload.sub, payload.email)` with wrong parameters
+- **Solution**: Updated to use `usersService.findById(payload.sub)` directly for proper user lookup
+- **Impact**: Fixed JWT token validation flow, improved security
+- **File**: `backend/src/modules/auth/strategies/jwt.strategy.ts`
+
+### 2. Refresh Token Guard Registration Fix ✅ COMPLETED
+
+- **Problem**: RefreshTokenGuard and RefreshTokenStrategy had mismatched strategy names
+- **Solution**: Standardized both to use `'refresh-token'` name consistently
+- **Impact**: Fixed refresh token authentication flow
+- **Files**:
+  - `backend/src/modules/auth/guards/refresh-token.guard.ts`
+  - `backend/src/modules/auth/strategies/refresh-token.strategy.ts`
+
+### 3. Session Cleanup Implementation ✅ COMPLETED
+
+- **Problem**: Session lifecycle not properly integrated with logout process
+- **Solution**: Added `SessionLifecycleService.endSessionByRefreshToken()` to both logout methods
+- **Impact**: Proper session cleanup, improved analytics tracking
+- **File**: `backend/src/modules/auth/auth.service.ts`
+
+### 4. Token Rotation Implementation ✅ COMPLETED
+
+- **Problem**: Missing automatic token rotation and old token revocation
+- **Solution**: Implemented full token rotation with configurable grace periods
+- **Features Added**:
+  - Automatic new refresh token generation on each refresh
+  - Old refresh token revocation with grace period support
+  - Session reference updates to new refresh tokens
+  - Comprehensive error handling and validation
+  - Extensive Sentry logging for monitoring
+- **File**: `backend/src/modules/auth/auth.service.ts` (refreshToken method)
+
+### 5. Comprehensive Sentry Integration ✅ COMPLETED
+
+- **Created**: Complete SentryService with security monitoring capabilities
+- **Features Implemented**:
+  - Security event logging (failed auth, suspicious activity)
+  - Authentication event tracking (success/failure)
+  - Token lifecycle monitoring (creation, refresh, revocation)
+  - Session management events (start, end, cleanup)
+  - CSRF protection violation tracking
+  - Data sanitization for privacy compliance
+- **Files Created/Updated**:
+  - `backend/src/modules/auth/services/sentry.service.ts` (new)
+  - `backend/src/modules/auth/auth.service.ts` (enhanced)
+  - `backend/src/modules/auth/middleware/csrf-protection.middleware.ts` (enhanced)
+  - `backend/src/modules/auth/auth.module.ts` (updated)
+
+## Previous Fixes (June 2, 2025)
 
 ### 1. Field Name Consistency Issues ✅ FIXED
 
@@ -162,6 +216,13 @@ backend/src/modules/auth/
 
 - `GET /users/login-history` - Get login history
 - `GET /users/login-history/export` - Export login history
+
+## 2025-06-02 – Frontend Device Fingerprinting Integration
+
+- Login and registration forms now collect device fingerprint data (screen, browser, OS, hardware, etc.) using a frontend utility.
+- Device fingerprint is sent to backend as `clientFingerprint` in `/auth/login` and `/auth/register` payloads.
+- Enables backend to track device/browser info for each session, improving analytics and security.
+- No user-facing changes; all device data is collected and sent transparently.
 
 ## Next Steps
 
