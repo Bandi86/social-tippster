@@ -1,10 +1,22 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { User } from '../users/entities/user.entity';
+import { ArrayOfIdsDto } from './dto/array-of-ids.dto';
+import { BulkSnoozeDto } from './dto/bulk-snooze.dto';
 import { CreateNotificationDto } from './dto/create-notification.dto';
-import { UpdateNotificationDto } from './dto/update-notification.dto';
+import { SnoozeNotificationDto, UpdateNotificationDto } from './dto/update-notification.dto';
 import { NotificationsService } from './notifications.service';
 
 @ApiTags('notifications')
@@ -31,6 +43,24 @@ export class NotificationsController {
   @ApiResponse({ status: 401, description: 'Unauthorized - JWT token required' })
   findAll(@CurrentUser() user: User) {
     return this.notificationsService.findAll(user.user_id);
+  }
+
+  // Paginated fetch for notifications (with snooze filter) - MUST come before :id route
+  @Get('paginated')
+  @ApiOperation({ summary: 'Get paginated notifications for current user' })
+  @ApiResponse({ status: 200, description: 'Notifications retrieved successfully' })
+  async findAllPaginated(
+    @CurrentUser() user: User,
+    @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
+    @Query('includeSnoozed') includeSnoozed?: string,
+  ) {
+    return this.notificationsService.findAllPaginated(
+      user.user_id,
+      limit ? parseInt(limit, 10) : 20,
+      offset ? parseInt(offset, 10) : 0,
+      includeSnoozed === 'true',
+    );
   }
 
   // Konkret id ertesites
@@ -97,5 +127,41 @@ export class NotificationsController {
   @ApiResponse({ status: 401, description: 'Unauthorized - JWT token required' })
   removeAll(@CurrentUser() user: User) {
     return this.notificationsService.removeAll(user.user_id);
+  }
+
+  // Bulk mark as read
+  @Patch('bulk/mark-read')
+  @ApiOperation({ summary: 'Bulk mark notifications as read' })
+  @ApiResponse({ status: 200, description: 'Notifications marked as read' })
+  async bulkMarkAsRead(@Body() dto: ArrayOfIdsDto, @CurrentUser() user: User) {
+    return await this.notificationsService.bulkMarkAsRead(dto.ids, user.user_id);
+  }
+
+  // Bulk delete
+  @Delete('bulk/delete')
+  @ApiOperation({ summary: 'Bulk delete notifications' })
+  @ApiResponse({ status: 200, description: 'Notifications deleted' })
+  async bulkDelete(@Body() dto: ArrayOfIdsDto, @CurrentUser() user: User) {
+    return await this.notificationsService.bulkDelete(dto.ids, user.user_id);
+  }
+
+  // Snooze a single notification
+  @Patch(':id/snooze')
+  @ApiOperation({ summary: 'Snooze a notification until a given time' })
+  @ApiResponse({ status: 200, description: 'Notification snoozed' })
+  async snoozeNotification(
+    @Param('id') id: string,
+    @Body() dto: SnoozeNotificationDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.notificationsService.snooze(id, dto.snoozed_until, user.user_id);
+  }
+
+  // Bulk snooze notifications
+  @Patch('bulk/snooze')
+  @ApiOperation({ summary: 'Bulk snooze notifications' })
+  @ApiResponse({ status: 200, description: 'Notifications snoozed' })
+  async bulkSnooze(@Body() dto: BulkSnoozeDto, @CurrentUser() user: User) {
+    return this.notificationsService.bulkSnooze(dto.ids, dto.snoozed_until, user.user_id);
   }
 }

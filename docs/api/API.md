@@ -130,7 +130,7 @@ parser.combinator({ value: '+' });
 
 Arguments:
 
-- `props (object)`: The new node's properties.
+- `props (object): The new node's properties.
 
 Notes:
 
@@ -939,3 +939,49 @@ postcss(plugin())
 //   2 |   color: red;
 //   3 | }
 ```
+
+---
+
+# Notification Snoozing & Pagination API (2025-06-03)
+
+## Notification Snoozing
+
+### Snooze a Notification
+
+- **PATCH** `/notifications/:id/snooze`
+- **Auth:** JWT required
+- **Body:**
+  ```json
+  { "snoozed_until": "2025-06-04T12:00:00.000Z" }
+  ```
+- **Response:** Updated notification object
+
+### Bulk Snooze Notifications
+
+- **PATCH** `/notifications/bulk/snooze`
+- **Auth:** JWT required
+- **Body:**
+  ```json
+  { "ids": ["id1", "id2"], "snoozed_until": "2025-06-04T12:00:00.000Z" }
+  ```
+- **Response:** `{ "affected": 2 }`
+
+## Notification Pagination
+
+### Get Paginated Notifications
+
+- **GET** `/notifications/paginated?limit=20&offset=0&includeSnoozed=false`
+- **Auth:** JWT required
+- **Response:**
+  ```json
+  {
+    "notifications": [
+      /* ... */
+    ],
+    "hasMore": true
+  }
+  ```
+
+---
+
+_Last updated: 2025-06-03 by GitHub Copilot_

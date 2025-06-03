@@ -1,6 +1,6 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeleteResult, Repository } from 'typeorm';
+import { DeleteResult, In, Repository } from 'typeorm';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { UpdateNotificationDto } from './dto/update-notification.dto';
 import { Notification } from './entities/notification.entity';
@@ -20,6 +20,10 @@ export interface INotificationsService {
   markAllAsRead(userId: string): Promise<number>;
   remove(id: string, userId?: string): Promise<void>;
   removeAll(userId: string): Promise<number>;
+  bulkMarkAsRead(ids: string[], userId: string): Promise<number>;
+  bulkDelete(ids: string[], userId: string): Promise<number>;
+  snooze(id: string, snoozedUntil: Date, userId: string): Promise<Notification | null>;
+  bulkSnooze(ids: string[], snoozedUntil: string, userId: string): Promise<number>;
 }
 
 @Injectable()
@@ -156,5 +160,103 @@ export class NotificationsService implements INotificationsService {
       this.notificationsGateway.notifyUser(userId, payload);
     }
     return result.affected ?? 0;
+  }
+
+  // Bulk mark notifications as read
+  async bulkMarkAsRead(ids: string[], userId: string): Promise<number> {
+    const result = await this.notificationRepository.update(
+      { notification_id: In(ids), user_id: userId },
+      { read_status: true, read_at: new Date() },
+    );
+    if (this.notificationsGateway && typeof this.notificationsGateway.notifyUser === 'function') {
+      const payload: WebSocketNotificationPayload = {
+        type: 'bulk_read',
+        notification: null,
+        meta: { ids },
+        timestamp: new Date().toISOString(),
+      };
+      this.notificationsGateway.notifyUser(userId, payload);
+    }
+    return result.affected || 0;
+  }
+
+  // Bulk delete notifications
+  async bulkDelete(ids: string[], userId: string): Promise<number> {
+    const result = await this.notificationRepository.delete({
+      notification_id: In(ids),
+      user_id: userId,
+    });
+    if (this.notificationsGateway && typeof this.notificationsGateway.notifyUser === 'function') {
+      const payload: WebSocketNotificationPayload = {
+        type: 'bulk_deleted',
+        notification: null,
+        meta: { ids },
+        timestamp: new Date().toISOString(),
+      };
+      this.notificationsGateway.notifyUser(userId, payload);
+    }
+    return result.affected ?? 0;
+  }
+
+  // Snooze a single notification
+  async snooze(id: string, snoozedUntil: Date, userId: string): Promise<Notification | null> {
+    const notification = await this.findOne(id, userId);
+    if (!notification) throw new NotFoundException('Notification not found');
+    await this.notificationRepository.update(id, { snoozed_until: snoozedUntil });
+    const updated = await this.findOne(id, userId);
+    if (
+      updated &&
+      this.notificationsGateway &&
+      typeof this.notificationsGateway.notifyUser === 'function'
+    ) {
+      const payload: WebSocketNotificationPayload = {
+        type: 'notification_snoozed',
+        notification: updated,
+        timestamp: new Date().toISOString(),
+      };
+      this.notificationsGateway.notifyUser(updated.user_id, payload);
+    }
+    return updated;
+  }
+
+  // Bulk snooze notifications
+  async bulkSnooze(ids: string[], snoozedUntil: string, userId: string): Promise<number> {
+    const result = await this.notificationRepository.update(
+      { notification_id: In(ids), user_id: userId },
+      { snoozed_until: snoozedUntil },
+    );
+    if (this.notificationsGateway && typeof this.notificationsGateway.notifyUser === 'function') {
+      const payload: WebSocketNotificationPayload = {
+        type: 'bulk_snoozed',
+        notification: null,
+        meta: { ids, snoozed_until: snoozedUntil },
+        timestamp: new Date().toISOString(),
+      };
+      this.notificationsGateway.notifyUser(userId, payload);
+    }
+    return result.affected || 0;
+  }
+
+  // Paginated fetch for notifications (with snooze filter)
+  async findAllPaginated(
+    userId: string,
+    limit = 20,
+    offset = 0,
+    includeSnoozed = false,
+  ): Promise<{ notifications: Notification[]; hasMore: boolean }> {
+    const where: Record<string, any> = { user_id: userId };
+    if (!includeSnoozed) {
+      where.snoozed_until = null;
+    }
+    const [notifications, total] = await this.notificationRepository.findAndCount({
+      where,
+      order: { created_at: 'DESC' },
+      skip: offset,
+      take: limit,
+    });
+    return {
+      notifications,
+      hasMore: offset + notifications.length < total,
+    };
   }
 }

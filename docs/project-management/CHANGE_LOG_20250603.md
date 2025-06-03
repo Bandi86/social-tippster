@@ -161,6 +161,23 @@ Completed a major redesign of the authentication system UI, consolidating the pr
 
 ---
 
+## Notification Snoozing & Pagination (Backend)
+
+- Added `snoozed_until` column to notifications table (migration: 1750001000000-AddSnoozedUntilToNotifications.ts)
+- Implemented PATCH /notifications/:id/snooze and PATCH /notifications/bulk/snooze endpoints
+- Added DTOs: SnoozeNotificationDto, BulkSnoozeDto
+- Service methods: snooze, bulkSnooze
+- WebSocket events for snoozing
+- Added paginated notification fetch: GET /notifications/paginated (limit, offset, includeSnoozed)
+- Updated API documentation and backend progress report
+
+## Status
+
+- All backend logic and endpoints implemented for snoozing and pagination
+- Next: Run migration, expand backend tests, implement frontend integration
+
+---
+
 ## 🔧 TECHNICAL DETAILS
 
 ### Code Quality Improvements
@@ -321,6 +338,18 @@ Completed a major redesign of the authentication system UI, consolidating the pr
 - Added `data-testid` attributes to registration form containers for robust Playwright UI/design testing.
 - Playwright design test (`tests/frontend/register-form-design.spec.ts`) now passes, confirming correct wide layout and grid structure.
 - All changes verified with automated Playwright test and screenshot.
+
+## Notification Preferences & Bulk Actions (Frontend & Backend)
+
+- Frontend: Added `/settings/notifications` page for user notification preferences (in-app, email, push)
+- Backend: API endpoints `/users/me/notification-preferences` (GET/PUT) fully integrated
+- Linked from notifications page settings button
+- Frontend: Bulk select, mark as read, and delete in `/notifications` page (checkboxes, select all, action buttons)
+- Zustand store and hook updated for bulkMarkAsRead and bulkDelete
+- Backend: Added `PATCH /notifications/bulk/mark-read` and `DELETE /notifications/bulk/delete` endpoints
+- WebSocket events for bulk actions
+
+**Status**: All features tested and working in dev
 
 ## Impact
 

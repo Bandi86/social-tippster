@@ -82,4 +82,7 @@ export class Notification {
 
   @Column({ type: 'enum', enum: NotificationPriority, default: NotificationPriority.LOW })
   priority: NotificationPriority;
+
+  @Column({ type: 'timestamp', nullable: true })
+  snoozed_until: Date | null;
 }

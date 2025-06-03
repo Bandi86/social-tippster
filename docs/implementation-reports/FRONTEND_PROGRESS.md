@@ -78,3 +78,26 @@
 - Updated `frontend/app/auth/layout.tsx` to skip Card/max-w-md wrapper for `/auth/register`.
 - Added `data-testid` attributes for robust Playwright UI/design testing.
 - Playwright test (`register-form-design.spec.ts`) verifies correct layout.
+
+---
+
+# Frontend Progress – Notification Preferences & Bulk Actions (2025-06-03)
+
+## Notification Preferences UI
+
+- Added `/settings/notifications` page for users to view and update notification preferences (in-app, email, push) per type (comment, mention, follow).
+- Integrated with backend API (`/users/me/notification-preferences` GET/PUT).
+- Linked from notifications page settings button.
+
+## Bulk Actions
+
+- Added bulk select, mark as read, and delete for notifications in `/notifications` page.
+- Zustand store and hook updated for bulkMarkAsRead and bulkDelete actions.
+- UI: checkboxes, select all, and action buttons.
+
+## Status
+
+- All features tested and working in dev.
+- Next: expand E2E tests for new flows.
+
+_Last updated: 2025-06-03 by GitHub Copilot_

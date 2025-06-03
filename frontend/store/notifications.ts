@@ -40,6 +40,7 @@ export interface Notification {
   related_user_id?: string;
   action_url?: string;
   priority: string;
+  snoozed_until?: string | null;
 }
 
 interface NotificationsState {
@@ -48,6 +49,7 @@ interface NotificationsState {
   isLoading: boolean;
   lastFetch: number | null;
   error: string | null;
+  hasMore: boolean;
 
   // Actions
   fetchNotifications: (userId: string) => Promise<void>;
@@ -58,6 +60,22 @@ interface NotificationsState {
   updateNotification: (notificationId: string, updates: Partial<Notification>) => void;
   clearError: () => void;
   reset: () => void;
+
+  // Bulk actions
+  bulkMarkAsRead: (ids: string[]) => Promise<void>;
+  bulkDelete: (ids: string[]) => Promise<void>;
+
+  // Snooze actions
+  snoozeNotification: (notificationId: string, snoozedUntil: string) => Promise<void>;
+  bulkSnooze: (ids: string[], snoozedUntil: string) => Promise<void>;
+
+  // Paginated fetch
+  fetchNotificationsPaginated: (
+    userId: string,
+    limit?: number,
+    offset?: number,
+    includeSnoozed?: boolean,
+  ) => Promise<void>;
 }
 
 export const useNotificationsStore = create<NotificationsState>((set, get) => ({
@@ -66,6 +84,7 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
   isLoading: false,
   lastFetch: null,
   error: null,
+  hasMore: true,
 
   async fetchNotifications(userId) {
     try {
@@ -166,6 +185,104 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
       isLoading: false,
       lastFetch: null,
       error: null,
+      hasMore: true,
     });
+  },
+
+  // Bulk actions
+  async bulkMarkAsRead(ids) {
+    try {
+      await axiosWithAuth({ url: '/notifications/bulk/mark-read', method: 'PATCH', data: { ids } });
+      set(state => ({
+        notifications: state.notifications.map(n =>
+          ids.includes(n.notification_id) ? { ...n, read_status: true } : n,
+        ),
+        unreadCount: state.notifications.filter(
+          n => !ids.includes(n.notification_id) && !n.read_status,
+        ).length,
+      }));
+    } catch (error) {
+      set({ error: 'Nem sikerült olvasottra állítani az értesítéseket' });
+    }
+  },
+  async bulkDelete(ids) {
+    try {
+      await axiosWithAuth({ url: '/notifications/bulk/delete', method: 'DELETE', data: { ids } });
+      set(state => ({
+        notifications: state.notifications.filter(n => !ids.includes(n.notification_id)),
+        unreadCount: state.notifications.filter(
+          n => !ids.includes(n.notification_id) && !n.read_status,
+        ).length,
+      }));
+    } catch (error) {
+      set({ error: 'Nem sikerült törölni az értesítéseket' });
+    }
+  },
+
+  // Snooze a single notification
+  async snoozeNotification(notificationId: string, snoozedUntil: string) {
+    try {
+      const updated = await axiosWithAuth({
+        url: `/notifications/${notificationId}/snooze`,
+        method: 'PATCH',
+        data: { snoozed_until: snoozedUntil },
+      });
+      set(state => ({
+        notifications: state.notifications.map(n =>
+          n.notification_id === notificationId ? { ...n, snoozed_until: snoozedUntil } : n,
+        ),
+      }));
+      return updated;
+    } catch (error) {
+      set({ error: 'Nem sikerült szundizni az értesítést' });
+    }
+  },
+
+  // Bulk snooze notifications
+  async bulkSnooze(ids: string[], snoozedUntil: string) {
+    try {
+      await axiosWithAuth({
+        url: '/notifications/bulk/snooze',
+        method: 'PATCH',
+        data: { ids, snoozed_until: snoozedUntil },
+      });
+      set(state => ({
+        notifications: state.notifications.map(n =>
+          ids.includes(n.notification_id) ? { ...n, snoozed_until: snoozedUntil } : n,
+        ),
+      }));
+    } catch (error) {
+      set({ error: 'Nem sikerült szundizni az értesítéseket' });
+    }
+  },
+
+  // Paginated fetch
+  async fetchNotificationsPaginated(
+    userId: string,
+    limit = 20,
+    offset = 0,
+    includeSnoozed = false,
+  ) {
+    try {
+      set({ isLoading: true, error: null });
+      const data = await axiosWithAuth({
+        url: `/notifications/paginated`,
+        method: 'GET',
+        params: { limit, offset, includeSnoozed },
+      });
+      set(state => ({
+        notifications:
+          offset === 0 ? data.notifications : [...state.notifications, ...data.notifications],
+        unreadCount: (offset === 0
+          ? data.notifications
+          : [...state.notifications, ...data.notifications]
+        ).filter((n: Notification) => !n.read_status).length,
+        isLoading: false,
+        lastFetch: Date.now(),
+        hasMore: data.hasMore,
+      }));
+    } catch (error) {
+      set({ isLoading: false, error: 'Nem sikerült betölteni az értesítéseket' });
+    }
   },
 }));

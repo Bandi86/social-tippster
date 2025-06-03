@@ -1,3 +1,30 @@
+# Backend Progress – Notification Snoozing & Pagination (2025-06-03)
+
+## Notification Snoozing
+
+- Added `snoozed_until` column to `Notification` entity
+- Migration: `1750001000000-AddSnoozedUntilToNotifications.ts` (pending run)
+- DTOs: `SnoozeNotificationDto`, `BulkSnoozeDto`
+- Service: `snooze`, `bulkSnooze` methods for single and bulk snoozing
+- Controller: `PATCH /notifications/:id/snooze`, `PATCH /notifications/bulk/snooze` endpoints
+- WebSocket events for snoozing
+
+## Notification Pagination
+
+- Service: `findAllPaginated` method with limit, offset, and snooze filtering
+- Controller: `GET /notifications/paginated` endpoint (query params: limit, offset, includeSnoozed)
+- Returns `{ notifications, hasMore }` for frontend infinite scroll
+
+## Status
+
+- All new endpoints and logic implemented
+- Type safety and error handling verified
+- Next: Run migration, expand tests, update API docs
+
+_Last updated: 2025-06-03 by GitHub Copilot_
+
+---
+
 # Backend Progress – Notification Preferences Migration & API
 
 **Date:** 2025-06-03
@@ -229,3 +256,22 @@ curl http://localhost:3001/api/admin/analytics/live-login-stats
 - Implement real-time dashboard updates
 - Add authentication testing for admin endpoints
 - Performance monitoring under load
+
+---
+
+# Backend Progress – Notification Bulk Actions (2025-06-03)
+
+## Bulk Notification Endpoints
+
+- Added `PATCH /notifications/bulk/mark-read` for bulk mark as read
+- Added `DELETE /notifications/bulk/delete` for bulk delete
+- DTO: `ArrayOfIdsDto` for array payload
+- Service: `bulkMarkAsRead`, `bulkDelete` methods (TypeORM In operator)
+- WebSocket events for bulk actions
+
+## Status
+
+- Endpoints tested and integrated with frontend
+- No breaking changes to existing notification API
+
+_Last updated: 2025-06-03 by GitHub Copilot_
