@@ -90,6 +90,6 @@ export class PostComment {
   @JoinColumn({ name: 'parent_comment_id' })
   parent_comment: PostComment;
 
-  @OneToMany(() => PostComment, (comment) => comment.parent_comment)
+  @OneToMany(() => PostComment, comment => comment.parent_comment)
   replies: PostComment[];
 }

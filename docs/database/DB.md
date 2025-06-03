@@ -220,15 +220,14 @@ The goal of this database plan is to outline the structure and organization of t
 - Attributes:
   - settings_id (PK)
   - user_id (FK)
-  - notification_preferences (JSON or similar format)
-  - privacy_settings (JSON or similar format)
+  - notification_preferences (JSON)
   - created_at
   - updated_at
 - Relationships:
-  - Belongs to a User
+  - Belongs to a User (one-to-one)
 - Purpose:
-  - To store user-specific settings such as notification preferences and privacy settings
-  - To allow users to customize their experience within the application
+  - Store per-user notification preferences (type/channel matrix)
+  - Allow users to customize notification delivery (in-app, email, push)
 
 12. ~~**UserRoles**~~ (Replaced by direct role field in User entity)
 

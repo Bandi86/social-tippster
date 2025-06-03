@@ -44,9 +44,12 @@ Thumbs.db
 docker-compose.override.yml
 
 # Uploads
-uploads/
+/uploads/
 
-temp/
+/temp/
+
+# Test files
+/tests/
 
 # Playwright
 /test-results/
@@ -56,13 +59,7 @@ temp/
 
 # Do not ignore test, debug, or doc files, but keep them out of root
 !docs/
-!docs/debug/
-!tests/
-!tests/images/
-!CLEANUP_SUMMARY.md
-!cookies.txt
-!debug-*.png
-!check-admin-status.js
+
 
 # Never ignore or delete cookies.txt, but it must be in docs/
 # Never ignore or delete CLEANUP_SUMMARY.md, but it must be in docs/

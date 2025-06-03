@@ -5,6 +5,7 @@ import {
   ForbiddenException,
   Get,
   HttpCode,
+  Put as HttpPut,
   HttpStatus,
   NotFoundException,
   Param,
@@ -31,9 +32,14 @@ import { UserListPaginatedResponseDto } from './dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { GetUsersQueryDto } from './dto/get-users-query.dto';
+import {
+  NotificationPreferencesDto,
+  UpdateNotificationPreferencesDto,
+} from './dto/notification-preferences.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 import { User } from './entities/user.entity';
+import { UserSettingsService } from './users-settings.service';
 import { UsersService } from './users.service';
 
 @ApiTags('users')
@@ -42,6 +48,7 @@ export class UsersController {
   constructor(
     private readonly usersService: UsersService,
     private readonly analyticsService: AnalyticsService,
+    private readonly userSettingsService: UserSettingsService,
   ) {}
 
   @Post()
@@ -250,5 +257,57 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'User sessions retrieved successfully' })
   async getUserSessions(@CurrentUser() user: User) {
     return this.analyticsService.getUserSessions(user.user_id);
+  }
+
+  @Get('me/notification-preferences')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Get current user notification preferences' })
+  @ApiResponse({
+    status: 200,
+    description: 'Notification preferences',
+    type: NotificationPreferencesDto,
+  })
+  async getNotificationPreferences(@CurrentUser() user: User): Promise<NotificationPreferencesDto> {
+    return (await this.userSettingsService.getPreferences(
+      user.user_id,
+    )) as NotificationPreferencesDto;
+  }
+
+  @HttpPut('me/notification-preferences')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Update current user notification preferences' })
+  @ApiBody({ type: UpdateNotificationPreferencesDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Notification preferences updated',
+    type: NotificationPreferencesDto,
+  })
+  async updateNotificationPreferences(
+    @CurrentUser() user: User,
+    @Body() dto: UpdateNotificationPreferencesDto,
+  ): Promise<NotificationPreferencesDto> {
+    return (await this.userSettingsService.updatePreferences(
+      user.user_id,
+      dto,
+    )) as NotificationPreferencesDto;
+  }
+
+  @Post('me/notification-preferences/reset')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Reset current user notification preferences to default' })
+  @ApiResponse({
+    status: 200,
+    description: 'Notification preferences reset',
+    type: NotificationPreferencesDto,
+  })
+  async resetNotificationPreferences(
+    @CurrentUser() user: User,
+  ): Promise<NotificationPreferencesDto> {
+    return (await this.userSettingsService.resetPreferences(
+      user.user_id,
+    )) as NotificationPreferencesDto;
   }
 }

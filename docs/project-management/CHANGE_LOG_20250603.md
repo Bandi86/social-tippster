@@ -133,6 +133,34 @@ Completed a major redesign of the authentication system UI, consolidating the pr
 
 ---
 
+## 🛎️ Notification Preferences API Implementation
+
+**Time**: June 3, 2025
+**Type**: Backend Feature Implementation & Testing
+**Priority**: Major
+
+### Completed
+
+- Created `user_settings` table and `UserSettings` entity for notification preferences
+- Implemented DTOs: `NotificationPreferencesDto`, `UpdateNotificationPreferencesDto`
+- Developed `UserSettingsService` with CRUD, merging, and default logic
+- Added endpoints:
+  - `GET /users/me/notification-preferences`
+  - `PUT /users/me/notification-preferences`
+  - `POST /users/me/notification-preferences/reset`
+- Wrote and validated manual API test script (`test-notification-preferences.js`)
+- Added integration test (`notification-preferences.integration.test.js`)
+- Documented test execution policy (run integration tests only when dev server is stopped)
+- Updated API and backend progress documentation
+
+### Notes
+
+- All endpoints require authentication
+- Preferences are merged with sensible defaults
+- See `docs/implementation-reports/API.md` and `docs/project-management/TESTING.md` for details
+
+---
+
 ## 🔧 TECHNICAL DETAILS
 
 ### Code Quality Improvements

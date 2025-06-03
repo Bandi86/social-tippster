@@ -172,6 +172,20 @@ async function generateAudioFingerprint(): Promise<string> {
     oscillator.start(0);
 
     return new Promise(resolve => {
+      let resolved = false;
+      function safeResolve(value: string) {
+        if (!resolved) {
+          resolved = true;
+          try {
+            oscillator.stop();
+          } catch {}
+          try {
+            audioContext.close();
+          } catch {}
+          resolve(value);
+        }
+      }
+
       scriptProcessor.onaudioprocess = e => {
         const buffer = e.inputBuffer.getChannelData(0);
         let sum = 0;
@@ -179,20 +193,12 @@ async function generateAudioFingerprint(): Promise<string> {
           sum += Math.abs(buffer[i]);
         }
         const average = sum / buffer.length;
-
-        oscillator.stop();
-        audioContext.close();
-
-        resolve(average.toString());
+        safeResolve(average.toString());
       };
 
       // Fallback after 100ms
       setTimeout(() => {
-        try {
-          oscillator.stop();
-          audioContext.close();
-        } catch {}
-        resolve('timeout');
+        safeResolve('timeout');
       }, 100);
     });
   } catch {

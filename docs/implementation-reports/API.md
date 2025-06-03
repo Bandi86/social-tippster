@@ -22,6 +22,42 @@
 - `POST /admin/analytics/sessions/invalidate-all/:userId`
   Invalidate all sessions for a user (admin only).
 
+## Notification Preferences API (2025-06-03)
+
+### New Endpoints
+
+- `GET /users/me/notification-preferences` – Get current user's notification preferences
+- `PUT /users/me/notification-preferences` – Update current user's notification preferences (partial or full)
+- `POST /users/me/notification-preferences/reset` – Reset preferences to default values
+
+### Data Model
+
+- `user_settings` table: stores per-user notification preferences as JSONB
+- Entity: `UserSettings` (TypeORM)
+- DTOs: `NotificationPreferencesDto`, `UpdateNotificationPreferencesDto`
+
+### Usage Example
+
+```http
+GET /users/me/notification-preferences
+Authorization: Bearer <token>
+
+Response:
+{
+  "notification_preferences": {
+    "comment": { "in_app": true, "email": false, "push": false },
+    "mention": { "in_app": true, "email": true, "push": false },
+    "follow": { "in_app": true, "email": false, "push": false }
+  }
+}
+```
+
+### Notes
+
+- All endpoints require authentication.
+- Preferences are merged with sensible defaults if not set.
+- See `tests/backend/test-notification-preferences.js` for full test coverage.
+
 ## Data Model Changes
 
 - `user_logins` table:

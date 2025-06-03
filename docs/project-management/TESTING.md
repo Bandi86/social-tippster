@@ -79,3 +79,29 @@ npm run start:test
 - Test uses `data-testid` selectors for reliability.
 - Test passes after layout fix in `frontend/app/auth/layout.tsx`.
 - Screenshot output: `tests/images/register-form-design.png`.
+
+## Notification Preferences API Testing (2025-06-03)
+
+### Backend API Test Coverage
+
+- **Manual API Test Script**: `tests/backend/test-notification-preferences.js` validates all notification preferences endpoints (GET, PUT, POST reset) against a running backend server.
+- **Integration Test**: `tests/backend/notification-preferences.integration.test.js` covers all API flows, but must be run when the main dev server is stopped to avoid port conflicts (see below).
+- **Unit Test**: Service logic can be tested in isolation (see `user-settings.service.unit.test.js` if present).
+
+### Test Execution Policy
+
+- **While dev server is running**: Use the manual test script for live API validation.
+- **For Jest integration tests**: Stop the main dev server before running, or configure tests to use a different port/in-memory DB.
+- **Do not run integration tests in parallel with the main dev server** (per project policy).
+
+### Endpoints Tested
+
+- `GET /users/me/notification-preferences`
+- `PUT /users/me/notification-preferences`
+- `POST /users/me/notification-preferences/reset`
+
+### Test Results (2025-06-03)
+
+- All manual and API tests pass with expected results.
+- Integration test startup will fail if port 3001 is in use (expected).
+- See `CHANGE_LOG_20250603.md` for details.

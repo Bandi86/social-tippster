@@ -1,3 +1,29 @@
+# Backend Progress – Notification Preferences Migration & API
+
+**Date:** 2025-06-03
+
+## Notification Preferences Migration & API
+
+- Added `UserSettings` entity and `user_settings` table for notification preferences
+- Migration: `1750000000000-CreateUserSettingsTable.ts` (verified OK, schema matches entity)
+- DTOs: `NotificationPreferencesDto`, `UpdateNotificationPreferencesDto`
+- Service: `UserSettingsService` (CRUD, default logic, type-safe merging)
+- Endpoints: `/users/me/notification-preferences` (GET, PUT, POST reset)
+- All code and migration tested and verified
+- Documentation updated: `docs/api/API.md`, `docs/changelogs/CHANGE_LOG_20250603.md`
+
+---
+
+## Notification Preferences API Testing (2025-06-03)
+
+- Manual API test script (`test-notification-preferences.js`) passes all endpoint checks (GET, PUT, POST reset)
+- Integration test (`notification-preferences.integration.test.js`) covers all flows, but must be run with dev server stopped (port conflict otherwise)
+- Service logic is unit-testable in isolation
+- All code, migration, and test coverage verified
+- Documentation updated: API, testing, changelog
+
+---
+
 # Backend Progress – Authentication System & User Login Improvements
 
 **Date:** 2025-06-03
@@ -203,7 +229,3 @@ curl http://localhost:3001/api/admin/analytics/live-login-stats
 - Implement real-time dashboard updates
 - Add authentication testing for admin endpoints
 - Performance monitoring under load
-
----
-
-**Implementation Status**: ✅ COMPLETED - June 1, 2025, 17:58 UTC

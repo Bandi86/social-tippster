@@ -165,3 +165,21 @@ The authentication system now has:
 - Admin Security Dashboard
 
 Your authentication system is now robust, secure, and production-ready! 🚀
+
+
+# Notification System Next Steps
+Recommended Next Steps (Backend)
+Design & Implement NotificationPreferences entity and endpoints
+Add migration, entity, DTOs, service, controller methods.
+Add notification deletion endpoints and logic
+User and admin delete/archive, update service and controller.
+Expand admin notification management
+Endpoints for admin to send/mark/delete notifications.
+Harden WebSocket gateway
+Add robust error handling, test multi-user scenarios.
+Prepare for push notification support
+Add push token registration endpoints (optional, for future).
+Write/expand tests for all new features
+Place in tests/backend/notifications/.
+Update documentation and changelogs
+docs/API.md, BACKEND_PROGRESS.md, docs/project-management/CHANGE_LOG_YYYYMMDD.md.
