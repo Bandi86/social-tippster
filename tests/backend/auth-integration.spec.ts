@@ -527,14 +527,17 @@ describe('Authentication System Integration Tests', () => {
     });
 
     it('should reject expired tokens', async () => {
-      // This test would require creating a token with immediate expiry
-      // For now, we'll test with an obviously invalid token
+      // Generate a token that expired 10 seconds ago using the test secret
+      const jwt = require('jsonwebtoken');
+      const expiredToken = jwt.sign(
+        { sub: '123', name: 'John Doe' },
+        process.env.JWT_SECRET || 'test-secret',
+        { expiresIn: -10 },
+      );
+
       await request(app.getHttpServer())
         .get('/auth/me')
-        .set(
-          'Authorization',
-          'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c',
-        )
+        .set('Authorization', `Bearer ${expiredToken}`)
         .expect(401);
     });
   });

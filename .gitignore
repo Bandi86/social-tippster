@@ -48,8 +48,8 @@ docker-compose.override.yml
 
 /temp/
 
-# Test files
-/tests/
+
+
 
 # Playwright
 /test-results/
@@ -59,11 +59,3 @@ docker-compose.override.yml
 
 # Do not ignore test, debug, or doc files, but keep them out of root
 !docs/
-
-
-# Never ignore or delete cookies.txt, but it must be in docs/
-# Never ignore or delete CLEANUP_SUMMARY.md, but it must be in docs/
-# Never ignore or delete debug PNGs or debug scripts, but they must be in docs/debug/
-# Never ignore or delete test files, but they must be in tests/
-# Never ignore or delete documentation files, but they must be in docs/
-# Keep the root directory clean: no test, image, debug, or documentation files should be present in the root.
