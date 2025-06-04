@@ -64,6 +64,19 @@
 - Improved maintainability and clarity of backend codebase.
 - Updated documentation and implementation reports accordingly.
 
+## [2025-06-04] Unified Backend Test Runner Script
+
+### Added
+
+- Created `tests/backend/run-all-backend-tests.sh` to run all backend tests (unit, integration, API, validation, shell scripts) in one command.
+- Updated `README.md` and `docs/project-management/TESTING.md` with usage instructions for the new script.
+
+### Benefits
+
+- Enables fast detection and review of all backend test issues after code changes.
+- Reduces manual effort and ensures all test types are covered in one step.
+- Errors and outputs are consolidated for easy review and fixing.
+
 ---
 
 _Logged by GitHub Copilot, 2025-06-04_

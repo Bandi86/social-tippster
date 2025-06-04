@@ -5,7 +5,7 @@ import {
 } from '../../../backend/src/modules/image-analysis/image-analysis.service';
 import { OcrService } from '../../../backend/src/modules/image-analysis/ocr.service';
 import { TipDataParserService } from '../../../backend/src/modules/image-analysis/tip-data-parser.service';
-import { CreateTipDto } from '../../../backend/src/modules/posts/dto/create-tip.dto';
+import { CreateTipDto } from '../../../backend/src/modules/tipps/dto/create-tip.dto';
 
 describe('ImageAnalysisService', () => {
   let service: ImageAnalysisService;

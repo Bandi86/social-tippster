@@ -151,6 +151,18 @@ npm run test:e2e
 ./tests/run-comprehensive-tests.sh
 ```
 
+## Unified Backend Test Runner
+
+To run all backend tests (unit, integration, API, validation, and shell scripts) in one command and quickly review all issues:
+
+```bash
+bash tests/backend/run-all-backend-tests.sh
+```
+
+- Make sure the dev server is running (`npm run dev`) before running this script.
+- All errors and outputs will be shown in the terminal and written to `tests/backend/errors/` if applicable.
+- Review the output and error files for any issues to fix fast.
+
 ## 🔧 Configuration
 
 Environment variables and configuration files:

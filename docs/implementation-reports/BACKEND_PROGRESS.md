@@ -431,3 +431,10 @@ _Last updated: 2025-06-04 by GitHub Copilot_
 _Last updated: 2025-06-04 by GitHub Copilot_
 
 ---
+
+## [2025-06-04] Unified Backend Test Runner Script
+
+- Added `tests/backend/run-all-backend-tests.sh` for unified backend test execution.
+- All backend test types (unit, integration, API, validation, shell) can now be run in one step.
+- Documentation updated in `README.md` and `docs/project-management/TESTING.md`.
+- Improves QA workflow and error review after backend changes.

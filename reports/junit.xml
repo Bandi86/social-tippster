@@ -1,3 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="jest tests" tests="0" failures="0" errors="0" time="151.29">
+<testsuites name="jest tests" tests="7" failures="0" errors="0" time="19.405">
+  <testsuite name="AnalyticsService - Session Management" errors="0" failures="0" skipped="0" timestamp="2025-06-04T16:10:57" time="6.971" tests="4">
+    <testcase classname="AnalyticsService - Session Management should create a user session" name="AnalyticsService - Session Management should create a user session" time="0.015">
+    </testcase>
+    <testcase classname="AnalyticsService - Session Management should end a user session" name="AnalyticsService - Session Management should end a user session" time="0.003">
+    </testcase>
+    <testcase classname="AnalyticsService - Session Management should get user sessions" name="AnalyticsService - Session Management should get user sessions" time="0.002">
+    </testcase>
+    <testcase classname="AnalyticsService - Session Management should create a user session with metadata" name="AnalyticsService - Session Management should create a user session with metadata" time="0.004">
+    </testcase>
+  </testsuite>
+  <testsuite name="AnalyticsService" errors="0" failures="0" skipped="0" timestamp="2025-06-04T16:11:04" time="0.873" tests="3">
+    <testcase classname="AnalyticsService should fetch user login history" name="AnalyticsService should fetch user login history" time="0.004">
+    </testcase>
+    <testcase classname="AnalyticsService should export login history as CSV" name="AnalyticsService should export login history as CSV" time="0.002">
+    </testcase>
+    <testcase classname="AnalyticsService should detect suspicious activity" name="AnalyticsService should detect suspicious activity" time="0.002">
+    </testcase>
+  </testsuite>
 </testsuites>

@@ -1,4 +1,4 @@
-import { TipValidationService } from '../../../backend/src/modules/posts/tip-validation.service';
+import { TipValidationService } from '../../../backend/src/modules/tipps/tip-validation.service';
 
 describe('TipValidationService', () => {
   let service: TipValidationService;

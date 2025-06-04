@@ -49,6 +49,9 @@ docker-compose.override.yml
 /temp/
 /errors/
 
+# Every Error folder in tests folder
+tests/**/errors/
+
 # Test cookies - specific file that should not be committed
 tests/cookies.txt
 

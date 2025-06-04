@@ -159,6 +159,19 @@ This test verifies that the tipps module endpoints are working correctly. It che
 - Advanced image analysis (OCR, tip extraction) is tested via `image-analysis/image-processing.service.ts`.
 - The uploads module is tested for file storage and validation only.
 
+## Unified Backend Test Runner (2025-06-04)
+
+A single script is now available to run all backend tests (unit, integration, API, validation, and shell scripts) at once:
+
+```bash
+bash tests/backend/run-all-backend-tests.sh
+```
+
+- Ensure the dev server is running (`npm run dev`) before running this script.
+- The script executes all Jest, Playwright, JS, and shell test scripts in `tests/backend/`.
+- Errors and outputs are shown in the terminal and written to `tests/backend/errors/` for review.
+- Use this for fast error detection and fixing after backend changes.
+
 ## Test Execution Policy
 
 - Backend server must be started manually with `npm run dev` before running any backend or integration tests.
