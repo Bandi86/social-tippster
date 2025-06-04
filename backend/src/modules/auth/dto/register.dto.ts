@@ -30,21 +30,21 @@ export class RegisterDto {
   @MinLength(6, { message: 'A jelszónak legalább 6 karakter hosszúnak kell lennie' })
   password: string;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     description: 'Keresztnév',
     example: 'John',
   })
-  @IsOptional()
-  @IsString()
-  first_name?: string;
+  @IsNotEmpty({ message: 'A keresztnév megadása kötelező' })
+  @IsString({ message: 'A keresztnév szöveges értéknek kell lennie' })
+  first_name: string;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     description: 'Vezetéknév',
     example: 'Doe',
   })
-  @IsOptional()
-  @IsString()
-  last_name?: string;
+  @IsNotEmpty({ message: 'A vezetéknév megadása kötelező' })
+  @IsString({ message: 'A vezetéknév szöveges értéknek kell lennie' })
+  last_name: string;
 
   @ApiPropertyOptional({
     description: 'Idézőjel',

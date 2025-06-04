@@ -4,8 +4,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { Repository } from 'typeorm';
 import { CreatePostDto, TipCategory } from '../posts/dto/create-post.dto';
-import { CreateTipDto } from '../posts/dto/create-tip.dto';
+import { CreateTipDto } from '../tipps/dto/create-tip.dto';
 import { Post, PostType } from '../posts/entities/posts.entity';
+import { ImageProcessingService } from './image-processing.service';
 import { OcrService } from './ocr.service';
 import { ParsedTipData, TipDataParserService } from './tip-data-parser.service';
 
@@ -44,6 +45,7 @@ export class ImageAnalysisService {
     private readonly postRepository: Repository<Post>,
     private readonly ocrService: OcrService,
     private readonly tipDataParserService: TipDataParserService,
+    private readonly imageProcessingService: ImageProcessingService,
   ) {}
 
   /**
@@ -53,8 +55,9 @@ export class ImageAnalysisService {
     try {
       this.logger.log(`Starting image analysis for: ${imagePath}`);
 
-      // 1. OCR - szöveg kinyerése a képből
-      const extractedText = await this.ocrService.extractTextFromImage(imagePath);
+      // 1. OCR - szöveg kinyerése a képből (delegálva az uploads modulnak)
+      const processedImage = await this.imageProcessingService.preprocessImage(imagePath);
+      const extractedText = await this.imageProcessingService.extractTextFromImage(processedImage);
 
       if (!extractedText || extractedText.trim().length < 10) {
         throw new BadRequestException('Nem sikerült értelmezhető szöveget kinyerni a képből');
@@ -284,6 +287,26 @@ export class ImageAnalysisService {
         return false;
       }
     }
+  }
+
+  /**
+   * Publikus wrapper: kép validálása (preprocess + basic check)
+   */
+  async validateImageFileWithProcessing(imagePath: string): Promise<boolean> {
+    try {
+      await this.imageProcessingService.preprocessImage(imagePath);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Publikus wrapper: OCR szöveg kinyerése preprocess után
+   */
+  async extractTextForOcrValidation(imagePath: string): Promise<string> {
+    const processedImage = await this.imageProcessingService.preprocessImage(imagePath);
+    return this.imageProcessingService.extractTextFromImage(processedImage);
   }
 
   /**

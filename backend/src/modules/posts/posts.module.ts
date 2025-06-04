@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ImageProcessingService } from '../uploads/image-processing.service';
+import { ImageProcessingService } from '../image-analysis/image-processing.service';
 import { User } from '../users/entities/user.entity';
 import {
   Post,
@@ -14,9 +14,6 @@ import {
 } from './entities';
 import { PostsController } from './posts.controller';
 import { PostsService } from './posts.service';
-import { TipValidationService } from './tip-validation.service';
-import { TipsController } from './tips.controller';
-import { TipsService } from './tips.service';
 
 @Module({
   imports: [
@@ -32,8 +29,8 @@ import { TipsService } from './tips.service';
       User,
     ]),
   ],
-  controllers: [PostsController, TipsController],
-  providers: [PostsService, TipsService, TipValidationService, ImageProcessingService],
-  exports: [PostsService, TipsService, TipValidationService, TypeOrmModule],
+  controllers: [PostsController],
+  providers: [PostsService, ImageProcessingService],
+  exports: [PostsService, TypeOrmModule],
 })
 export class PostsModule {}

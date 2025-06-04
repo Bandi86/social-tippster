@@ -1,5 +1,13 @@
 # Social Tippster
 
+> **2025-06-04:**
+>
+> - Image upload (storage/validation) and image analysis (OCR, tip extraction) are now handled by separate backend modules.
+> - `backend/src/modules/uploads/image-processing.service.ts` is deprecated; all advanced logic is in `backend/src/modules/image-analysis/image-processing.service.ts`.
+> - Tip-related functionality has been refactored into a dedicated tipps module: `backend/src/modules/tipps/`.
+> - See `docs/implementation-reports/TIPPS_MODULE_REFACTORING.md` for details on the tipps module refactoring.
+> - See `docs/implementation-reports/BACKEND_PROGRESS.md` for details on other backend changes.
+
 A comprehensive social media platform for football tips and predictions, built with Next.js frontend and NestJS backend.
 
 ## 🏗️ Project Structure
@@ -226,25 +234,38 @@ Environment variables and configuration files:
 
 **Impact:** Eliminated console errors and significantly improved user experience during page navigation.
 
-## 📄 License
+# Social Tippster (Backend) – Tipps Module & Image Upload Refactor (2025-06-04)
 
-See [LICENSE.md](docs/LICENSE.md) for details.
+> **2025-06-04:**
+>
+> - All tip-related logic is now handled by the dedicated tipps module (`backend/src/modules/tipps/`).
+> - The posts module only handles generic post logic; all tip creation, validation, and business rules are in the tipps module.
+> - Image upload (storage/validation) and image analysis (OCR, tip extraction) are now handled by separate backend modules.
+> - `backend/src/modules/uploads/image-processing.service.ts` is deprecated; all advanced logic is in `backend/src/modules/image-analysis/image-processing.service.ts`.
+> - See `docs/implementation-reports/TIPPS_MODULE_REFACTORING.md` for details on the tipps module refactoring.
+> - See `docs/implementation-reports/BACKEND_PROGRESS.md` for details on other backend changes.
 
-## 🤝 Support
+## Tipps Module Overview
 
-For support and questions, check the documentation in `/docs` or create an issue in the project repository.
+- All tip endpoints are now under `/tipps` (see API docs for details).
+- The tipps module is self-contained, type-safe, and production-ready.
+- Posts module is now focused only on generic post logic.
 
-## [32mTest File Organization (2025-06-01)[0m
+## Image Upload & Analysis Refactor
 
-All test files are consolidated under the root `tests/` folder, with subfolders for:
+- Uploads module handles file storage and validation only.
+- All advanced image analysis is handled by the image-analysis module.
 
-- `tests/backend/` (backend tests)
-- `tests/frontend/` (frontend tests)
-- `tests/examples/` (example tests)
-- `tests/images/` (test screenshots)
-- `tests/playwright-report/` (E2E test reports)
+## Testing
 
-No test files are present in the root of `frontend/` or `backend/` directories. This structure is up-to-date and compliant with project documentation standards.
+- All tipps module endpoints are tested via `tests/backend/test-tipps-module.js` and `tests/backend/tip-validation.service.spec.ts`.
+- Backend server must be started manually with `npm run dev` before running any backend or integration tests.
+
+## Documentation
+
+- See `/docs/implementation-reports/TIPPS_MODULE_REFACTORING.md` for technical details.
+- See `/docs/implementation-reports/API.md` for endpoint documentation.
+- See `/docs/project-management/TESTING.md` for test instructions and policy.
 
 ---
 

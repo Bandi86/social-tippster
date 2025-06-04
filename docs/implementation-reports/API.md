@@ -74,35 +74,41 @@ Response:
 - Data retention logic for old login records (default: 1 year).
 - Admins can now view and manage user sessions for security and compliance.
 
-## Image Upload API (2025-06-04)
+# API Changes – Tipps Module & Image Upload Refactor (2025-06-04)
 
-### New Endpoints
+## Tipps Module Endpoints
+
+- `POST /tipps`: Create a new tip
+- `GET /tipps`: Get all tips with filtering and pagination
+- `GET /tipps/my-performance`: Get user tip performance statistics
+- `GET /tipps/leaderboard`: Get tips leaderboard
+- `GET /tipps/statistics`: Get overall tip statistics
+- `POST /tipps/validate`: Validate a tip before creation
+- `POST /tipps/check-deadline`: Check submission deadlines for tips
+- `POST /tipps/:id/result`: Set tip result
+- `GET /tipps/:id`: Get a specific tip by ID
+
+## Tipps Module Details
+
+- All tip-related logic is now handled by the tipps module, not the posts module.
+- Validation, business rules, and endpoints for tips are self-contained in the tipps module.
+- See `docs/implementation-reports/TIPPS_MODULE_REFACTORING.md` for technical details.
+
+## Image Upload & Analysis Refactor
 
 - `POST /api/uploads/profile` – Upload profile avatar images
 - `POST /api/uploads/post` – Upload post images
+- All advanced image analysis (OCR, tip extraction) is now handled by `image-analysis/image-processing.service.ts`.
+- The uploads module only handles file storage and validation.
 
-### File Upload Specifications
+## File Upload Specifications
 
 - **Accepted formats:** JPEG, JPG, PNG only
 - **Maximum file size:** 5MB
 - **Content-Type:** `multipart/form-data`
 - **Form field name:** `file`
 
-### Request Example
-
-```http
-POST /api/uploads/profile
-Content-Type: multipart/form-data
-
---boundary
-Content-Disposition: form-data; name="file"; filename="avatar.jpg"
-Content-Type: image/jpeg
-
-[binary image data]
---boundary--
-```
-
-### Response Format
+## Response Format
 
 ```json
 {
@@ -111,41 +117,12 @@ Content-Type: image/jpeg
 }
 ```
 
-#### Error Response
+## Status
 
-```json
-{
-  "url": "",
-  "error": "Invalid file upload"
-}
-```
+- All endpoints are production-ready and type-safe.
+- Backend builds and runs successfully.
 
-### File Storage Structure
-
-- **Profile images:** `./uploads/profile/`
-- **Post images:** `./uploads/posts/`
-- **File naming:** `{timestamp}-{random}.{extension}`
-- **Access:** Static serving at `/uploads/*` routes
-
-### Implementation Details
-
-- **Module:** `UploadsModule` with Multer integration
-- **Service:** `UploadsService` for path and filename utilities
-- **Controller:** `UploadsController` with validation and error handling
-- **Security:** File type validation via mimetype checking
-- **TypeScript:** Fully type-safe implementation with proper error handling
-
-### Usage Notes
-
-- Files are stored on local filesystem
-- Unique filenames prevent conflicts
-- Automatic directory creation ensures upload paths exist
-- Consider cloud storage for production deployment
-
-## See Also
-
-- [AUTHENTICATION.md](./AUTHENTICATION.md)
-- [BACKEND_PROGRESS.md](./BACKEND_PROGRESS.md)
+_Last updated: 2025-06-04 by GitHub Copilot_
 
 ---
 

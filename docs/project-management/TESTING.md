@@ -1,5 +1,14 @@
 # TESTING
 
+> **2025-06-04:**
+>
+> - Backend image upload (storage/validation) and image analysis (OCR, tip extraction) are now handled by separate modules.
+> - All advanced image processing logic is in `backend/src/modules/image-analysis/image-processing.service.ts`.
+> - The old `uploads/image-processing.service.ts` is deprecated and only provides basic file validation.
+> - Tip-related functionality has been refactored into a dedicated tipps module.
+> - A simple test for the tipps module endpoints is available at `tests/backend/test-tipps-module.js`.
+> - Update or add tests accordingly.
+
 ## Test File Organization (as of 2025-06-01)
 
 - All test files are located in the root `tests/` folder, with subfolders for backend, frontend, and examples.
@@ -40,6 +49,20 @@ npm run test:e2e
 # Start backend in test mode
 npm run start:test
 ```
+
+### 🧪 Tipps Module Testing
+
+The tipps module can be tested using the following command:
+
+```bash
+# Run the tipps module test
+node tests/backend/test-tipps-module.js
+```
+
+This test verifies that the tipps module endpoints are working correctly. It checks:
+
+- The `/tipps` endpoint for retrieving all tips
+- The `/tipps/leaderboard` endpoint for retrieving the tips leaderboard
 
 > **Note:** Before running any of the above test commands, ensure the backend server is already running on `localhost:3001` using `npm run dev`.
 
@@ -120,9 +143,32 @@ npm run start:test
 - Lint and formatting issues resolved
 - All changes follow project file organization and documentation standards
 
-### ⚠️ Backend Server Manual Start Policy (2025-06-04)
+# TESTING – Tipps Module & Image Upload Refactor (2025-06-04)
 
-- Jest, integration, and E2E tests **do not** start or stop the backend server automatically.
-- You must start the backend server manually with `npm run dev` before running any backend or integration tests.
+## Tipps Module Testing
+
+- All tip-related endpoints are now tested via `tests/backend/test-tipps-module.js` and `tests/backend/tip-validation.service.spec.ts`.
+- Tests cover creation, validation, statistics, leaderboard, and deadline logic for tips.
+- All validation logic is now separated and testable in isolation.
+- TypeScript errors and async/await issues fixed in all related test files.
+- Lint and formatting issues resolved.
+
+## Backend Image Upload & Analysis Testing
+
+- Image upload endpoints (`/api/uploads/profile`, `/api/uploads/post`) are tested for file type, size, and error handling.
+- Advanced image analysis (OCR, tip extraction) is tested via `image-analysis/image-processing.service.ts`.
+- The uploads module is tested for file storage and validation only.
+
+## Test Execution Policy
+
+- Backend server must be started manually with `npm run dev` before running any backend or integration tests.
+- Jest, integration, and E2E tests do **not** start or stop the backend server automatically.
 - Do **not** rely on test scripts or Jest configuration to start/stop the server.
 - This policy prevents port conflicts and ensures a stable test environment.
+
+## Status
+
+- All tests pass and follow project file organization and documentation standards.
+- Backend builds and runs successfully.
+
+_Last updated: 2025-06-04 by GitHub Copilot_

@@ -1,3 +1,22 @@
+# Backend Progress – Comprehensive Validation Test Coverage (2025-06-04)
+
+## Comprehensive Validation Test Added
+
+- **File:** `tests/backend/backend-comprehensive-validation.js`
+- **Purpose:** Unified, up-to-date backend test covering registration, login, and public endpoint access
+- **Features:**
+  - Registration: All edge cases, Hungarian/English error handling, error body output to file
+  - Login: All edge cases, language, DB state verification
+  - Public endpoint access: Checks for unexpected open/protected URLs
+  - All error responses are written to `tests/backend/errors/` for easy review and fixing
+- **How to use:**
+  1. Start dev servers (`npm run dev`)
+  2. Run: `node tests/backend/backend-comprehensive-validation.js`
+  3. Review output and error files
+- **Documentation updated:** This file, see below for details
+
+---
+
 # Backend Progress – Notification Snoozing & Pagination (2025-06-03)
 
 ## Notification Snoozing
@@ -359,6 +378,55 @@ POST /api/uploads/post
 - ✅ Backend builds and runs successfully
 - ⚠️ Manual testing with actual image files pending
 - 📝 Frontend integration components needed
+
+_Last updated: 2025-06-04 by GitHub Copilot_
+
+---
+
+# Backend Progress – Image Upload & Analysis Refactor (2025-06-04)
+
+## Image Upload & Analysis Module Separation
+
+- **UploadsModule** now only handles file storage, type/size validation, and directory management.
+- All advanced image processing (preprocessing, OCR, betting slip parsing, validation) moved to **ImageAnalysisModule**.
+- `image-processing.service.ts` in uploads is now deprecated; all logic is in `image-analysis/image-processing.service.ts`.
+- All backend imports and usages updated to use the new service location.
+- Improved code maintainability, clarity, and testability.
+- All changes follow project documentation and file organization standards.
+
+_Last updated: 2025-06-04 by GitHub Copilot_
+
+---
+
+# Backend Progress – Tipps Module Refactor & Image Upload/Analysis Separation (2025-06-04)
+
+## Tipps Module Refactor
+
+- Refactored all tip-related logic out of the posts module and into a dedicated tipps module (`backend/src/modules/tipps/`).
+- Created `tipps.controller.ts`, `tipps.service.ts`, and `tip-validation.service.ts` for tip management and validation.
+- Updated all backend imports and references to use the new tipps module structure.
+- Removed obsolete/duplicate files and logic from the posts module.
+- Cleaned up posts service to only handle generic post logic.
+- Ensured all tipps module files are present, named, and referenced correctly.
+- Fixed DTO and service imports in the tipps module to use local paths and correct enum sources.
+- Diagnosed and fixed TypeScript "unsafe type" errors in the tipps module.
+- All changes follow project file organization and documentation standards.
+
+## Backend Image Upload & Analysis Refactor
+
+- Separated image upload (storage/validation) and image analysis (OCR, parsing, tip extraction) logic into distinct modules.
+- Deprecated `backend/src/modules/uploads/image-processing.service.ts` (now only basic file validation).
+- Moved all advanced image processing to `backend/src/modules/image-analysis/image-processing.service.ts`.
+- Updated all backend imports and usages to use the new service location.
+- Improved maintainability and clarity of backend codebase.
+
+## Testing & Status
+
+- Created unit test: `tests/backend/tip-validation.service.spec.ts` for all tip validation logic.
+- All validation logic now separated and testable.
+- TypeScript errors and async/await issues fixed.
+- Lint and formatting issues resolved.
+- Backend builds and runs successfully.
 
 _Last updated: 2025-06-04 by GitHub Copilot_
 

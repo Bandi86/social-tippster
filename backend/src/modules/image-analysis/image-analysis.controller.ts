@@ -236,8 +236,10 @@ export class ImageAnalysisController {
 
       this.logger.log(`Validating uploaded image: ${file.filename}`);
 
-      // Alap fájl validálás
-      const isValidFile = this.imageAnalysisService.validateImageFile(file.path);
+      // Alap fájl validálás (delegálva az uploads modulnak)
+      const isValidFile = await this.imageAnalysisService.validateImageFileWithProcessing(
+        file.path,
+      );
 
       if (!isValidFile) {
         this.cleanupTempFile(file.path);
@@ -252,9 +254,7 @@ export class ImageAnalysisController {
 
       // Gyors OCR teszt - csak első 50 karakter
       try {
-        const ocrText = await this.imageAnalysisService['ocrService'].extractTextFromImage(
-          file.path,
-        );
+        const ocrText = await this.imageAnalysisService.extractTextForOcrValidation(file.path);
         const hasText = typeof ocrText === 'string' && ocrText.trim().length > 0;
         return {
           success: true,

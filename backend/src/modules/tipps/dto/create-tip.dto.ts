@@ -12,7 +12,7 @@ import {
   Min,
   MinLength,
 } from 'class-validator';
-import { PostStatus, PostVisibility, TipCategory } from './create-post.dto';
+import { PostStatus, PostVisibility, TipCategory } from '../../posts/entities/posts.entity';
 
 export class CreateTipDto {
   @IsString()

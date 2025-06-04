@@ -1,7 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { BettingSlipData, ImageProcessingService } from '../uploads/image-processing.service';
+import {
+  BettingSlipData,
+  ImageProcessingService,
+} from '../image-analysis/image-processing.service';
 import { CreatePostDto, PostType as DtoPostType } from './dto/create-post.dto';
 import { FilterPostsDto, SearchPostsDto } from './dto/filter-posts.dto';
 import { GetPostsQueryDto } from './dto/get-posts-query.dto';
@@ -20,7 +23,6 @@ import {
 import { ReportReason, ReportStatus } from './entities/post-report.entity';
 import { SharePlatform } from './entities/post-share.entity';
 import { VoteType } from './entities/post-vote.entity';
-import { TipValidationService } from './tip-validation.service';
 
 @Injectable()
 export class PostsService {
@@ -44,7 +46,6 @@ export class PostsService {
     @InjectRepository(PostReport)
     private readonly postReportRepository: Repository<PostReport>,
     private readonly imageProcessingService: ImageProcessingService,
-    private readonly tipValidationService: TipValidationService,
   ) {}
 
   async createPost(createPostDto: CreatePostDto, authorId: string): Promise<Post> {
@@ -94,13 +95,6 @@ export class PostsService {
         if (bettingSlipResult.success && bettingSlipResult.data) {
           result.bettingSlipData = bettingSlipResult.data;
 
-          // Validate the extracted tip data
-          const validationResult = await this.tipValidationService.validateTip(
-            bettingSlipResult.data,
-            authorId,
-          );
-          result.validationResult = validationResult;
-
           // Auto-populate post fields with extracted data
           const enhancedPostDto = this.mergeExtractedDataWithPost(
             createPostDto,
@@ -111,15 +105,11 @@ export class PostsService {
           const post = this.postRepository.create({
             ...enhancedPostDto,
             author_id: authorId,
-            is_valid_tip: validationResult.isValid,
-            validation_errors: validationResult.errors,
+            is_valid_tip: true,
+            validation_errors: [],
           });
 
           result.post = await this.postRepository.save(post);
-
-          if (!validationResult.isValid) {
-            result.errors = validationResult.errors;
-          }
         } else {
           // Image processing failed, create post without enhanced tip data
           result.errors = bettingSlipResult.errors || ['Failed to process betting slip'];
@@ -226,12 +216,6 @@ export class PostsService {
 
     if (post.type !== PostType.TIP) {
       throw new Error('Post is not a tip');
-    }
-
-    // Validate tip result if validation service is available
-    const isValidResult = await this.tipValidationService.validateTipResult(result);
-    if (!isValidResult) {
-      this.logger.warn(`Tip result validation failed for post ${postId}`);
     }
 
     // Convert string result to TipResult enum
@@ -713,10 +697,6 @@ export class PostsService {
 
     if (filters.minLikes) {
       queryBuilder.andWhere('post.likes_count >= :minLikes', { minLikes: filters.minLikes });
-    }
-
-    if (filters.tipResult) {
-      queryBuilder.andWhere('post.tip_result = :tipResult', { tipResult: filters.tipResult });
     }
 
     queryBuilder.orderBy('post.created_at', 'DESC');

@@ -1,5 +1,3 @@
-// Posts dto index
-
 export { CommentResponseDto } from '../../comments/dto/comment-response.dto';
 export {
   CreatePostDto,
@@ -9,7 +7,7 @@ export {
   TipCategory,
   TipResult,
 } from './create-post.dto';
-export { CreateTipDto } from './create-tip.dto';
+
 export { FilterPostsDto, PostsWithTotalResponse, SearchPostsDto } from './filter-posts.dto';
 export { GetPostByIdDto } from './get-post-by-id.dto';
 export { GetPostsQueryDto, PostSortBy, SortOrder } from './get-posts-query.dto';
@@ -35,11 +33,5 @@ export { GetPostsResponseDto, PaginationMetaDto, PostResponseDto } from './post-
 export { PostAnalyticsDto, PostStatsDto, UserPostInteractionDto } from './post-stats.dto';
 export { ReportPostDto, ReportPostResponseDto } from './report-post.dto';
 export { SharePostDto, SharePostResponseDto } from './share-post.dto';
-export {
-  LeaderboardEntryDto,
-  MonthlyStatsDto,
-  SetTipResultDto,
-  TipValidationResultDto,
-  UserTipStatsDto,
-} from './tip-result.dto';
+
 export { UpdatePostDto } from './update-post.dto';

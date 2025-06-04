@@ -31,7 +31,7 @@
 ## Tippes posztok kezelése backend oldalon
 
 # Tipp module:
-
+Guard Protection: csak regisztrált felhasználók férhetnek hozzá
 A tipp module arra szolgal, hogy a mar hozzaadott posztokbol informaciot nyerjen ki amibol a tipp adatbazisba tudjuk menteni a felhasznalo tippeit. A tipp module a posztokhoz kapcsolodo informaciokat dolgozza fel, es ez alapjan hozza letre a tippeket.
 
 Hogy kezeljuk ezt?
@@ -46,6 +46,7 @@ Hogy kezeljuk ezt?
 9. Az api vegpontok megfelelo dokumentalasa, hogy a frontend es mas rendszerek konnyen tudjak hasznalni a tipp adatokat.
 
 ## Kép feltöltése és kezelése backend oldalon
+Guard Protection: csak regisztrált felhasználók férhetnek hozzá
 
 # A kepek feltolteset es kezelest az uploads module vegzi.
   - 2 fajta kepet kell kezelni az egyik a profile kep a masik a poszthoz tartozo kep.
@@ -55,6 +56,7 @@ Hogy kezeljuk ezt?
   - A profile kepeket a uploads/profiles mappaban helyezzuk el. A file nevuk is egyedi kell legyen, hogy elkeruljuk az osszeutkozest. A file nev tartalmazhatja a felhasznalo id-t, hogy konnyen azonosithato legyen.
 
 # image analysis module feladata:
+Guard Protection: csak regisztrált felhasználók férhetnek hozzá
  1. automatikusan viszgalja az uploads/posts mappaban levo kepeket.
  2. Minden kepet eloszor sharp modullal ellenoriz, hogy megfelel-e a szabvanyoknak (pl. meret, formatum)
  3. feljavitja a kepet, hogy megfeleljen a szabvanyoknak.
@@ -94,6 +96,7 @@ Hogy kezeljuk ezt?
 3. Toroljuk a redudans kodokat es azokat a fileokat amikre mar nincs szukseg.
 4. **Poszt Module Refaktorálása:**
    - Különválasztjuk a posztok és tippek kezelését.
+   - Mar vannak lesz filok, mint pl tip-validation tipp controller es tipp service ezeket akar at is helyezhetjuk az ures tipps module mappaba
    - A posztok adatbázisának struktúráját optimalizáljuk, hogy könnyen lehessen keresni, szűrni és rendezni.
    - A posztokhoz tartozó hozzászólások kezelését a comments module vegzi (nem tudom jelenleg hogy mennyire van kesz)
 5. **Tipps Module Létrehozása:**
@@ -106,3 +109,7 @@ Hogy kezeljuk ezt?
 7. Surun elorfordul hogy a kod unsafe type value hibak vannak, ezeket mindenhol javítani kell, hogy a kód biztonságos legyen.
 8. **Tesztelés:**
    - Kesobb tesztelunk a refaktorált modulokat, hogy megbizonyosodjunk a helyes működésről.
+
+Jelenleg a posztok és tippek kezelése nem elég hatékony, és a képek feltöltése és elemzése is problémás. A refaktorálás célja, hogy a kódot átláthatóbbá, karbantarthatóbbá és hatékonyabbá tegyük, valamint hogy a felhasználói élményt javítsuk a posztok és tippek kezelésében.
+ez azt is jelenti hogy a posztokat a post module kezeli le a tippekkel kapcsolatos informaciot logikat pedig a tipps module fogja kezelni.
+Jelenleg vegyes ossze vissza vannak ezek a fileok, midket moduleban letre van hozva szerintem ugyanaz bar nem gyozodtem rola meg. JAVITANI KELL
