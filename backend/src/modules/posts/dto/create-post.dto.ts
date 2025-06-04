@@ -16,21 +16,40 @@ import {
 
 export enum PostType {
   TIP = 'tip',
+  GENERAL = 'general',
   DISCUSSION = 'discussion',
-  NEWS = 'news',
   ANALYSIS = 'analysis',
 }
 
 export enum PostStatus {
   DRAFT = 'draft',
   PUBLISHED = 'published',
+  PRIVATE = 'private',
   ARCHIVED = 'archived',
+  DELETED = 'deleted',
+  REPORTED = 'reported',
 }
 
 export enum PostVisibility {
   PUBLIC = 'public',
   FOLLOWERS = 'followers',
   PRIVATE = 'private',
+}
+
+export enum TipCategory {
+  SINGLE_BET = 'single_bet',
+  COMBO_BET = 'combo_bet',
+  SYSTEM_BET = 'system_bet',
+  LIVE_BET = 'live_bet',
+}
+
+export enum TipResult {
+  PENDING = 'pending',
+  WON = 'won',
+  LOST = 'lost',
+  VOID = 'void',
+  HALF_WON = 'half_won',
+  HALF_LOST = 'half_lost',
 }
 
 export class CreatePostDto {
@@ -57,6 +76,10 @@ export class CreatePostDto {
   @IsString()
   category?: string;
 
+  @ValidateIf((o: CreatePostDto) => o.type === PostType.TIP)
+  @IsEnum(TipCategory, { message: 'Érvényes tip kategória szükséges' })
+  tipCategory?: TipCategory;
+
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
@@ -67,6 +90,24 @@ export class CreatePostDto {
   @ValidateIf((o: CreatePostDto) => o.type === PostType.TIP)
   @IsUUID('4', { message: 'Érvényes meccs ID szükséges' })
   matchId?: string;
+
+  @ValidateIf((o: CreatePostDto) => o.type === PostType.TIP)
+  @IsString()
+  @MinLength(1, { message: 'A meccs neve nem lehet üres' })
+  matchName?: string;
+
+  @ValidateIf((o: CreatePostDto) => o.type === PostType.TIP)
+  @IsDateString({}, { message: 'Érvényes meccs dátum szükséges' })
+  matchDate?: string;
+
+  @ValidateIf((o: CreatePostDto) => o.type === PostType.TIP)
+  @IsString()
+  matchTime?: string;
+
+  @ValidateIf((o: CreatePostDto) => o.type === PostType.TIP)
+  @IsString()
+  @MinLength(1, { message: 'Az outcome nem lehet üres' })
+  outcome?: string;
 
   @ValidateIf((o: CreatePostDto) => o.type === PostType.TIP)
   @IsUUID('4', { message: 'Érvényes betting market ID szükséges' })
@@ -83,6 +124,13 @@ export class CreatePostDto {
   @Max(1000, { message: 'Az odds értéke maximum 1000 lehet' })
   @Type(() => Number)
   odds?: number;
+
+  @ValidateIf((o: CreatePostDto) => o.type === PostType.TIP)
+  @IsOptional()
+  @IsNumber({}, { message: 'A total odds értéke szám kell legyen' })
+  @Min(1.01, { message: 'A total odds értéke minimum 1.01 lehet' })
+  @Type(() => Number)
+  totalOdds?: number;
 
   @ValidateIf((o: CreatePostDto) => o.type === PostType.TIP)
   @IsNumber({}, { message: 'A tét értéke szám kell legyen' })
@@ -102,6 +150,11 @@ export class CreatePostDto {
   @IsOptional()
   @IsDateString({}, { message: 'Érvényes dátum formátum szükséges' })
   expiresAt?: string;
+
+  @ValidateIf((o: CreatePostDto) => o.type === PostType.TIP)
+  @IsOptional()
+  @IsDateString({}, { message: 'Érvényes submission deadline formátum szükséges' })
+  submissionDeadline?: string;
 
   // Post ütemezés
   @IsOptional()

@@ -19,6 +19,7 @@ import { SeasonModule } from './modules/data/season/season.module';
 import { TeamModule } from './modules/data/team/team.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { PostsModule } from './modules/posts/posts.module';
+import { UploadsModule } from './modules/uploads/uploads.module';
 import { UsersModule } from './modules/users/users.module';
 
 // Only apply ThrottlerGuard in production
@@ -50,6 +51,7 @@ if (process.env.NODE_ENV !== 'development') {
     TeamModule,
     PlayerModule,
     SeasonModule,
+    UploadsModule,
   ],
   controllers: [
     AppController,

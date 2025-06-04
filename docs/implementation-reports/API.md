@@ -74,6 +74,74 @@ Response:
 - Data retention logic for old login records (default: 1 year).
 - Admins can now view and manage user sessions for security and compliance.
 
+## Image Upload API (2025-06-04)
+
+### New Endpoints
+
+- `POST /api/uploads/profile` – Upload profile avatar images
+- `POST /api/uploads/post` – Upload post images
+
+### File Upload Specifications
+
+- **Accepted formats:** JPEG, JPG, PNG only
+- **Maximum file size:** 5MB
+- **Content-Type:** `multipart/form-data`
+- **Form field name:** `file`
+
+### Request Example
+
+```http
+POST /api/uploads/profile
+Content-Type: multipart/form-data
+
+--boundary
+Content-Disposition: form-data; name="file"; filename="avatar.jpg"
+Content-Type: image/jpeg
+
+[binary image data]
+--boundary--
+```
+
+### Response Format
+
+```json
+{
+  "url": "/uploads/profile/1733316754321-987654321.jpg",
+  "error": null
+}
+```
+
+#### Error Response
+
+```json
+{
+  "url": "",
+  "error": "Invalid file upload"
+}
+```
+
+### File Storage Structure
+
+- **Profile images:** `./uploads/profile/`
+- **Post images:** `./uploads/posts/`
+- **File naming:** `{timestamp}-{random}.{extension}`
+- **Access:** Static serving at `/uploads/*` routes
+
+### Implementation Details
+
+- **Module:** `UploadsModule` with Multer integration
+- **Service:** `UploadsService` for path and filename utilities
+- **Controller:** `UploadsController` with validation and error handling
+- **Security:** File type validation via mimetype checking
+- **TypeScript:** Fully type-safe implementation with proper error handling
+
+### Usage Notes
+
+- Files are stored on local filesystem
+- Unique filenames prevent conflicts
+- Automatic directory creation ensures upload paths exist
+- Consider cloud storage for production deployment
+
 ## See Also
 
 - [AUTHENTICATION.md](./AUTHENTICATION.md)

@@ -1,12 +1,14 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import * as Sentry from '@sentry/node';
 import * as cookieParser from 'cookie-parser';
+import { join } from 'path';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   // Initialize Sentry before creating the app
-  const Sentry = require('@sentry/node');
   Sentry.init({
     dsn: process.env.SENTRY_DSN || 'https://placeholder-dsn@sentry.io/placeholder-project-id',
     environment: process.env.NODE_ENV || 'development',
@@ -14,7 +16,7 @@ async function bootstrap() {
     debug: process.env.NODE_ENV === 'development',
   });
 
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   // Global validation pipe
   app.useGlobalPipes(
@@ -89,6 +91,9 @@ async function bootstrap() {
       persistAuthorization: true,
     },
   });
+
+  // Serve static uploads (profile, posts, etc.)
+  app.useStaticAssets(join(__dirname, '..', '..', 'uploads'), { prefix: '/uploads/' });
 
   await app.listen(3001);
   const baseUrl = `http://localhost:3001`;

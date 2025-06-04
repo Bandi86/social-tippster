@@ -48,6 +48,8 @@ Start both frontend and backend servers with a single command:
 npm run dev
 ```
 
+> **Note:** The backend server is **not** started automatically by Jest or any test runner. You must start the server manually with `npm run dev` before running backend or integration tests. Do not rely on test scripts to start or stop the server.
+
 This will start:
 
 - Frontend: http://localhost:3000
@@ -119,6 +121,12 @@ Comprehensive documentation is available in the `/docs` folder:
 - Live analytics endpoints for admin dashboard
 - Enhanced device fingerprinting
 - Session timeout warning components
+
+## 🧪 Running Tests
+
+- All backend and integration tests require the backend server to be running on `localhost:3001`.
+- Jest and other test runners will **not** start or stop the server automatically.
+- Always start the server manually with `npm run dev` before running any tests.
 
 ## 🧪 Testing
 

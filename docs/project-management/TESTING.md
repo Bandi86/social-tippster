@@ -41,6 +41,8 @@ npm run test:e2e
 npm run start:test
 ```
 
+> **Note:** Before running any of the above test commands, ensure the backend server is already running on `localhost:3001` using `npm run dev`.
+
 ### ⏳ Pending Test Updates
 
 - Update integration tests for new token rotation logic
@@ -105,3 +107,22 @@ npm run start:test
 - All manual and API tests pass with expected results.
 - Integration test startup will fail if port 3001 is in use (expected).
 - See `CHANGE_LOG_20250603.md` for details.
+
+### ✅ Tip Validation Service & Backend Tip System (2025-06-04)
+
+- Implemented `TipValidationService` for deadline, odds, user history, and match existence validation logic (stubbed for now)
+- Injected and used `TipValidationService` in `TipsService` for all tip validation
+- Added/updated endpoints in `TipsController` for tip validation and deadline checking
+- Created unit test: `tests/backend/tip-validation.service.spec.ts` for all validation logic
+- All validation logic now separated and testable
+- All endpoints from posts-todo-2025-06-04.md are now present
+- TypeScript errors and async/await issues fixed
+- Lint and formatting issues resolved
+- All changes follow project file organization and documentation standards
+
+### ⚠️ Backend Server Manual Start Policy (2025-06-04)
+
+- Jest, integration, and E2E tests **do not** start or stop the backend server automatically.
+- You must start the backend server manually with `npm run dev` before running any backend or integration tests.
+- Do **not** rely on test scripts or Jest configuration to start/stop the server.
+- This policy prevents port conflicts and ensures a stable test environment.

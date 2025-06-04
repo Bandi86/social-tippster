@@ -12,21 +12,40 @@ import { User } from '../../users/entities/user.entity';
 
 export enum PostType {
   TIP = 'tip',
+  GENERAL = 'general',
   DISCUSSION = 'discussion',
-  NEWS = 'news',
   ANALYSIS = 'analysis',
 }
 
 export enum PostStatus {
   DRAFT = 'draft',
   PUBLISHED = 'published',
+  PRIVATE = 'private',
   ARCHIVED = 'archived',
+  DELETED = 'deleted',
+  REPORTED = 'reported',
 }
 
 export enum PostVisibility {
   PUBLIC = 'public',
   FOLLOWERS = 'followers',
   PRIVATE = 'private',
+}
+
+export enum TipCategory {
+  SINGLE_BET = 'single_bet',
+  COMBO_BET = 'combo_bet',
+  SYSTEM_BET = 'system_bet',
+  LIVE_BET = 'live_bet',
+}
+
+export enum TipResult {
+  PENDING = 'pending',
+  WON = 'won',
+  LOST = 'lost',
+  VOID = 'void',
+  HALF_WON = 'half_won',
+  HALF_LOST = 'half_lost',
 }
 
 @Entity('posts')
@@ -71,6 +90,13 @@ export class Post {
   @Column({ type: 'varchar', length: 100, nullable: true })
   category: string;
 
+  @Column({
+    type: 'enum',
+    enum: TipCategory,
+    nullable: true,
+  })
+  tip_category: TipCategory;
+
   @Column({ type: 'simple-array', nullable: true })
   tags: string[];
 
@@ -86,6 +112,18 @@ export class Post {
   @Column({ type: 'uuid', nullable: true })
   match_id: string;
 
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  match_name: string;
+
+  @Column({ type: 'date', nullable: true })
+  match_date: Date;
+
+  @Column({ type: 'varchar', length: 10, nullable: true })
+  match_time: string;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  outcome: string;
+
   @Column({ type: 'uuid', nullable: true })
   betting_market_id: string;
 
@@ -95,6 +133,9 @@ export class Post {
   @Column({ type: 'decimal', precision: 6, scale: 2, nullable: true })
   odds: number;
 
+  @Column({ type: 'decimal', precision: 8, scale: 2, nullable: true })
+  total_odds: number;
+
   @Column({ type: 'int', nullable: true })
   stake: number;
 
@@ -103,6 +144,9 @@ export class Post {
 
   @Column({ type: 'timestamp', nullable: true })
   expires_at: Date;
+
+  @Column({ type: 'timestamp', nullable: true })
+  submission_deadline: Date;
 
   // Scheduling
   @Column({ type: 'timestamp', nullable: true })
@@ -203,12 +247,34 @@ export class Post {
   engagement_rate: number;
 
   // Tip result tracking (for completed tips)
-  @Column({ type: 'boolean', nullable: true })
-  tip_result: boolean; // true = won, false = lost, null = pending
+  @Column({
+    type: 'enum',
+    enum: TipResult,
+    default: TipResult.PENDING,
+    nullable: true,
+  })
+  tip_result: TipResult;
+
+  @Column({ type: 'boolean', default: false })
+  is_result_set: boolean;
 
   @Column({ type: 'timestamp', nullable: true })
   tip_resolved_at: Date;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
   tip_profit: number; // Calculated profit/loss
+
+  // Tip validation
+  @Column({ type: 'boolean', default: true })
+  is_valid_tip: boolean;
+
+  @Column({ type: 'simple-array', nullable: true })
+  validation_errors: string[];
+
+  // Additional tip metadata
+  @Column({ type: 'text', nullable: true })
+  shareable_link: string;
+
+  @Column({ type: 'json', nullable: true })
+  edit_history: any[]; // Store edit history as JSON
 }

@@ -27,7 +27,10 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { User, UserRole } from '../users/entities/user.entity';
 import { CreatePostDto } from './dto/create-post.dto';
+import { FilterPostsDto, PostsWithTotalResponse, SearchPostsDto } from './dto/filter-posts.dto';
 import { GetPostsQueryDto } from './dto/get-posts-query.dto';
+import { ReportPostDto, ReportPostResponseDto } from './dto/report-post.dto';
+import { SharePostDto, SharePostResponseDto } from './dto/share-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { Post as PostEntity } from './entities';
 import { PostsService } from './posts.service';
@@ -69,6 +72,34 @@ export class PostsController {
     @Query(new ValidationPipe({ transform: true, whitelist: true })) queryDto: GetPostsQueryDto,
   ) {
     return await this.postsService.findAllPosts(queryDto);
+  }
+
+  // --- Search Functionality ---
+  @Get('search')
+  @ApiOperation({ summary: 'Search posts by query string' })
+  @ApiResponse({
+    status: 200,
+    description: 'Posts found successfully',
+    type: PostsWithTotalResponse,
+  })
+  async searchPosts(
+    @Query(new ValidationPipe({ transform: true, whitelist: true })) searchDto: SearchPostsDto,
+  ): Promise<PostsWithTotalResponse> {
+    return await this.postsService.searchPosts(searchDto);
+  }
+
+  // --- Filter Functionality ---
+  @Get('filter')
+  @ApiOperation({ summary: 'Filter posts by various criteria' })
+  @ApiResponse({
+    status: 200,
+    description: 'Filtered posts retrieved successfully',
+    type: PostsWithTotalResponse,
+  })
+  async filterPosts(
+    @Query(new ValidationPipe({ transform: true, whitelist: true })) filterDto: FilterPostsDto,
+  ): Promise<PostsWithTotalResponse> {
+    return await this.postsService.filterPosts(filterDto);
   }
 
   @Get(':id')
@@ -272,4 +303,119 @@ export class PostsController {
 
   // TODO: Implement controller endpoints for comment system
   // TODO: Implement controller endpoints for post statistics and analytics
+
+  @Get('by-author/:userId')
+  @ApiOperation({ summary: 'Get posts by specific author' })
+  @ApiParam({ name: 'userId', description: 'Author User UUID' })
+  @ApiResponse({ status: 200, description: 'Author posts retrieved successfully' })
+  async getPostsByAuthor(
+    @Param('userId', ParseUUIDPipe) userId: string,
+    @Query(new ValidationPipe({ transform: true, whitelist: true })) queryDto?: GetPostsQueryDto,
+  ) {
+    const authorQuery = { ...queryDto, authorId: userId };
+    return await this.postsService.findAllPosts(authorQuery);
+  }
+
+  // --- Share Functionality ---
+  @Post(':id/share')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Share a post on social platforms' })
+  @ApiParam({ name: 'id', description: 'Post UUID' })
+  @ApiResponse({ status: 201, description: 'Post shared successfully', type: SharePostResponseDto })
+  @ApiResponse({ status: 404, description: 'Post not found' })
+  async sharePost(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() shareData: SharePostDto,
+    @CurrentUser() user: User,
+  ): Promise<SharePostResponseDto> {
+    try {
+      const result = await this.postsService.sharePost(
+        id,
+        user.user_id,
+        shareData.platform,
+        shareData.additional_data,
+      );
+      return {
+        success: result.success,
+        shareUrl: result.shareUrl,
+        shareId: result.shareId,
+      };
+    } catch (err) {
+      if (err instanceof Error && err.message === 'Post not found') {
+        throw new NotFoundException('Post not found');
+      }
+      throw err;
+    }
+  }
+
+  // --- Report Functionality ---
+  @Post(':id/report')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Report a post for moderation' })
+  @ApiParam({ name: 'id', description: 'Post UUID' })
+  @ApiResponse({
+    status: 201,
+    description: 'Post reported successfully',
+    type: ReportPostResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Post not found' })
+  async reportPost(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() reportData: ReportPostDto,
+    @CurrentUser() user: User,
+  ): Promise<ReportPostResponseDto> {
+    try {
+      const result = await this.postsService.reportPost(
+        id,
+        user.user_id,
+        reportData.reason,
+        reportData.additional_details,
+      );
+      return {
+        success: result.success,
+        reportId: result.reportId,
+      };
+    } catch (err) {
+      if (err instanceof Error && err.message === 'Post not found') {
+        throw new NotFoundException('Post not found');
+      }
+      throw err;
+    }
+  }
+
+  // --- Favorite (alias for bookmark) ---
+  @Post(':id/favorite')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Add post to favorites (alias for bookmark)' })
+  @ApiParam({ name: 'id', description: 'Post UUID' })
+  @ApiResponse({ status: 201, description: 'Post added to favorites successfully' })
+  @ApiResponse({ status: 404, description: 'Post not found' })
+  async favoritePost(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: User,
+  ): Promise<{ success: boolean }> {
+    // Favorite is essentially the same as bookmark
+    return await this.bookmarkPost(id, user);
+  }
+
+  @Delete(':id/favorite')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Remove post from favorites' })
+  @ApiParam({ name: 'id', description: 'Post UUID' })
+  @ApiResponse({ status: 204, description: 'Post removed from favorites successfully' })
+  async unfavoritePost(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: User,
+  ): Promise<void> {
+    // Unfavorite is essentially the same as unbookmark
+    return await this.unbookmarkPost(id, user);
+  }
 }

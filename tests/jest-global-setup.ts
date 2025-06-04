@@ -1,3 +1,10 @@
+// ⚠️ FIGYELEM: Ez a fájl NEM AKTÍV!
+// Jest nem használja ezt a globalSetup-ot. A szervert manuálisan kell indítani a tesztek előtt.
+// Ne szerkeszd, ne hivatkozz rá, csak archivált példaként maradt meg.
+
+// Ezt a fájlt mostantól nem használja a Jest globalSetup-hoz, mert a szervert manuálisan kell indítani.
+// A tartalom megőrizve, de a Jest configból eltávolítva.
+
 import { setup as setupDevServer } from 'jest-dev-server';
 
 export default async () => {
@@ -16,4 +23,3 @@ export default async () => {
     process.exit(1);
   }
 };
-

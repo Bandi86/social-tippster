@@ -275,3 +275,91 @@ curl http://localhost:3001/api/admin/analytics/live-login-stats
 - No breaking changes to existing notification API
 
 _Last updated: 2025-06-03 by GitHub Copilot_
+
+---
+
+# Tip Validation Service & Backend Tip System Improvements (2025-06-04)
+
+## TipValidationService
+
+- Implemented `TipValidationService` for deadline, odds, user history, and match existence validation logic (stubbed for now)
+- Injected and used `TipValidationService` in `TipsService` for all tip validation
+- All validation logic now separated and testable
+
+## Endpoints
+
+- Added/updated endpoints in `TipsController` for tip validation and deadline checking
+- All endpoints from posts-todo-2025-06-04.md are now present
+
+## Testing
+
+- Created unit test: `tests/backend/tip-validation.service.spec.ts` for all validation logic
+- Test covers deadline, odds, user history, and match existence logic
+
+## Status
+
+- TypeScript errors and async/await issues fixed
+- Lint and formatting issues resolved
+- All changes follow project file organization and documentation standards
+
+_Last updated: 2025-06-04 by GitHub Copilot_
+
+---
+
+# Backend Progress – Image Upload System Implementation (2025-06-04)
+
+## Image Upload System
+
+### Implementation Overview
+
+- **UploadsModule**: Complete Multer integration with file handling capabilities
+- **UploadsService**: Utility methods for path generation and unique filename creation
+- **UploadsController**: RESTful endpoints for profile and post image uploads
+- **Static File Serving**: Configured at `/uploads/*` route for uploaded images
+
+### Features Implemented
+
+- **File Type Validation**: JPEG, JPG, PNG only with mimetype checking
+- **File Size Limits**: 5MB maximum upload size
+- **Structured Storage**: Separate folders for different image types
+  - `/uploads/profile/` - User profile avatars
+  - `/uploads/posts/` - Post images
+- **Unique Filename Generation**: Timestamp + random suffix to prevent conflicts
+- **Automatic Directory Creation**: Ensures upload directories exist
+- **TypeScript Safety**: Proper type guards and error handling
+
+### API Endpoints
+
+```http
+POST /api/uploads/profile
+POST /api/uploads/post
+```
+
+### Response Format
+
+```json
+{
+  "url": "/uploads/profile/1733316123456-789123456.jpg",
+  "error": "Optional error message"
+}
+```
+
+### Technical Implementation
+
+- **Module Structure**: Clean separation of concerns with proper DI
+- **Error Handling**: Comprehensive validation and error responses
+- **File Management**: Safe file operations with conflict resolution
+- **Build Status**: ✅ Compiles successfully without TypeScript errors
+
+### Status
+
+- ✅ Core upload functionality implemented
+- ✅ File validation and security measures in place
+- ✅ TypeScript issues resolved
+- ✅ Backend builds and runs successfully
+- ⚠️ Manual testing with actual image files pending
+- 📝 Frontend integration components needed
+
+_Last updated: 2025-06-04 by GitHub Copilot_
+
+---

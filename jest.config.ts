@@ -8,8 +8,6 @@ const config: Config = {
     '<rootDir>/tests/**/*.test.@(ts|tsx|js|jsx)',
     '!<rootDir>/tests/playwright/**', // ⛔️ Kizárjuk a Playwright teszteket
   ],
-  globalSetup: '<rootDir>/tests/jest-global-setup.ts',
-globalTeardown: '<rootDir>/tests/jest-global-teardown.ts',
   preset: 'ts-jest',
   testPathIgnorePatterns: [
     '<rootDir>/node_modules/',

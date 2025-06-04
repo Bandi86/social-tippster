@@ -32,9 +32,6 @@ module.exports = {
   coverageDirectory: 'tests/coverage/auth-integration',
   testEnvironment: 'node',
   setupFilesAfterEnv: ['<rootDir>/tests/backend/auth-test-setup.ts'],
-  moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/backend/src/$1',
-  },
   testTimeout: 60000,
   maxWorkers: 1,
   verbose: true,
