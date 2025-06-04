@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CreatePostDto } from './dto/create-post.dto';
+import { BettingSlipData, ImageProcessingService } from '../uploads/image-processing.service';
+import { CreatePostDto, PostType as DtoPostType } from './dto/create-post.dto';
 import { FilterPostsDto, SearchPostsDto } from './dto/filter-posts.dto';
 import { GetPostsQueryDto } from './dto/get-posts-query.dto';
 import {
@@ -11,15 +12,20 @@ import {
   PostCommentVote,
   PostReport,
   PostShare,
+  PostType,
   PostView,
   PostVote,
+  TipResult,
 } from './entities';
 import { ReportReason, ReportStatus } from './entities/post-report.entity';
 import { SharePlatform } from './entities/post-share.entity';
 import { VoteType } from './entities/post-vote.entity';
+import { TipValidationService } from './tip-validation.service';
 
 @Injectable()
 export class PostsService {
+  private readonly logger = new Logger(PostsService.name);
+
   constructor(
     @InjectRepository(Post)
     private readonly postRepository: Repository<Post>,
@@ -37,6 +43,8 @@ export class PostsService {
     private readonly postCommentVoteRepository: Repository<PostCommentVote>,
     @InjectRepository(PostReport)
     private readonly postReportRepository: Repository<PostReport>,
+    private readonly imageProcessingService: ImageProcessingService,
+    private readonly tipValidationService: TipValidationService,
   ) {}
 
   async createPost(createPostDto: CreatePostDto, authorId: string): Promise<Post> {
@@ -45,6 +53,292 @@ export class PostsService {
       author_id: authorId,
     });
     return await this.postRepository.save(post);
+  }
+
+  /**
+   * Create post with automatic betting slip processing
+   */
+  async createPostWithBettingSlip(
+    createPostDto: CreatePostDto & { imageUrl?: string },
+    authorId: string,
+  ): Promise<{
+    post: Post | null;
+    bettingSlipData?: BettingSlipData;
+    validationResult?: any;
+    errors?: string[];
+  }> {
+    const result: {
+      post: Post | null;
+      bettingSlipData?: BettingSlipData;
+      validationResult?: any;
+      errors?: string[];
+    } = {
+      post: null,
+      bettingSlipData: undefined,
+      validationResult: undefined,
+      errors: undefined,
+    };
+
+    try {
+      // Process betting slip if image is provided
+      if (createPostDto.imageUrl && createPostDto.type === DtoPostType.TIP) {
+        this.logger.log('Processing betting slip for new post...');
+
+        // Extract image path from URL (assuming local uploads)
+        const imagePath = createPostDto.imageUrl.replace('/uploads/', '../../uploads/');
+
+        // Process the betting slip image
+        const bettingSlipResult =
+          await this.imageProcessingService.processBettingSlipImage(imagePath);
+
+        if (bettingSlipResult.success && bettingSlipResult.data) {
+          result.bettingSlipData = bettingSlipResult.data;
+
+          // Validate the extracted tip data
+          const validationResult = await this.tipValidationService.validateTip(
+            bettingSlipResult.data,
+            authorId,
+          );
+          result.validationResult = validationResult;
+
+          // Auto-populate post fields with extracted data
+          const enhancedPostDto = this.mergeExtractedDataWithPost(
+            createPostDto,
+            bettingSlipResult.data,
+          );
+
+          // Create the post with enhanced data
+          const post = this.postRepository.create({
+            ...enhancedPostDto,
+            author_id: authorId,
+            is_valid_tip: validationResult.isValid,
+            validation_errors: validationResult.errors,
+          });
+
+          result.post = await this.postRepository.save(post);
+
+          if (!validationResult.isValid) {
+            result.errors = validationResult.errors;
+          }
+        } else {
+          // Image processing failed, create post without enhanced tip data
+          result.errors = bettingSlipResult.errors || ['Failed to process betting slip'];
+          const post = this.postRepository.create({
+            ...createPostDto,
+            author_id: authorId,
+          });
+          result.post = await this.postRepository.save(post);
+        }
+      } else {
+        // No image or not a tip post, create normally
+        const post = this.postRepository.create({
+          ...createPostDto,
+          author_id: authorId,
+        });
+        result.post = await this.postRepository.save(post);
+      }
+
+      return result;
+    } catch (error) {
+      this.logger.error('Error creating post with betting slip:', error);
+
+      // Fallback to creating post without enhancement
+      const post = this.postRepository.create({
+        ...createPostDto,
+        author_id: authorId,
+      });
+      result.post = await this.postRepository.save(post);
+      result.errors = ['Failed to process betting slip, post created without enhancement'];
+
+      return result;
+    }
+  }
+
+  /**
+   * Merge extracted betting slip data with post data
+   */
+  private mergeExtractedDataWithPost(
+    createPostDto: CreatePostDto,
+    bettingSlipData: BettingSlipData,
+  ): CreatePostDto {
+    const merged = { ...createPostDto };
+
+    // Map betting slip data to CreatePostDto fields (camelCase)
+    if (bettingSlipData.team1 && bettingSlipData.team2) {
+      merged.matchName = `${bettingSlipData.team1} vs ${bettingSlipData.team2}`;
+    }
+
+    if (bettingSlipData.matchDate) {
+      merged.matchDate = bettingSlipData.matchDate.toISOString();
+    }
+
+    if (bettingSlipData.odds) {
+      merged.odds = bettingSlipData.odds;
+    }
+
+    if (bettingSlipData.stake) {
+      merged.stake = bettingSlipData.stake;
+    }
+
+    if (bettingSlipData.outcome) {
+      merged.outcome = bettingSlipData.outcome;
+    }
+
+    if (bettingSlipData.validityTime) {
+      merged.expiresAt = bettingSlipData.validityTime.toISOString();
+      merged.submissionDeadline = bettingSlipData.validityTime.toISOString();
+    }
+
+    // Auto-generate title if not provided
+    if (!merged.title && bettingSlipData.team1 && bettingSlipData.team2) {
+      merged.title = `${bettingSlipData.team1} vs ${bettingSlipData.team2} - Tip`;
+    }
+
+    // Enhance content with extracted data
+    if (bettingSlipData.odds || bettingSlipData.stake) {
+      const extractedInfo: string[] = [];
+      if (bettingSlipData.odds) extractedInfo.push(`Odds: ${bettingSlipData.odds}`);
+      if (bettingSlipData.stake) extractedInfo.push(`Stake: ${bettingSlipData.stake}`);
+      if (bettingSlipData.maxWinning)
+        extractedInfo.push(`Potential Win: ${bettingSlipData.maxWinning}`);
+
+      if (extractedInfo.length > 0) {
+        merged.content = `${merged.content || ''}\n\n**Extracted from betting slip:**\n${extractedInfo.join('\n')}`;
+      }
+    }
+
+    return merged;
+  }
+
+  /**
+   * Update post tip result after match completion
+   */
+  async updateTipResult(
+    postId: string,
+    result: 'win' | 'loss' | 'void',
+    actualOdds?: number,
+    profit?: number,
+  ): Promise<Post> {
+    const post = await this.findPostById(postId);
+    if (!post) {
+      throw new Error('Post not found');
+    }
+
+    if (post.type !== PostType.TIP) {
+      throw new Error('Post is not a tip');
+    }
+
+    // Validate tip result if validation service is available
+    const isValidResult = await this.tipValidationService.validateTipResult(result);
+    if (!isValidResult) {
+      this.logger.warn(`Tip result validation failed for post ${postId}`);
+    }
+
+    // Convert string result to TipResult enum
+    let tipResult: TipResult;
+    switch (result) {
+      case 'win':
+        tipResult = TipResult.WON;
+        break;
+      case 'loss':
+        tipResult = TipResult.LOST;
+        break;
+      case 'void':
+        tipResult = TipResult.VOID;
+        break;
+      default:
+        tipResult = TipResult.PENDING;
+    }
+
+    // Update post with result
+    const updatedPost = await this.postRepository.save({
+      ...post,
+      tip_result: tipResult,
+      is_result_set: true,
+      tip_resolved_at: new Date(),
+      tip_profit: profit || 0,
+    });
+
+    return updatedPost;
+  }
+
+  /**
+   * Get posts with tip statistics
+   */
+  async getPostsWithTipStats(authorId?: string): Promise<{
+    posts: Post[];
+    statistics: {
+      totalTips: number;
+      wonTips: number;
+      lostTips: number;
+      pendingTips: number;
+      winRate: number;
+      totalProfit: number;
+      averageOdds: number;
+    };
+  }> {
+    const queryBuilder = this.postRepository
+      .createQueryBuilder('post')
+      .leftJoinAndSelect('post.author', 'author')
+      .where('post.type = :type', { type: PostType.TIP })
+      .andWhere('post.status = :status', { status: 'published' })
+      .orderBy('post.created_at', 'DESC');
+
+    if (authorId) {
+      queryBuilder.andWhere('post.author_id = :authorId', { authorId });
+    }
+
+    const posts = await queryBuilder.getMany();
+
+    // Calculate statistics
+    const stats = this.calculateTipStatistics(posts);
+
+    return {
+      posts,
+      statistics: stats,
+    };
+  }
+
+  /**
+   * Calculate tip statistics from posts
+   */
+  private calculateTipStatistics(posts: Post[]): {
+    totalTips: number;
+    wonTips: number;
+    lostTips: number;
+    pendingTips: number;
+    winRate: number;
+    totalProfit: number;
+    averageOdds: number;
+  } {
+    const totalTips = posts.length;
+    const wonTips = posts.filter(p => p.tip_result === TipResult.WON).length;
+    const lostTips = posts.filter(p => p.tip_result === TipResult.LOST).length;
+    const pendingTips = posts.filter(
+      p => !p.tip_result || p.tip_result === TipResult.PENDING,
+    ).length;
+
+    const winRate = totalTips > 0 ? (wonTips / (wonTips + lostTips)) * 100 : 0;
+
+    const totalProfit = posts
+      .filter(p => p.tip_profit !== null && p.tip_profit !== undefined)
+      .reduce((sum, p) => sum + (p.tip_profit || 0), 0);
+
+    const validOdds = posts.filter(p => p.odds && p.odds > 0);
+    const averageOdds =
+      validOdds.length > 0
+        ? validOdds.reduce((sum, p) => sum + (p.odds || 0), 0) / validOdds.length
+        : 0;
+
+    return {
+      totalTips,
+      wonTips,
+      lostTips,
+      pendingTips,
+      winRate: Math.round(winRate * 100) / 100,
+      totalProfit: Math.round(totalProfit * 100) / 100,
+      averageOdds: Math.round(averageOdds * 100) / 100,
+    };
   }
 
   async findAllPosts(queryDto?: GetPostsQueryDto): Promise<{ posts: Post[]; total: number }> {

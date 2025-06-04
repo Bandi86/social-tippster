@@ -1,1 +1,0 @@
-backend/src/modules/admin/admin.controller.ts(47,2): error TS1238: Unable to resolve signature of class decorator when called as an expression.

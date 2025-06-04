@@ -1,1 +1,0 @@
-frontend/components/features/notifications/NotificationsBell.tsx(19,13): error TS7030: Not all code paths return a value.

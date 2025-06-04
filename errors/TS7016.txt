@@ -1,2 +1,0 @@
-backend/src/modules/notifications/notifications.gateway.ts(9,47): error TS7016: Could not find a declaration file for module 'ws'. 'C:/Users/bandi/Documents/code/social-tippster/social-tippster/backend/node_modules/ws/index.js' implicitly has an 'any' type.
-backend/src/modules/notifications/notifications.gateway.ts(10,24): error TS7016: Could not find a declaration file for module 'ws'. 'C:/Users/bandi/Documents/code/social-tippster/social-tippster/backend/node_modules/ws/index.js' implicitly has an 'any' type.

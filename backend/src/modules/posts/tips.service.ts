@@ -39,7 +39,7 @@ export class TipsService {
 
   async createTip(createTipDto: CreateTipDto, authorId: string): Promise<Post> {
     // Validate tip before creation
-    const validationResult = this.validateTip(createTipDto);
+    const validationResult = await this.validateTip(createTipDto);
     if (!validationResult.isValid) {
       throw new BadRequestException({
         message: 'Tip validation failed',
@@ -103,20 +103,38 @@ export class TipsService {
     return updatedTip;
   }
 
-  validateTip(createTipDto: CreateTipDto) {
+  async validateTip(createTipDto: CreateTipDto) {
     // Use TipValidationService for all checks
     const errors: string[] = [];
-    const { matchDate, odds, matchId } = createTipDto;
+    const { matchDate, odds, matchId, matchName, outcome, stake, submissionDeadline } =
+      createTipDto;
     const now = new Date();
+
     if (!this.tipValidationService.validateSubmissionDeadline(new Date(matchDate), now)) {
       errors.push('A tipp leadási határideje lejárt.');
     }
     if (!this.tipValidationService.validateOdds(odds)) {
       errors.push('Az odds értéke érvénytelen.');
     }
-    if (matchId && !this.tipValidationService.validateMatchExists()) {
-      errors.push('A megadott meccs nem létezik.');
+
+    // Convert CreateTipDto to BettingSlipData for validation
+    if (matchId || matchName) {
+      const bettingSlipData = {
+        matchDate: new Date(matchDate),
+        team1: matchName?.split(' vs ')[0] || matchName?.split(' - ')[0] || '',
+        team2: matchName?.split(' vs ')[1] || matchName?.split(' - ')[1] || '',
+        outcome,
+        odds,
+        stake,
+        submissionTime: submissionDeadline ? new Date(submissionDeadline) : new Date(),
+      };
+
+      const matchValidation = await this.tipValidationService.validateMatchExists(bettingSlipData);
+      if (!matchValidation.isValid) {
+        errors.push('A megadott meccs nem létezik.');
+      }
     }
+
     // User history check (optional, can be extended)
     // ...
     return {

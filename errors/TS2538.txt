@@ -1,1 +1,0 @@
-frontend/components/features/posts/CreatePostForm.tsx(127,16): error TS2538: Type 'symbol' cannot be used as an index type.
