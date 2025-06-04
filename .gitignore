@@ -48,8 +48,8 @@ docker-compose.override.yml
 
 /temp/
 
-
-
+# Test cookies - specific file that should not be committed
+tests/cookies.txt
 
 # Playwright
 /test-results/
