@@ -5,6 +5,7 @@
 // ===============================
 
 // ---- Importok ----
+import { completeAuthReset } from '@/lib/auth-reset';
 import authService from '@/lib/auth-service';
 import { AuthActions, AuthState, AuthTokens, User } from '@/types';
 import { create } from 'zustand';
@@ -90,6 +91,9 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       clearAuth: () => {
+        console.log('🔄 Starting clearAuth...');
+
+        // Always reset Zustand state in-memory first
         set({
           user: null,
           tokens: null,
@@ -100,10 +104,20 @@ export const useAuthStore = create<AuthStore>()(
           sessionId: undefined,
           deviceFingerprint: undefined,
           idleTimeout: undefined,
+          isInitialized: false, // Force re-initialization
         });
+
+        // Use comprehensive auth reset
         if (typeof window !== 'undefined') {
-          localStorage.removeItem('authToken');
+          completeAuthReset();
+
+          // Also clear API client auth
+          import('../lib/api-client').then(({ apiClient }) => {
+            apiClient.clearAuth();
+          });
         }
+
+        console.log('✅ clearAuth completed');
       },
 
       clearError: () => {
@@ -294,23 +308,27 @@ export const useAuthStore = create<AuthStore>()(
       initialize: async () => {
         set({ isLoading: true });
         try {
+          // First check if we have any persisted tokens or user data
           const persistedTokens = get().tokens;
           const persistedUser = get().user;
 
-          if (persistedTokens && persistedTokens.accessToken) {
-            // If we have persisted user data, use it
-            if (persistedUser) {
-              set({
-                user: persistedUser,
-                tokens: persistedTokens,
-                isAuthenticated: true,
-                isLoading: false,
-                isInitialized: true,
-              });
-              return;
-            }
+          // If no persisted data at all, set to guest state immediately
+          if (!persistedTokens?.accessToken && !persistedUser) {
+            console.log('No persisted auth data found, initializing as guest');
+            set({
+              user: null,
+              tokens: null,
+              isAuthenticated: false,
+              isLoading: false,
+              isInitialized: true,
+            });
+            return;
+          }
 
-            // If no user data but we have tokens, fetch user data
+          // If we have persisted user data and a valid-looking token, try to use it
+          if (persistedTokens?.accessToken && persistedUser) {
+            console.log('Found persisted auth data, validating...');
+            // Validate the token by trying to fetch user data
             try {
               const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
                 headers: {
@@ -320,13 +338,46 @@ export const useAuthStore = create<AuthStore>()(
 
               if (response.ok) {
                 const userData = await response.json();
+                console.log('Token is valid, user authenticated');
                 set({
                   user: userData,
                   tokens: persistedTokens,
                   isAuthenticated: true,
+                  isLoading: false,
+                  isInitialized: true,
                 });
+                return;
               } else {
-                // Token is invalid, clear auth
+                console.log('Token validation failed, clearing auth');
+                get().clearAuth();
+              }
+            } catch (error) {
+              console.error('Error validating token:', error);
+              get().clearAuth();
+            }
+          } else if (persistedTokens?.accessToken && !persistedUser) {
+            // If we only have tokens but no user data, fetch user data
+            console.log('Found token but no user data, fetching user...');
+            try {
+              const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+                headers: {
+                  Authorization: `Bearer ${persistedTokens.accessToken}`,
+                },
+              });
+
+              if (response.ok) {
+                const userData = await response.json();
+                console.log('User data fetched successfully');
+                set({
+                  user: userData,
+                  tokens: persistedTokens,
+                  isAuthenticated: true,
+                  isLoading: false,
+                  isInitialized: true,
+                });
+                return;
+              } else {
+                console.log('Failed to fetch user data, clearing auth');
                 get().clearAuth();
               }
             } catch (error) {
@@ -334,13 +385,15 @@ export const useAuthStore = create<AuthStore>()(
               get().clearAuth();
             }
           } else {
-            // No persisted tokens
-            console.log('Auth initialized, no persisted session.');
+            // Invalid state, clear everything
+            console.log('Invalid auth state detected, clearing');
+            get().clearAuth();
           }
         } catch (error) {
           console.error('Error during auth initialization:', error);
           get().clearAuth();
         } finally {
+          // Ensure we always set initialized to true and loading to false
           set({ isLoading: false, isInitialized: true });
         }
       },

@@ -4,7 +4,7 @@
 import * as bcrypt from 'bcrypt';
 import * as dotenv from 'dotenv';
 import { DeepPartial, Repository } from 'typeorm';
-dotenv.config();
+dotenv.config({ path: __dirname + '/../../.env' });
 
 /* console.log(
   'DATABASE_PASSWORD:',
@@ -18,7 +18,8 @@ import {
 } from '../modules/admin/analytics-dashboard/entities/system-metrics.entity';
 import { CommentStatus, PostComment } from '../modules/posts/entities/post-comment.entity';
 import { PostVote, VoteType } from '../modules/posts/entities/post-vote.entity';
-import { Post, PostStatus, PostType, PostVisibility } from '../modules/posts/entities/posts.entity';
+import { Post } from '../modules/posts/entities/posts.entity';
+import { PostStatus, PostType, PostVisibility } from '../modules/posts/enums/post.enums';
 import { BadgeTier, Gender, User, UserRole } from '../modules/users/entities/user.entity';
 import dataSource from './data-source';
 
@@ -182,7 +183,7 @@ async function seed() {
       {
         title: 'Premier League Predictions',
         content: 'Chelsea vs Arsenal looks like a draw to me.',
-        type: PostType.TIP,
+        type: PostType.GENERAL, // FIX: Use a valid PostType enum value
         status: PostStatus.PUBLISHED,
         visibility: PostVisibility.PUBLIC,
         author_id: users[0].user_id,
@@ -198,22 +199,89 @@ async function seed() {
     ]);
     console.log(`✅ Created ${posts.length} posts`);
 
-    // COMMENTS
+    // BOOKMARKS
+    for (const post of posts) {
+      for (const user of users) {
+        await dataSource.getRepository('post_bookmarks').save({
+          user_id: user.user_id,
+          post_id: post.id,
+        });
+      }
+    }
+    console.log('✅ Created post bookmarks');
+
+    // SHARES
+    for (const post of posts) {
+      for (const user of users) {
+        await dataSource.getRepository('post_shares').save({
+          user_id: user.user_id,
+          post_id: post.id,
+          platform: 'facebook',
+          additional_data: JSON.stringify({ note: 'Seed share' }),
+          ip_address: '127.0.0.1',
+          user_agent: 'seed-script',
+        });
+      }
+    }
+    console.log('✅ Created post shares');
+
+    // VIEWS
+    for (const post of posts) {
+      for (const user of users) {
+        await dataSource.getRepository('post_views').save({
+          user_id: user.user_id,
+          post_id: post.id,
+          ip_address: '127.0.0.1',
+          user_agent: 'seed-script',
+          referrer: 'http://localhost:3000',
+          duration_seconds: Math.floor(Math.random() * 300),
+          is_unique: true,
+        });
+      }
+    }
+    console.log('✅ Created post views');
+
+    // NESTED COMMENTS + COMMENT VOTES
     const commentRepo: Repository<PostComment> = dataSource.getRepository(PostComment);
+    const commentVoteRepo = dataSource.getRepository('post_comment_votes');
     const comments: PostComment[] = [];
     for (const post of posts) {
+      // Top-level comments
       for (let i = 0; i < users.length; i++) {
         const commentData: DeepPartial<PostComment> = {
           post_id: post.id,
           author_id: users[i].user_id,
-          content: `Comment ${i + 1} on ${post.title}`,
+          content: `Top comment ${i + 1} on ${post.title}`,
           status: CommentStatus.PUBLISHED,
         };
         const comment = await commentRepo.save(commentData);
         comments.push(comment);
+        // Nested reply
+        const replyData: DeepPartial<PostComment> = {
+          post_id: post.id,
+          author_id: users[(i + 1) % users.length].user_id,
+          parent_comment_id: comment.id,
+          content: `Reply to comment ${i + 1} on ${post.title}`,
+          status: CommentStatus.PUBLISHED,
+        };
+        const reply = await commentRepo.save(replyData);
+        comments.push(reply);
+        // Comment votes (like/dislike)
+        for (const user of users) {
+          await commentVoteRepo.save({
+            user_id: user.user_id,
+            comment_id: comment.id,
+            type: i % 2 === 0 ? 'like' : 'dislike',
+          });
+          await commentVoteRepo.save({
+            user_id: user.user_id,
+            comment_id: reply.id,
+            type: i % 2 === 1 ? 'like' : 'dislike',
+          });
+        }
       }
     }
-    console.log('✅ Created comments');
+    console.log('✅ Created nested comments and comment votes');
 
     // POST VOTES
     for (const post of posts) {

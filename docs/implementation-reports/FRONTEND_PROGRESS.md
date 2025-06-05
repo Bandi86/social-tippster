@@ -100,4 +100,43 @@
 - All features tested and working in dev.
 - Next: expand E2E tests for new flows.
 
-_Last updated: 2025-06-03 by GitHub Copilot_
+---
+
+# Frontend Progress – Session Expiry & Refresh Handling (2025-06-05)
+
+## Improved Session Expiry & Refresh 404 Handling
+
+- Enhanced frontend session management: when a refresh token request returns 404 (user/session not found), the frontend now not only clears authentication state and shows a toast, but also automatically redirects the user to the login page if they are on a protected route.
+- This logic is implemented globally in `AuthProvider`, so users are never left in a stuck or inconsistent state after backend seed or session invalidation.
+- Ensures a seamless UX: after backend seed or session reset, the next frontend API call will log out the user and redirect to login.
+- Updated files:
+  - `frontend/providers/AuthProvider.tsx` (global redirect logic)
+  - `frontend/lib/api-client.ts` (already handled 404/401, no change needed)
+- Documentation and test instructions updated accordingly.
+
+---
+
+# Frontend Progress – Session Expiry & Guest UI Reset (2025-06-05)
+
+## Bugfix: Session Expiry Leaves Stale User UI
+
+- Fixed a bug where, after session expiry or backend reseed, the UI (navbar, welcome header, etc.) still showed the previous user's info even after logout or page reload.
+- Zustand `clearAuth` now clears both in-memory and persisted state (`auth-storage` in localStorage), ensuring no stale user data after logout/session expiry.
+- `AuthProvider` re-initializes auth state after logout/session expiry and redirects to login if needed, so all components re-render as guest.
+- Navbar and WelcomeHeader always reflect the correct state from the store.
+- Playwright test (`tests/frontend/auth-session-expiry.spec.ts`) verifies that after session expiry and reload, the UI shows only guest elements and no user info. Test selectors were made robust to avoid ambiguity (e.g., for 'Regisztráció' link).
+- Test now passes and reliably verifies the fix.
+
+### Files Updated
+
+- `frontend/store/auth.ts`
+- `frontend/providers/AuthProvider.tsx`
+- `frontend/components/layout/Navbar.tsx`
+- `frontend/components/root/WelcomeHeader.tsx`
+- `tests/frontend/auth-session-expiry.spec.ts`
+
+### Testing
+
+- Playwright test run: PASSED (2025-06-05)
+
+_Last updated: 2025-06-05 by GitHub Copilot_

@@ -3,9 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import * as fs from 'fs';
 import * as path from 'path';
 import { Repository } from 'typeorm';
-import { CreatePostDto, TipCategory } from '../posts/dto/create-post.dto';
+import { CreatePostDTO } from '../posts/dto/create-post.dto';
+import { Post } from '../posts/entities/posts.entity';
+import { PostType } from '../posts/enums/post.enums';
 import { CreateTipDto } from '../tipps/dto/create-tip.dto';
-import { Post, PostType } from '../posts/entities/posts.entity';
+import { TipCategory } from '../tipps/enums/tip.enums';
 import { ImageProcessingService } from './image-processing.service';
 import { OcrService } from './ocr.service';
 import { ParsedTipData, TipDataParserService } from './tip-data-parser.service';
@@ -18,7 +20,7 @@ export interface ImageAnalysisResult {
     errors: string[];
   };
   confidence: number;
-  suggestedPostData: Partial<CreatePostDto>;
+  suggestedPostData: Partial<CreatePostDTO>;
 }
 
 export interface MatchData {
@@ -140,11 +142,10 @@ export class ImageAnalysisService {
   /**
    * CreatePostDto generálása az elemzett adatok alapján
    */
-  private generateSuggestedPostData(parsedData: ParsedTipData): Partial<CreatePostDto> {
-    const suggestedData: Partial<CreatePostDto> = {
-      type: PostType.TIP,
-      title: this.generateTipTitle(parsedData),
-      content: this.generateTipContent(parsedData),
+  private generateSuggestedPostData(parsedData: ParsedTipData): Partial<CreatePostDTO> {
+    const suggestedData: Partial<CreatePostDTO> = {
+      type: PostType.DISCUSSION, // Changed from PostType.TIP to a valid enum value
+      content: `${this.generateTipTitle(parsedData)}\n\n${this.generateTipContent(parsedData)}`,
     };
 
     // Tipp-specifikus mezők hozzáadása ha rendelkezésre állnak

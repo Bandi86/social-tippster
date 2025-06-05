@@ -74,9 +74,11 @@ Response:
 - Data retention logic for old login records (default: 1 year).
 - Admins can now view and manage user sessions for security and compliance.
 
-# API Changes – Tipps Module & Image Upload Refactor (2025-06-04)
+# API Changes – Posts & Tipps Refactor (2025-06-05)
 
-## Tipps Module Endpoints
+**Last updated:** 2025-06-05
+
+## Tipps Endpoints
 
 - `POST /tipps`: Create a new tip
 - `GET /tipps`: Get all tips with filtering and pagination
@@ -88,41 +90,16 @@ Response:
 - `POST /tipps/:id/result`: Set tip result
 - `GET /tipps/:id`: Get a specific tip by ID
 
-## Tipps Module Details
+## Data Model Changes
 
-- All tip-related logic is now handled by the tipps module, not the posts module.
-- Validation, business rules, and endpoints for tips are self-contained in the tipps module.
-- See `docs/implementation-reports/TIPPS_MODULE_REFACTORING.md` for technical details.
+- `posts.type` enum updated: removed legacy value `'tip'`, now only accepts `'general', 'discussion', 'analysis', 'help_request', 'news'`.
+- All tip-related columns removed from `posts` table, now handled in `tipps` table.
+- New `tipps` table created with all tip-specific fields and indexes.
 
-## Image Upload & Analysis Refactor
+## Migration Notes
 
-- `POST /api/uploads/profile` – Upload profile avatar images
-- `POST /api/uploads/post` – Upload post images
-- All advanced image analysis (OCR, tip extraction) is now handled by `image-analysis/image-processing.service.ts`.
-- The uploads module only handles file storage and validation.
-
-## File Upload Specifications
-
-- **Accepted formats:** JPEG, JPG, PNG only
-- **Maximum file size:** 5MB
-- **Content-Type:** `multipart/form-data`
-- **Form field name:** `file`
-
-## Response Format
-
-```json
-{
-  "url": "/uploads/profile/1733316754321-987654321.jpg",
-  "error": null
-}
-```
-
-## Status
-
-- All endpoints are production-ready and type-safe.
-- Backend builds and runs successfully.
-
-_Last updated: 2025-06-04 by GitHub Copilot_
+- If you see `invalid input value for enum posts_type_enum: "tip"`, update all legacy values before running migration.
+- See `docs/project-management/CHANGE_LOG_20250605.md` for full troubleshooting steps.
 
 ---
 

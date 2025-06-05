@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsArray, IsBoolean, IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
-import { TipCategory } from '../../posts/dto/create-post.dto';
+import { TipCategory } from '../../tipps/enums/tip.enums';
 
 export class ParsedTipDataDto {
   @ApiProperty({ description: 'Meccs neve', required: false })

@@ -1,14 +1,6 @@
 export { CommentResponseDto } from '../../comments/dto/comment-response.dto';
-export {
-  CreatePostDto,
-  PostStatus,
-  PostType,
-  PostVisibility,
-  TipCategory,
-  TipResult,
-} from './create-post.dto';
-
-export { FilterPostsDto, PostsWithTotalResponse, SearchPostsDto } from './filter-posts.dto';
+export { CreatePostDTO, PostStatus, PostType, PostVisibility } from './create-post.dto';
+export { FilterPostsDTO } from './filter-posts.dto';
 export { GetPostByIdDto } from './get-post-by-id.dto';
 export { GetPostsQueryDto, PostSortBy, SortOrder } from './get-posts-query.dto';
 export {
@@ -31,7 +23,6 @@ export {
 } from './post-interactions.dto';
 export { GetPostsResponseDto, PaginationMetaDto, PostResponseDto } from './post-response.dto';
 export { PostAnalyticsDto, PostStatsDto, UserPostInteractionDto } from './post-stats.dto';
-export { ReportPostDto, ReportPostResponseDto } from './report-post.dto';
-export { SharePostDto, SharePostResponseDto } from './share-post.dto';
-
-export { UpdatePostDto } from './update-post.dto';
+export { ReportPostDTO, ReportPostResponseDTO } from './report-post.dto';
+export { SharePostDTO, SharePostResponseDTO } from './share-post.dto';
+export { UpdatePostDTO } from './update-post.dto';

@@ -104,3 +104,14 @@ The Social Tippster application is now fully populated with comprehensive test d
 **Created**: June 1, 2025
 **Task**: Complete database population with user content and football data
 **Result**: Successfully seeded all core application data
+
+## [2025-06-05] Seed Script Bővítés
+
+- A `backend/src/database/seed.ts` script mostantól automatikusan generál:
+  - Minden posthoz: bookmark, share (facebook), view (random időtartam, minden usertől)
+  - Minden posthoz: minden usertől top-level komment, minden kommenthez egy nested reply
+  - Minden kommentre és reply-ra minden user szavaz (like/dislike, váltakozva)
+  - Post mezők bővítése: tags, image_url, is_featured, stb.
+- Cél: a frontend és tesztelés minden funkciója valósághű, bőséges adatokkal tesztelhető legyen.
+- Script futtatása: `npx ts-node backend/src/database/seed.ts`
+- **Frissítve:** 2025-06-05 - Copilot Chat

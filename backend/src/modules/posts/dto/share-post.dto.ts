@@ -1,7 +1,7 @@
 import { IsEnum, IsOptional, IsString } from 'class-validator';
 import { SharePlatform } from '../entities/post-share.entity';
 
-export class SharePostDto {
+export class SharePostDTO {
   @IsEnum(SharePlatform)
   platform: SharePlatform;
 
@@ -10,7 +10,7 @@ export class SharePostDto {
   additional_data?: string; // JSON string for platform-specific data
 }
 
-export class SharePostResponseDto {
+export class SharePostResponseDTO {
   success: boolean;
   shareUrl: string;
   shareId: string;

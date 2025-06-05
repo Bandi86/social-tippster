@@ -1,5 +1,5 @@
 // Post-related entities
-export { Post, PostStatus, PostType, PostVisibility, TipCategory, TipResult } from './posts.entity';
+export { Post } from './posts.entity';
 
 // Post interaction entities
 export { PostBookmark } from './post-bookmark.entity';

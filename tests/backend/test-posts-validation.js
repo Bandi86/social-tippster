@@ -1,27 +1,50 @@
 // Test script for testing posts API validation and functionality
 const axios = require('axios');
+const { v4: uuidv4 } = require('uuid');
 
 const API_BASE = 'http://localhost:3001/api';
+
+async function getOrCreateTestUser() {
+  const email = `testuser_${Date.now()}_${Math.random().toString(36).substring(2, 8)}@test.com`;
+  const password = 'Password123!';
+  try {
+    // Próbálunk belépni
+    const loginResponse = await axios.post(
+      `${API_BASE}/auth/login`,
+      { email, password },
+      { withCredentials: true, timeout: 10000 },
+    );
+    return { email, password, token: loginResponse.data.access_token };
+  } catch (err) {
+    // Ha nem sikerül, regisztrálunk
+    await axios.post(
+      `${API_BASE}/auth/register`,
+      {
+        username: `testuser_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`,
+        email,
+        password,
+        first_name: 'Test',
+        last_name: 'User',
+      },
+      { timeout: 10000 },
+    );
+    // Majd újra próbálunk belépni
+    const loginResponse = await axios.post(
+      `${API_BASE}/auth/login`,
+      { email, password },
+      { withCredentials: true, timeout: 10000 },
+    );
+    return { email, password, token: loginResponse.data.access_token };
+  }
+}
 
 async function testPostsAPI() {
   console.log('=== Testing Posts API Comprehensive Validation ===\n');
 
   try {
     // First login to get a valid token
-    console.log('1. Logging in...');
-    const loginResponse = await axios.post(
-      `${API_BASE}/auth/login`,
-      {
-        email: 'testuser123@test.com',
-        password: 'password123',
-      },
-      {
-        withCredentials: true,
-        timeout: 10000,
-      },
-    );
-
-    const accessToken = loginResponse.data.access_token;
+    console.log('1. Logging in or registering test user...');
+    const { token: accessToken } = await getOrCreateTestUser();
     console.log('Login successful!\n');
 
     // Test cases for posts API
@@ -45,6 +68,14 @@ async function testPostsAPI() {
           title: 'Test Tip Post',
           content: 'This is a test tip post content',
           type: 'tip',
+          tipCategory: 'single_bet',
+          matchId: uuidv4(), // dynamically generated valid v4 UUID
+          matchName: 'Team A vs Team B',
+          matchDate: new Date(Date.now() + 86400000).toISOString(), // tomorrow
+          matchTime: '18:00',
+          outcome: 'Team A wins',
+          bettingMarketId: uuidv4(), // dynamically generated valid v4 UUID
+          tipText: 'Team A will win based on recent form.',
           odds: 2.5,
           stake: 5,
           confidence: 4,

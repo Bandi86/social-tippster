@@ -8,6 +8,17 @@
 > - Tip-related functionality has been refactored into a dedicated tipps module.
 > - A simple test for the tipps module endpoints is available at `tests/backend/test-tipps-module.js`.
 > - Update or add tests accordingly.
+>
+> **2025-06-05:**
+>
+> - A seed script (`backend/src/database/seed.ts`) mostantól automatikusan generál minden fő interakciót: bookmark, share, view, nested comment, comment vote, bővített post mezők (tags, image_url, is_featured, stb.).
+> - Így a frontend és API teszteléshez minden szükséges adat automatikusan elérhető.
+> - Improved frontend session expiry and refresh 404 handling: when a refresh token request returns 404 (user/session not found), the frontend now globally clears authentication and redirects to the login page if the user is on a protected route.
+> - To test: after running a backend seed or invalidating sessions, visit the frontend as a previously logged-in user. The next API call will clear auth and redirect to login automatically.
+> - See `docs/implementation-reports/FRONTEND_PROGRESS.md` for implementation details.
+> - Bugfix: After session expiry or backend reseed, the frontend UI (navbar, welcome header, etc.) now fully resets to guest state after logout or reload. Zustand store and persisted state are cleared, and all UI components reflect the correct authentication state.
+> - Playwright test (`tests/frontend/auth-session-expiry.spec.ts`) added to verify that after session expiry and reload, the UI shows only guest elements and no user info. Test selectors were made robust to avoid ambiguity. Test now passes.
+> - See `docs/implementation-reports/FRONTEND_PROGRESS.md` and changelog for details.
 
 ## Test File Organization (as of 2025-06-01)
 

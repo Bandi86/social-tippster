@@ -8,6 +8,7 @@ import {
   Post,
   Req,
   Res,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -51,11 +52,10 @@ export class AuthController {
     }
     const user = await this.authService.validateUser(loginDto.email, loginDto.password);
     if (!user) {
-      throw new BadRequestException('Hibás email vagy jelszó');
+      throw new UnauthorizedException('Hibás email vagy jelszó');
     }
     // Return 201 on successful login
     const result = await this.authService.login(loginDto, req);
-    // Manually set status if needed in service, or let Nest handle 201 via ApiResponse
     return result;
   }
 

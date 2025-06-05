@@ -438,3 +438,31 @@ _Last updated: 2025-06-04 by GitHub Copilot_
 - All backend test types (unit, integration, API, validation, shell) can now be run in one step.
 - Documentation updated in `README.md` and `docs/project-management/TESTING.md`.
 - Improves QA workflow and error review after backend changes.
+
+---
+
+# Backend Progress – Posts & Tipps Module Refactor and Migration (2025-06-05)
+
+## Posts & Tipps Module Separation
+
+- Finalized the separation: posts module now only handles generic post CRUD (text, image, comments reference).
+- All tip-related logic (creation, validation, statistics, result, betting slip processing) is handled exclusively by the tipps module.
+- Verified that no controllers or services reference tip logic in the posts module.
+- Cleaned up unused imports and ensured type safety.
+
+## Migration & Enum Troubleshooting
+
+- After entity changes, TypeORM migration dryrun revealed major schema drift (enum changes, new/dropped columns, new tipps table, etc.).
+- Migration failed due to legacy `"tip"` values in `posts.type` column, which are not present in the new enum.
+- Wrote and ran a script (`fix-posts-type-tip.ts`) to update all `posts.type = 'tip'` to `discussion` before migration.
+- Temporarily set `synchronize: false` in `data-source.ts` to avoid TypeORM auto-sync errors during the script run.
+- After fixing data, migration ran successfully and DB is now in sync with entities.
+- Cleaned up `data-source.ts` to only export default DataSource (required for TypeORM CLI compatibility).
+
+## Status
+
+- Tipps module is clean, self-contained, and production-ready.
+- All changes follow project file organization and documentation standards.
+- Backend builds, migrates, and runs successfully.
+
+_Last updated: 2025-06-05 by GitHub Copilot_

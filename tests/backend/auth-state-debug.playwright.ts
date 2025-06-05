@@ -1,3 +1,10 @@
+// Jest futtatásból kizárva
+if (!process.env.PLAYWRIGHT_TEST) {
+  // Prevent Jest from running this file
+  export {};
+  return;
+}
+
 import { test } from '@playwright/test';
 
 test.describe('Authentication State Debug', () => {

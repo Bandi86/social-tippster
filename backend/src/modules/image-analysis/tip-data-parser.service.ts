@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { TipCategory } from '../posts/entities/posts.entity';
+import { TipCategory } from '../tipps/enums/tip.enums';
 
 export interface ParsedTipData {
   // Meccs információk
@@ -161,7 +161,7 @@ export class TipDataParserService {
   private extractTipCategory(text: string, result: ParsedTipData): void {
     const categoryKeywords = {
       [TipCategory.SINGLE_BET]: ['single', 'egyszerű', 'alap', 'szimpla'],
-      [TipCategory.COMBO_BET]: ['combo', 'kombinált', 'multi', 'több'],
+      [TipCategory.MULTI_BET]: ['combo', 'kombinált', 'multi', 'több'],
       [TipCategory.SYSTEM_BET]: ['system', 'rendszer', 'bankers'],
       [TipCategory.LIVE_BET]: ['live', 'élő', 'running', 'futó'],
     };

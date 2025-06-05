@@ -1,7 +1,7 @@
 import { IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
 import { ReportReason } from '../entities/post-report.entity';
 
-export class ReportPostDto {
+export class ReportPostDTO {
   @IsEnum(ReportReason)
   reason: ReportReason;
 
@@ -11,7 +11,7 @@ export class ReportPostDto {
   additional_details?: string;
 }
 
-export class ReportPostResponseDto {
+export class ReportPostResponseDTO {
   success: boolean;
   reportId: string;
 }

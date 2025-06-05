@@ -1050,3 +1050,25 @@ npx ts-node backend/src/database/seed-football-data.ts
 ```
 
 **Seeding befejezve:** 2025-06-01
+
+## [2025-06-05] Seed Script Bővítés
+
+A seed script (`backend/src/database/seed.ts`) mostantól a következőket is generálja:
+
+- Minden posthoz automatikusan létrejönnek:
+  - Bookmarks (minden user minden postot bookmarkol)
+  - Shares (minden user minden postot megoszt, platform: facebook)
+  - Views (minden user minden postot megnéz, random időtartammal)
+- Kommentek:
+  - Minden posthoz minden usertől top-level komment
+  - Minden kommenthez egy nested reply (másik usertől)
+  - Minden kommentre és reply-ra minden user szavaz (like/dislike, váltakozva)
+- A postok most már tartalmaznak extra mezőket (tags, image_url, is_featured, stb.), hogy a frontend minden funkciót tesztelhessen.
+
+A script futtatása:
+
+```
+npx ts-node backend/src/database/seed.ts
+```
+
+**Frissítve:** 2025-06-05 - Copilot Chat

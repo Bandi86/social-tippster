@@ -12,7 +12,8 @@ import {
   Min,
   MinLength,
 } from 'class-validator';
-import { PostStatus, PostVisibility, TipCategory } from '../../posts/entities/posts.entity';
+import { PostStatus, PostVisibility } from '../../posts/enums/post.enums';
+import { TipCategory } from '../enums/tip.enums';
 
 export class CreateTipDto {
   @IsString()

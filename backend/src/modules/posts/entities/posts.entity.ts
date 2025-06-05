@@ -1,3 +1,9 @@
+/**
+ * Post Entity - Refactored
+ * Frissítve: 2025.06.05
+ * Megjegyzés: Minden tipp specifikus mező eltávolítva
+ */
+
 import {
   Column,
   CreateDateColumn,
@@ -5,62 +11,32 @@ import {
   Index,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
-
-export enum PostType {
-  TIP = 'tip',
-  GENERAL = 'general',
-  DISCUSSION = 'discussion',
-  ANALYSIS = 'analysis',
-}
-
-export enum PostStatus {
-  DRAFT = 'draft',
-  PUBLISHED = 'published',
-  PRIVATE = 'private',
-  ARCHIVED = 'archived',
-  DELETED = 'deleted',
-  REPORTED = 'reported',
-}
-
-export enum PostVisibility {
-  PUBLIC = 'public',
-  FOLLOWERS = 'followers',
-  PRIVATE = 'private',
-}
-
-export enum TipCategory {
-  SINGLE_BET = 'single_bet',
-  COMBO_BET = 'combo_bet',
-  SYSTEM_BET = 'system_bet',
-  LIVE_BET = 'live_bet',
-}
-
-export enum TipResult {
-  PENDING = 'pending',
-  WON = 'won',
-  LOST = 'lost',
-  VOID = 'void',
-  HALF_WON = 'half_won',
-  HALF_LOST = 'half_lost',
-}
+import { PostStatus, PostType, PostVisibility } from '../enums/post.enums';
+import { PostBookmark } from './post-bookmark.entity';
+import { PostComment } from './post-comment.entity';
+import { PostReport } from './post-report.entity';
+import { PostShare } from './post-share.entity';
+import { PostView } from './post-view.entity';
+import { PostVote } from './post-vote.entity';
 
 @Entity('posts')
 @Index(['author_id'])
 @Index(['type'])
 @Index(['status'])
+@Index(['visibility'])
 @Index(['created_at'])
-@Index(['match_id'])
 @Index(['is_featured'])
 @Index(['is_premium'])
 export class Post {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar', length: 500, nullable: true })
   title: string;
 
   @Column({ type: 'text' })
@@ -87,19 +63,6 @@ export class Post {
   })
   visibility: PostVisibility;
 
-  @Column({ type: 'varchar', length: 100, nullable: true })
-  category: string;
-
-  @Column({
-    type: 'enum',
-    enum: TipCategory,
-    nullable: true,
-  })
-  tip_category: TipCategory;
-
-  @Column({ type: 'simple-array', nullable: true })
-  tags: string[];
-
   // Author relationship
   @Column({ type: 'uuid' })
   author_id: string;
@@ -108,173 +71,85 @@ export class Post {
   @JoinColumn({ name: 'author_id' })
   author: User;
 
-  // Tip-specific fields
-  @Column({ type: 'uuid', nullable: true })
-  match_id: string;
-
   @Column({ type: 'varchar', length: 255, nullable: true })
-  match_name: string;
+  created_by: string;
 
-  @Column({ type: 'date', nullable: true })
-  match_date: Date;
-
-  @Column({ type: 'varchar', length: 10, nullable: true })
-  match_time: string;
-
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  outcome: string;
-
+  // Category and tags
   @Column({ type: 'uuid', nullable: true })
-  betting_market_id: string;
+  category_id: string;
 
-  @Column({ type: 'text', nullable: true })
-  tip_text: string;
+  @Column({ type: 'simple-array', nullable: true })
+  tags: string[];
 
-  @Column({ type: 'decimal', precision: 6, scale: 2, nullable: true })
-  odds: number;
-
-  @Column({ type: 'decimal', precision: 8, scale: 2, nullable: true })
-  total_odds: number;
-
-  @Column({ type: 'int', nullable: true })
-  stake: number;
-
-  @Column({ type: 'int', nullable: true })
-  confidence: number;
-
-  @Column({ type: 'timestamp', nullable: true })
-  expires_at: Date;
-
-  @Column({ type: 'timestamp', nullable: true })
-  submission_deadline: Date;
-
-  // Scheduling
-  @Column({ type: 'timestamp', nullable: true })
-  scheduled_for: Date;
+  // Media
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  image_url: string;
 
   // Interaction settings
   @Column({ type: 'boolean', default: true })
   comments_enabled: boolean;
 
   @Column({ type: 'boolean', default: true })
-  voting_enabled: boolean;
-
-  @Column({ type: 'boolean', default: true })
   sharing_enabled: boolean;
 
-  // Premium features
-  @Column({ type: 'boolean', default: false })
-  is_premium: boolean;
+  @Column({ type: 'simple-array', nullable: true })
+  sharing_platforms: string[];
 
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  sharing_url: string;
+
+  // Status flags
   @Column({ type: 'boolean', default: false })
   is_featured: boolean;
 
   @Column({ type: 'boolean', default: false })
   is_pinned: boolean;
 
-  // Media
-  @Column({ type: 'simple-array', nullable: true })
-  image_urls: string[];
+  @Column({ type: 'boolean', default: false })
+  is_reported: boolean;
 
-  // External links
-  @Column({ type: 'text', nullable: true })
-  external_url: string;
+  @Column({ type: 'boolean', default: false })
+  is_premium: boolean;
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  external_title: string;
+  @Column({ type: 'boolean', default: false })
+  is_deleted: boolean;
 
-  @Column({ type: 'text', nullable: true })
-  external_description: string;
-
-  @Column({ type: 'text', nullable: true })
-  external_image_url: string;
-
-  // Statistics (denormalized for performance)
+  // Counters
   @Column({ type: 'int', default: 0 })
   likes_count: number;
-
-  @Column({ type: 'int', default: 0 })
-  dislikes_count: number;
 
   @Column({ type: 'int', default: 0 })
   comments_count: number;
 
   @Column({ type: 'int', default: 0 })
-  shares_count: number;
+  share_count: number;
 
   @Column({ type: 'int', default: 0 })
   views_count: number;
 
-  @Column({ type: 'int', default: 0 })
-  bookmarks_count: number;
-
-  // Metadata
+  // Timestamps
   @CreateDateColumn()
   created_at: Date;
 
   @UpdateDateColumn()
   updated_at: Date;
 
-  // Soft delete
-  @Column({ type: 'timestamp', nullable: true })
-  deleted_at: Date;
+  // Relations
+  @OneToMany(() => PostComment, comment => comment.post)
+  comments: PostComment[];
 
-  // SEO fields
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  slug: string;
+  @OneToMany(() => PostVote, vote => vote.post)
+  votes: PostVote[];
 
-  @Column({ type: 'text', nullable: true })
-  meta_description: string;
+  @OneToMany(() => PostReport, report => report.post)
+  reports: PostReport[];
 
-  @Column({ type: 'simple-array', nullable: true })
-  meta_keywords: string[];
+  @OneToMany(() => PostBookmark, bookmark => bookmark.post)
+  bookmarks: PostBookmark[];
 
-  // Moderation
-  @Column({ type: 'boolean', default: false })
-  is_reported: boolean;
+  @OneToMany(() => PostShare, share => share.post)
+  shares: PostShare[];
 
-  @Column({ type: 'int', default: 0 })
-  reports_count: number;
-
-  @Column({ type: 'boolean', default: false })
-  is_verified: boolean; // For verified tips
-
-  // Performance tracking
-  @Column({ type: 'timestamp', nullable: true })
-  last_interaction_at: Date;
-
-  @Column({ type: 'decimal', precision: 5, scale: 2, nullable: true })
-  engagement_rate: number;
-
-  // Tip result tracking (for completed tips)
-  @Column({
-    type: 'enum',
-    enum: TipResult,
-    default: TipResult.PENDING,
-    nullable: true,
-  })
-  tip_result: TipResult;
-
-  @Column({ type: 'boolean', default: false })
-  is_result_set: boolean;
-
-  @Column({ type: 'timestamp', nullable: true })
-  tip_resolved_at: Date;
-
-  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
-  tip_profit: number; // Calculated profit/loss
-
-  // Tip validation
-  @Column({ type: 'boolean', default: true })
-  is_valid_tip: boolean;
-
-  @Column({ type: 'simple-array', nullable: true })
-  validation_errors: string[];
-
-  // Additional tip metadata
-  @Column({ type: 'text', nullable: true })
-  shareable_link: string;
-
-  @Column({ type: 'json', nullable: true })
-  edit_history: any[]; // Store edit history as JSON
+  @OneToMany(() => PostView, view => view.post)
+  views: PostView[];
 }

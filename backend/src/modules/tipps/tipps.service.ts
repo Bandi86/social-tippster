@@ -1,11 +1,12 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Post, PostType, TipResult } from '../posts/entities/posts.entity';
 import { PostsService } from '../posts/posts.service';
 import { User } from '../users/entities/user.entity';
 import { CreateTipDto } from './dto/create-tip.dto';
 import { LeaderboardEntryDto, SetTipResultDto, UserTipStatsDto } from './dto/tip-result.dto';
+import { Tip } from './entities/tip.entity';
+import { TipResult } from './enums/tip.enums';
 import { TipValidationService } from './tip-validation.service';
 
 interface TipStatsRaw {
@@ -30,14 +31,14 @@ interface LeaderboardRaw {
 export class TippsService {
   constructor(
     private readonly postsService: PostsService,
-    @InjectRepository(Post)
-    private readonly postRepository: Repository<Post>,
+    @InjectRepository(Tip)
+    private readonly tipRepository: Repository<Tip>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly tipValidationService: TipValidationService,
   ) {}
 
-  async createTip(createTipDto: CreateTipDto, authorId: string): Promise<Post> {
+  async createTip(createTipDto: CreateTipDto, authorId: string): Promise<Tip> {
     // Validate tip before creation
     const validationResult = await this.validateTip(createTipDto);
     if (!validationResult.isValid) {
@@ -48,7 +49,6 @@ export class TippsService {
     }
     const tipData = {
       ...createTipDto,
-      type: PostType.TIP,
       match_name: createTipDto.matchName,
       match_date: new Date(createTipDto.matchDate),
       match_time: createTipDto.matchTime,
@@ -63,13 +63,13 @@ export class TippsService {
       validation_errors: [],
       author_id: authorId,
     };
-    const tip = this.postRepository.create(tipData);
-    return await this.postRepository.save(tip);
+    const tip = this.tipRepository.create(tipData);
+    return await this.tipRepository.save(tip);
   }
 
-  async setTipResult(tipId: string, setResultDto: SetTipResultDto, userId: string): Promise<Post> {
-    const tip = await this.postRepository.findOne({
-      where: { id: tipId, author_id: userId, type: PostType.TIP },
+  async setTipResult(tipId: string, setResultDto: SetTipResultDto, userId: string): Promise<Tip> {
+    const tip = await this.tipRepository.findOne({
+      where: { id: tipId, author_id: userId },
     });
     if (!tip) {
       throw new NotFoundException('Tip not found or you do not have permission to set its result');
@@ -85,7 +85,7 @@ export class TippsService {
     } else {
       tip.tip_profit = this.calculateProfit(tip, setResultDto.result);
     }
-    const updatedTip = await this.postRepository.save(tip);
+    const updatedTip = await this.tipRepository.save(tip);
     await this.updateUserTipStats(userId, setResultDto.result, tip.tip_profit);
     return updatedTip;
   }
@@ -123,8 +123,8 @@ export class TippsService {
   }
 
   async getUserTipStats(userId: string): Promise<UserTipStatsDto> {
-    const tipStats = (await this.postRepository
-      .createQueryBuilder('post')
+    const tipStats = (await this.tipRepository
+      .createQueryBuilder('tip')
       .select([
         'COUNT(*) as totalTips',
         'SUM(CASE WHEN tip_result = :won THEN 1 ELSE 0 END) as wonTips',
@@ -133,9 +133,8 @@ export class TippsService {
         'AVG(CASE WHEN tip_result IN (:won, :lost) THEN odds END) as averageOdds',
         'SUM(COALESCE(tip_profit, 0)) as totalProfit',
       ])
-      .where('author_id = :userId AND type = :type', {
+      .where('author_id = :userId', {
         userId,
-        type: PostType.TIP,
       })
       .setParameters({
         won: TipResult.WON,
@@ -168,20 +167,19 @@ export class TippsService {
   }
 
   async getLeaderboard(limit: number = 50): Promise<LeaderboardEntryDto[]> {
-    const leaderboardData = await this.postRepository
-      .createQueryBuilder('post')
+    const leaderboardData = await this.tipRepository
+      .createQueryBuilder('tip')
       .select([
-        'post.author_id as userId',
+        'tip.author_id as userId',
         'user.username as username',
         'COUNT(*) as totalTips',
         'SUM(CASE WHEN tip_result = :won THEN 1 ELSE 0 END) as wonTips',
         'SUM(CASE WHEN tip_result = :lost THEN 1 ELSE 0 END) as lostTips',
         'SUM(COALESCE(tip_profit, 0)) as totalProfit',
       ])
-      .innerJoin(User, 'user', 'user.user_id = post.author_id')
-      .where('post.type = :type', { type: PostType.TIP })
-      .andWhere('post.is_result_set = :isResultSet', { isResultSet: true })
-      .groupBy('post.author_id, user.username')
+      .innerJoin(User, 'user', 'user.user_id = tip.author_id')
+      .where('tip.is_result_set = :isResultSet', { isResultSet: true })
+      .groupBy('tip.author_id, user.username')
       .orderBy('SUM(COALESCE(tip_profit, 0))', 'DESC')
       .setParameters({
         won: TipResult.WON,
@@ -208,29 +206,28 @@ export class TippsService {
   async checkDeadlines(): Promise<void> {
     const now = new Date();
     // Use query builder to get expired tip IDs
-    const expiredTipIds = await this.postRepository
-      .createQueryBuilder('post')
-      .select('post.id')
-      .where('post.submission_deadline < :now', { now })
-      .andWhere('post.type = :type', { type: PostType.TIP })
-      .andWhere('post.tip_result = :pending', { pending: TipResult.PENDING })
+    const expiredTipIds = await this.tipRepository
+      .createQueryBuilder('tip')
+      .select('tip.id')
+      .where('tip.submission_deadline < :now', { now })
+      .andWhere('tip.tip_result = :pending', { pending: TipResult.PENDING })
       .getRawMany();
     const ids = Array.isArray(expiredTipIds)
       ? expiredTipIds.map((row: { id: string }) => row.id)
       : [];
     if (ids.length > 0) {
-      const tips = await this.postRepository.findByIds(ids);
+      const tips = await this.tipRepository.findByIds(ids);
       for (const tip of tips) {
         tip.is_valid_tip = false;
         if (!Array.isArray(tip.validation_errors)) tip.validation_errors = [];
         tip.validation_errors.push('Submission deadline expired');
-        await this.postRepository.save(tip);
+        await this.tipRepository.save(tip);
       }
     }
   }
 
-  async getTipById(id: string): Promise<Post> {
-    const tip = await this.postRepository.findOne({ where: { id, type: PostType.TIP } });
+  async getTipById(id: string): Promise<Tip> {
+    const tip = await this.tipRepository.findOne({ where: { id } });
     if (!tip) {
       throw new NotFoundException('Tip not found');
     }
@@ -240,10 +237,9 @@ export class TippsService {
   private async calculateStreaks(
     userId: string,
   ): Promise<{ currentStreak: number; bestStreak: number }> {
-    const tips = await this.postRepository.find({
+    const tips = await this.tipRepository.find({
       where: {
         author_id: userId,
-        type: PostType.TIP,
         is_result_set: true,
       },
       order: { tip_resolved_at: 'DESC' },
@@ -257,7 +253,7 @@ export class TippsService {
       if (tip.tip_result !== TipResult.PENDING) {
         if (currentStreakType === null) {
           // First tip in the sequence
-          currentStreakType = tip.tip_result;
+          currentStreakType = tip.tip_result as TipResult;
           currentStreak = 1;
         } else if (currentStreakType === tip.tip_result) {
           // Continuing the streak
@@ -267,7 +263,7 @@ export class TippsService {
           if (currentStreakType === TipResult.WON && currentStreak > bestStreak) {
             bestStreak = currentStreak;
           }
-          currentStreakType = tip.tip_result;
+          currentStreakType = tip.tip_result as TipResult;
           currentStreak = 1;
         }
       }
@@ -285,7 +281,7 @@ export class TippsService {
     };
   }
 
-  private calculateProfit(tip: Post, result: TipResult): number {
+  private calculateProfit(tip: Tip, result: TipResult): number {
     if (result === TipResult.WON) {
       // Calculate profit: (odds * stake) - stake
       return (tip.odds || 0) * (tip.stake || 0) - (tip.stake || 0);

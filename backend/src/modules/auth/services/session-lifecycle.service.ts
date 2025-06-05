@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { randomBytes } from 'crypto';
-import { UserSession } from 'src/modules/admin/analytics-dashboard/entities/user-session.entity';
 import { Repository } from 'typeorm';
 import { AnalyticsService } from '../../admin/analytics-dashboard/analytics.service';
+import { UserSession } from '../../admin/analytics-dashboard/entities/user-session.entity';
 import { RefreshToken } from '../entities/refresh-token.entity';
 
 // Add DeviceFingerprint interface import

@@ -62,13 +62,56 @@ class ApiClient {
 
         // Don't try to refresh if this IS the refresh request
         if (originalRequest.url === '/auth/refresh') {
-          console.log('Refresh request failed - clearing auth');
-          this.clearAuth();
+          // If 404, treat as user not found and force logout
+          if (error.response?.status === 404) {
+            console.log('Refresh request 404 - user not found, clearing auth and logging out');
+            this.clearAuth();
+            // Optionally, show a toast if available
+            if (typeof window !== 'undefined') {
+              import('@/hooks/use-toast')
+                .then(({ toast }) => {
+                  toast({
+                    title: 'Munkamenet lejárt',
+                    description:
+                      'A felhasználó nem található vagy a munkamenet lejárt. Kérlek jelentkezz be újra!',
+                    variant: 'destructive',
+                  });
+                })
+                .catch(() => {});
+            }
+          } else {
+            console.log('Refresh request failed - clearing auth');
+            this.clearAuth();
+          }
           return Promise.reject(error);
         }
 
-        if (error.response?.status === 401 && !originalRequest._retry) {
-          console.log('401 error - attempting token refresh');
+        if (
+          (error.response?.status === 401 || error.response?.status === 404) &&
+          !originalRequest._retry
+        ) {
+          // 404 on any endpoint that means user/session not found, treat as logout
+          if (
+            error.response?.status === 404 &&
+            originalRequest.url &&
+            originalRequest.url.startsWith('/auth/refresh')
+          ) {
+            this.clearAuth();
+            if (typeof window !== 'undefined') {
+              import('@/hooks/use-toast')
+                .then(({ toast }) => {
+                  toast({
+                    title: 'Munkamenet lejárt',
+                    description:
+                      'A felhasználó nem található vagy a munkamenet lejárt. Kérlek jelentkezz be újra!',
+                    variant: 'destructive',
+                  });
+                })
+                .catch(() => {});
+            }
+            return Promise.reject(error);
+          }
+          console.log('401/404 error - attempting token refresh');
           originalRequest._retry = true;
 
           try {

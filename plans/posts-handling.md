@@ -25,28 +25,32 @@
 10. A posztokhoz feltoltott fotok megtekinthetok, de csak a poszt letrehozoja tudja torolni oket.
 
 ## Poszt esete ha tippet tolt fel es nincs hozza kep.
+
 1. ilyenkor a meglevo adatok alapjan a poszt tartalmat vesszuk figyelembe es ez alapjan probaljuk a tartalmat a tipp adatbazisba menteni.
 
 ## Poszt ertelmezese ha felhasznalo ervenyes kepet tolt fel.
+
 1. A feltoltott kepet ellenorizzuk, hogy megfelel-e a szabvanyoknak (pl. meret, formatum).
 2. Ha a kep megfelel, akkor a poszt tartalmaba beillesztjuk a kepet, es a posztot elmentjuk az adatbazisba.
 3. Ha a kep nem felel meg a szabvanyoknak, akkor hiba uzenetet jelenitunk meg, es a felhasznalo visszairanyitodik a poszt letrehozasa oldalra.
 4. A poszt megjelenitesekor a kep is lathato lesz a poszt tartalmaban.
 5. A hatterben elkezdjuk feldolgozni a feltoltott kepet. Az image scanner ellenorzi a kepet, es ha talal benne megfelelo tartalmat, akkor azt hozzadja a tipp adatbazishoz.
-  Fontos struktura pelda milyen lehet egy tipp:
- - merkezosek kezdesi idopontja: 2023-03-15 18:00
- - ket csapat neve: csapat1, csapat2
- - kimenetel : csapat1 nyer, csapat2 nyer, dontetlen
- - odds : 1.5, 2.0, 3.0
- - alaptett: 1000
- - kombinaciok ez lehet tobbfele. 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 vagy 3/4 stb
- - osszes tett: 10000
- - eredo odds: 35.99
- - maximum nyeremeny: 10000
- - szelveny szama: ami egy kod, hogy a felhasznalo tudja azonositani a tippeket
- - jatekba kuldes ideje: 2023-03-15 18:00 ez azt jelenti az illeto mikor adta fel a tippeket
- - jatek ervenyessege: 2023-03-15 20:00 ez azt jelenti, hogy a tipp mikor jar le az ido pont utan mar lehet tudni hogy a tipp nyero vagy vesztes
- - jatek ara: 1000
+   Fontos struktura pelda milyen lehet egy tipp:
+
+- merkezosek kezdesi idopontja: 2023-03-15 18:00
+- ket csapat neve: csapat1, csapat2
+- kimenetel : csapat1 nyer, csapat2 nyer, dontetlen
+- odds : 1.5, 2.0, 3.0
+- alaptett: 1000
+- kombinaciok ez lehet tobbfele. 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 vagy 3/4 stb
+- osszes tett: 10000
+- eredo odds: 35.99
+- maximum nyeremeny: 10000
+- szelveny szama: ami egy kod, hogy a felhasznalo tudja azonositani a tippeket
+- jatekba kuldes ideje: 2023-03-15 18:00 ez azt jelenti az illeto mikor adta fel a tippeket
+- jatek ervenyessege: 2023-03-15 20:00 ez azt jelenti, hogy a tipp mikor jar le az ido pont utan mar lehet tudni hogy a tipp nyero vagy vesztes
+- jatek ara: 1000
+
 6. A hatterben ezekre az adatokra vadaszunk ezekkel az adatokkal tudjuk feltolteni egy adott user tippjeit. Ezekbol az adatokbol csak a fontosabbakat kell figyelni a tetet az odssot a hataridoket az hogy a kombi szelveny vagy melyik csapat jatszik jelenleg nem relevans. Azt akarjuk menteni a tipp adatbazisba hogy ki mikor tippel, milyen tettel mekkora oddsal mennyit nyer ha nyer es ebbol az adatbol dolgozni.
 7. Kesobb ha lesz api hozzaferes nyertes vagy vesztes tippeket mar nem kell a usernek kezzel megadni.
 
@@ -63,4 +67,25 @@
 9. Az adminisztrator jogosult a posztokhoz fuzott hozzaszolasok szerkesztesere is, ha azok nem megfelelok.
 10. Az adminisztrator jogosult a posztokhoz fuzott hozzaszolasok torlesere is, ha azok nem megfelelok.
 
+# ---
 
+# 2025-06-05: Tesztelés, validáció és hibakezelés fejlesztése (automata tesztek, backend logika)
+
+## Automatizált tesztelés és validációs követelmények
+
+- A tip post létrehozásához a `bettingMarketId` mezőnek **érvényes v4 UUID**-nek kell lennie. Hibás UUID esetén a backend validációs hibát ad vissza.
+- A backend globális validációs logikája (ValidationPipe) részletes hibákat logol, és minden hibás inputra megfelelő REST státuszkódot (pl. 400, 401) ad vissza.
+- A tesztek minden futtatásnál **egyedi teszt user**-t generálnak, hogy ne legyen ütközés.
+- A discussion post létrehozásánál fellépő belső szerverhiba (500) okát a service/entity mentési logok segítik feltárni (pl. kötelező mező hiánya, entitás constraint, DB constraint).
+- A tesztek valid/invalid inputokat is ellenőriznek, minden esetben elvárt a részletes hibaüzenet és a helyes státuszkód.
+- A backend logban minden input és hiba megjelenik, így a hibák gyorsan azonosíthatók.
+
+## QA és fejlesztői workflow
+
+- Minden kódmódosítás után a backend újraindítása szükséges (`npm run dev`).
+- A tesztek futtatása: `node tests/backend/test-posts-validation.js`.
+- A validációs hibák és logok ellenőrzése a backend terminálban történik.
+- A REST API-nak minden valid/invalid esetben helyes státuszkódot és részletes hibakezelést kell adnia.
+- A tesztelési és hibakezelési tapasztalatokat, edge case-eket folyamatosan dokumentálni kell a fejlesztési tervekben.
+
+# ---

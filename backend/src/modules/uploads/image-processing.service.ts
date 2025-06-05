@@ -3,7 +3,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
-import { TipCategory } from '../posts/dto/create-post.dto';
+import { TipCategory } from '../tipps/enums/tip.enums';
 
 export interface BettingSlipData {
   extractedText: string;

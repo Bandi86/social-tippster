@@ -1,121 +1,152 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import { IsArray, IsDate, IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
-import { TipCategory } from '../entities/posts.entity';
+/**
+ * FilterPostsDTO - Posztok szűrése
+ * Frissítve: 2025.06.05
+ * Megjegyzés: Tipp specifikus szűrők eltávolítva
+ */
 
-export class FilterPostsDto {
-  @ApiPropertyOptional({
-    description: 'Filter by post category',
-    enum: TipCategory,
-  })
-  @IsOptional()
-  @IsEnum(TipCategory)
-  category?: TipCategory;
+import {
+  IsArray,
+  IsBoolean,
+  IsDateString,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Max,
+  Min,
+} from 'class-validator';
+import { PostStatus, PostType, PostVisibility } from '../enums/post.enums';
 
-  @ApiPropertyOptional({
-    description: 'Filter by post type (tip/prediction)',
-  })
+export class FilterPostsDTO {
   @IsOptional()
   @IsString()
-  type?: string;
+  category?: string;
 
-  @ApiPropertyOptional({
-    description: 'Filter posts from this date onwards',
-    type: Date,
-  })
-  @IsOptional()
-  @Type(() => Date)
-  @IsDate()
-  dateFrom?: Date;
-
-  @ApiPropertyOptional({
-    description: 'Filter posts up to this date',
-    type: Date,
-  })
-  @IsOptional()
-  @Type(() => Date)
-  @IsDate()
-  dateTo?: Date;
-
-  @ApiPropertyOptional({
-    description: 'Filter by tags',
-    type: [String],
-  })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
   tags?: string[];
 
-  @ApiPropertyOptional({
-    description: 'Minimum number of likes',
-  })
   @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  minLikes?: number;
+  @IsUUID()
+  author?: string;
 
-  @ApiPropertyOptional({
-    description: 'Filter by tip result',
-  })
   @IsOptional()
-  @IsString()
-  tipResult?: string;
+  @IsEnum(PostType)
+  type?: PostType;
 
-  @ApiPropertyOptional({
-    description: 'Maximum number of results to return',
-    default: 20,
-  })
   @IsOptional()
-  @Type(() => Number)
+  @IsEnum(PostStatus)
+  status?: PostStatus;
+
+  @IsOptional()
+  @IsEnum(PostVisibility)
+  visibility?: PostVisibility;
+
+  @IsOptional()
+  @IsDateString()
+  createdAtFrom?: string;
+
+  @IsOptional()
+  @IsDateString()
+  createdAtTo?: string;
+
+  @IsOptional()
+  @IsDateString()
+  updatedAtFrom?: string;
+
+  @IsOptional()
+  @IsDateString()
+  updatedAtTo?: string;
+
+  @IsOptional()
   @IsNumber()
+  @Min(0)
+  likesCountMin?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  likesCountMax?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  commentsCountMin?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  commentsCountMax?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  isFeatured?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  isPinned?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  isReported?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  isPremium?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  isDeleted?: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  shareCountMin?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  shareCountMax?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  viewsCountMin?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  viewsCountMax?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  sharingEnabled?: boolean;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  sharingPlatforms?: string[];
+
+  // Pagination
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  page?: number = 1;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  @Max(100)
   limit?: number = 20;
 
-  @ApiPropertyOptional({
-    description: 'Number of results to skip',
-    default: 0,
-  })
+  // Sorting
   @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  offset?: number = 0;
-}
-
-export class SearchPostsDto {
-  @ApiPropertyOptional({
-    description: 'Search query string',
-  })
   @IsString()
-  query: string;
+  sortBy?: string = 'createdAt';
 
-  @ApiPropertyOptional({
-    description: 'Maximum number of results to return',
-    default: 20,
-  })
   @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  limit?: number = 20;
-
-  @ApiPropertyOptional({
-    description: 'Number of results to skip',
-    default: 0,
-  })
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  offset?: number = 0;
-}
-
-export class PostsWithTotalResponse {
-  @ApiPropertyOptional({
-    description: 'Array of posts',
-    type: [Object],
-  })
-  posts: any[];
-
-  @ApiPropertyOptional({
-    description: 'Total number of posts',
-    type: Number,
-  })
-  total: number;
+  @IsEnum(['ASC', 'DESC'])
+  sortOrder?: 'ASC' | 'DESC' = 'DESC';
 }

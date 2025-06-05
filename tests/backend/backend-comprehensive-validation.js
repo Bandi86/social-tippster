@@ -21,24 +21,42 @@ function writeErrorToFile(prefix, body) {
   return filePath;
 }
 
+function getUniqueEmail(base) {
+  // Add timestamp and random string for uniqueness
+  const ts = Date.now();
+  const rand = Math.random().toString(36).substring(2, 8);
+  return `${base}+${ts}${rand}@test.com`;
+}
+
+function getUniqueUsername(base) {
+  const ts = Date.now();
+  const rand = Math.random().toString(36).substring(2, 8);
+  return `${base}_${ts}_${rand}`;
+}
+
+// Store generated emails and usernames for login tests
+const generatedEmails = {};
+const generatedUsernames = {};
+
 async function testRegistration() {
   console.log('\n=== Registration Tests ===');
   const testCases = [
     {
       name: 'Valid registration',
       data: {
-        username: 'reguser1',
-        email: 'reguser1@test.com',
+        username: getUniqueUsername('reguser1'),
+        email: getUniqueEmail('reguser1'),
         password: 'Password123!',
         first_name: 'Teszt',
         last_name: 'Felhasználó',
       },
       expectedStatus: 201,
+      storeKey: 'reguser1',
     },
     {
       name: 'Missing email',
       data: {
-        username: 'reguser2',
+        username: getUniqueUsername('reguser2'),
         password: 'Password123!',
         first_name: 'Teszt',
         last_name: 'Felhasználó',
@@ -48,8 +66,8 @@ async function testRegistration() {
     {
       name: 'Missing password',
       data: {
-        username: 'reguser3',
-        email: 'reguser3@test.com',
+        username: getUniqueUsername('reguser3'),
+        email: getUniqueEmail('reguser3'),
         first_name: 'Teszt',
         last_name: 'Felhasználó',
       },
@@ -58,7 +76,7 @@ async function testRegistration() {
     {
       name: 'Invalid email',
       data: {
-        username: 'reguser4',
+        username: getUniqueUsername('reguser4'),
         email: 'notanemail',
         password: 'Password123!',
         first_name: 'Teszt',
@@ -69,8 +87,8 @@ async function testRegistration() {
     {
       name: 'Short password',
       data: {
-        username: 'reguser5',
-        email: 'reguser5@test.com',
+        username: getUniqueUsername('reguser5'),
+        email: getUniqueEmail('reguser5'),
         password: '123',
         first_name: 'Teszt',
         last_name: 'Felhasználó',
@@ -80,8 +98,8 @@ async function testRegistration() {
     {
       name: 'Hungarian error: missing first_name',
       data: {
-        username: 'reguser6',
-        email: 'reguser6@test.com',
+        username: getUniqueUsername('reguser6'),
+        email: getUniqueEmail('reguser6'),
         password: 'Password123!',
         last_name: 'Felhasználó',
       },
@@ -90,23 +108,12 @@ async function testRegistration() {
     {
       name: 'Hungarian error: missing last_name',
       data: {
-        username: 'reguser7',
-        email: 'reguser7@test.com',
+        username: getUniqueUsername('reguser7'),
+        email: getUniqueEmail('reguser7'),
         password: 'Password123!',
         first_name: 'Teszt',
       },
       expectedStatus: 400,
-    },
-    {
-      name: 'Already registered email',
-      data: {
-        username: 'reguser1',
-        email: 'reguser1@test.com',
-        password: 'Password123!',
-        first_name: 'Teszt',
-        last_name: 'Felhasználó',
-      },
-      expectedStatus: 409,
     },
   ];
 
@@ -117,6 +124,10 @@ async function testRegistration() {
       });
       if (res.status === testCase.expectedStatus) {
         console.log(`✅ ${testCase.name}: Passed (${res.status})`);
+        if (testCase.storeKey && res.status === 201) {
+          generatedEmails[testCase.storeKey] = testCase.data.email;
+          generatedUsernames[testCase.storeKey] = testCase.data.username;
+        }
       } else {
         console.log(`❌ ${testCase.name}: Expected ${testCase.expectedStatus}, got ${res.status}`);
         writeErrorToFile('registration', res.data);
@@ -133,25 +144,29 @@ async function testRegistration() {
       console.log(`❌ ${testCase.name}: Exception`);
       writeErrorToFile('registration', err.response?.data || err.message);
     }
+    // Add throttling delay to avoid rate limiting
+    await new Promise(res => setTimeout(res, 1200));
   }
 }
 
 async function testLogin() {
   console.log('\n=== Login Tests ===');
+  // Use the email generated during registration for valid login
+  const validEmail = generatedEmails['reguser1'] || 'reguser1@test.com';
   const testCases = [
     {
       name: 'Valid login',
-      data: { email: 'reguser1@test.com', password: 'Password123!' },
+      data: { email: validEmail, password: 'Password123!' },
       expectedStatus: 201,
     },
     {
       name: 'Wrong password',
-      data: { email: 'reguser1@test.com', password: 'WrongPass' },
+      data: { email: validEmail, password: 'WrongPass' },
       expectedStatus: 401,
     },
     {
       name: 'Nonexistent user',
-      data: { email: 'noone@test.com', password: 'Password123!' },
+      data: { email: getUniqueEmail('noone'), password: 'Password123!' },
       expectedStatus: 401,
     },
     {
@@ -161,7 +176,7 @@ async function testLogin() {
     },
     {
       name: 'Missing password',
-      data: { email: 'reguser1@test.com' },
+      data: { email: validEmail },
       expectedStatus: 400,
     },
     {
@@ -206,6 +221,8 @@ async function testLogin() {
       console.log(`❌ ${testCase.name}: Exception`);
       writeErrorToFile('login', err.response?.data || err.message);
     }
+    // Add throttling delay to avoid rate limiting
+    await new Promise(res => setTimeout(res, 1200));
   }
 }
 

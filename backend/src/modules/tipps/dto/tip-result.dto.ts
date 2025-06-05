@@ -1,5 +1,5 @@
 import { IsEnum, IsNumber, IsOptional } from 'class-validator';
-import { TipResult } from '../../posts/entities/posts.entity';
+import { TipResult } from '../enums/tip.enums';
 
 export class SetTipResultDto {
   @IsEnum(TipResult, { message: 'Érvényes tip eredmény szükséges' })

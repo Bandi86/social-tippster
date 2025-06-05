@@ -12,12 +12,11 @@ export const dataSourceOptions: DataSourceOptions = {
   database: process.env.DATABASE_NAME || 'tippmix',
   entities: [__dirname + '/../**/*.entity{.ts,.js}'],
   migrations: [__dirname + '/migrations/**/*{.ts,.js}'],
-  synchronize: process.env.NODE_ENV === 'development',
+  synchronize: process.env.NODE_ENV === 'development', // visszaállítva
 };
 
 const dataSource = new DataSource(dataSourceOptions);
 export default dataSource;
-
 /* console.log(`🔌 Database connection options:
   Host: ${dataSourceOptions.host}
   Port: ${dataSourceOptions.port}
