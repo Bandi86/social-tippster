@@ -276,15 +276,19 @@ export class AnalyticsService {
       }
 
       // Log auth event to monitoring service
-      this.monitoringService.logAuthEvent(
-        loginData.is_successful ? 'login_success' : 'login_failure',
-        {
-          userId: loginData.user_id || undefined,
-          ipAddress: loginData.ip_address,
-          userAgent: loginData.user_agent,
+      this.monitoringService.logAuthEvent({
+        userId: loginData.user_id || undefined,
+        userEmail: undefined, // Not available in this context
+        ipAddress: loginData.ip_address,
+        userAgent: loginData.user_agent,
+        eventType: 'login',
+        success: loginData.is_successful,
+        details: {
+          loginId: savedLogin.id,
           timestamp: new Date(),
         },
-      );
+        timestamp: new Date(),
+      });
 
       return savedLogin;
     } catch (error) {

@@ -13,8 +13,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
         username: configService.get('database.username'),
         password: configService.get('database.password'),
         database: configService.get('database.name'),
-        entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-
+        entities: [
+          __dirname + '/../**/*.entity{.ts,.js}',
+          '!' + __dirname + '/../**/archived/**/*.entity{.ts,.js}', // Exclude archived entities
+        ],
         synchronize: configService.get('NODE_ENV') === 'development',
         logging: true,
       }),

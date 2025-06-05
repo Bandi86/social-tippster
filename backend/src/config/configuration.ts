@@ -25,6 +25,11 @@ export default () => ({
   sentry: {
     dsn: process.env.SENTRY_DSN,
     environment: process.env.NODE_ENV || 'development',
-    enabled: process.env.SENTRY_ENABLED === 'true' || process.env.NODE_ENV === 'production',
+    enabled:
+      process.env.SENTRY_ENABLED === 'true' ||
+      (process.env.NODE_ENV === 'production' &&
+        process.env.SENTRY_DSN &&
+        process.env.SENTRY_DSN !== 'your-sentry-dsn' &&
+        !process.env.SENTRY_DSN.includes('placeholder')),
   },
 });

@@ -3,17 +3,8 @@ import type { NextConfig } from 'next';
 const nextConfig: NextConfig = {
   /* config options here */
   experimental: {
-    // Ignore archived folders during build and development
-    turbo: {
-      rules: {
-        '**/*': {
-          loaders: ['raw-loader'],
-          exclude: {
-            '**/archived/**': { loaders: [] },
-          },
-        },
-      },
-    },
+    turbopackSourceMaps: true, // Enable source maps for Turbopack
+    serverActions: {}, // fixed: must be an object, not boolean
   },
   // Webpack configuration to ignore archived folders
   webpack: (config, { dev, isServer }) => {

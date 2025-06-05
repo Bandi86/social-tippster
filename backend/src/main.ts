@@ -2,20 +2,13 @@ import { BadRequestException, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import * as Sentry from '@sentry/node';
 import * as cookieParser from 'cookie-parser';
 import { join } from 'path';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
-  // Initialize Sentry before creating the app
-  Sentry.init({
-    dsn: process.env.SENTRY_DSN || 'https://placeholder-dsn@sentry.io/placeholder-project-id',
-    environment: process.env.NODE_ENV || 'development',
-    tracesSampleRate: 1.0,
-    debug: process.env.NODE_ENV === 'development',
-  });
+  console.log('🚀 Starting backend server without Sentry integration');
 
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 

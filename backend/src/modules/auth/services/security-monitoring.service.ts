@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as Sentry from '@sentry/node';
 
 export interface SecurityEvent {
   type:
@@ -19,18 +18,8 @@ export interface SecurityEvent {
 
 @Injectable()
 export class SecurityMonitoringService {
-  private readonly sentryEnabled: boolean;
-
   constructor(private readonly configService: ConfigService) {
-    this.sentryEnabled = !!this.configService.get<string>('SENTRY_DSN');
-
-    if (this.sentryEnabled) {
-      Sentry.init({
-        dsn: this.configService.get<string>('SENTRY_DSN'),
-        environment: this.configService.get<string>('NODE_ENV') || 'development',
-        tracesSampleRate: 1.0,
-      });
-    }
+    console.log('🔒 Security Monitoring Service initialized with console logging');
   }
 
   /**
@@ -38,40 +27,16 @@ export class SecurityMonitoringService {
    */
   logSecurityEvent(event: SecurityEvent): void {
     try {
-      // Console logging for development
-      console.warn(`🔒 Security Event [${event.type.toUpperCase()}]:`, {
+      // Console logging for all environments
+      const logLevel = this.mapSeverityToLogLevel(event.severity);
+      console[logLevel](`🔒 Security Event [${event.type.toUpperCase()}]:`, {
         severity: event.severity,
         userId: event.userId,
         email: event.email,
         ipAddress: event.ipAddress,
         details: event.details,
+        timestamp: new Date().toISOString(),
       });
-
-      // Sentry logging for production monitoring
-      if (this.sentryEnabled) {
-        Sentry.withScope(scope => {
-          scope.setTag('securityEvent', event.type);
-          scope.setLevel(this.mapSeverityToSentryLevel(event.severity));
-
-          if (event.userId) {
-            scope.setUser({ id: event.userId, email: event.email });
-          }
-
-          scope.setContext('security', {
-            eventType: event.type,
-            ipAddress: event.ipAddress,
-            userAgent: event.userAgent,
-            ...event.details,
-          });
-
-          Sentry.captureMessage(`Security Event: ${event.type}`, event.severity as any);
-        });
-      }
-
-      // TODO: Add additional monitoring integrations here
-      // - Database logging for audit trails
-      // - Email alerts for critical events
-      // - Slack notifications for high severity events
     } catch (error) {
       console.error('Failed to log security event:', error);
     }
@@ -80,16 +45,16 @@ export class SecurityMonitoringService {
   /**
    * Log failed login attempts
    */
-  async logFailedLogin(
+  logFailedLogin(
     email: string,
     ipAddress: string,
     userAgent: string,
     failureReason: string,
     attemptCount?: number,
-  ): Promise<void> {
+  ): void {
     const severity = attemptCount && attemptCount >= 3 ? 'high' : 'medium';
 
-    await this.logSecurityEvent({
+    this.logSecurityEvent({
       type: 'failed_login',
       email,
       ipAddress,
@@ -106,15 +71,15 @@ export class SecurityMonitoringService {
   /**
    * Log suspicious login patterns
    */
-  async logSuspiciousLogin(
+  logSuspiciousLogin(
     userId: string,
     email: string,
     ipAddress: string,
     userAgent: string,
     suspiciousChanges: string[],
     similarityScore: number,
-  ): Promise<void> {
-    await this.logSecurityEvent({
+  ): void {
+    this.logSecurityEvent({
       type: 'suspicious_login',
       userId,
       email,
@@ -132,13 +97,13 @@ export class SecurityMonitoringService {
   /**
    * Log token validation failures
    */
-  async logTokenValidationFailure(
+  logTokenValidationFailure(
     token: string,
     ipAddress: string,
     userAgent: string,
     error: string,
-  ): Promise<void> {
-    await this.logSecurityEvent({
+  ): void {
+    this.logSecurityEvent({
       type: 'token_validation_failure',
       ipAddress,
       userAgent,
@@ -154,13 +119,8 @@ export class SecurityMonitoringService {
   /**
    * Log CSRF protection violations
    */
-  async logCSRFViolation(
-    userId: string,
-    ipAddress: string,
-    userAgent: string,
-    endpoint: string,
-  ): Promise<void> {
-    await this.logSecurityEvent({
+  logCSRFViolation(userId: string, ipAddress: string, userAgent: string, endpoint: string): void {
+    this.logSecurityEvent({
       type: 'csrf_violation',
       userId,
       ipAddress,
@@ -176,14 +136,14 @@ export class SecurityMonitoringService {
   /**
    * Log brute force attempts
    */
-  async logBruteForceAttempt(
+  logBruteForceAttempt(
     email: string,
     ipAddress: string,
     userAgent: string,
     attemptCount: number,
     isBlocked: boolean,
-  ): Promise<void> {
-    await this.logSecurityEvent({
+  ): void {
+    this.logSecurityEvent({
       type: 'brute_force_attempt',
       email,
       ipAddress,
@@ -198,31 +158,27 @@ export class SecurityMonitoringService {
   }
 
   /**
-   * Capture exceptions with Sentry
+   * Capture exceptions with console logging
    */
   captureException(error: Error, context?: Record<string, any>): void {
-    if (this.sentryEnabled) {
-      Sentry.withScope(scope => {
-        if (context) {
-          scope.setContext('additional', context);
-        }
-        Sentry.captureException(error);
-      });
-    }
-    console.error('Security Exception:', error, context);
+    console.error('🔒 Security Exception:', {
+      message: error.message,
+      stack: error.stack,
+      context: context || {},
+      timestamp: new Date().toISOString(),
+    });
   }
 
   /**
-   * Map severity levels to Sentry levels
+   * Map severity levels to console log levels
    */
-  private mapSeverityToSentryLevel(severity: SecurityEvent['severity']): Sentry.SeverityLevel {
+  private mapSeverityToLogLevel(severity: SecurityEvent['severity']): 'error' | 'warn' | 'info' {
     switch (severity) {
       case 'critical':
-        return 'fatal';
       case 'high':
         return 'error';
       case 'medium':
-        return 'warning';
+        return 'warn';
       case 'low':
       default:
         return 'info';

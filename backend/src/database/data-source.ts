@@ -10,9 +10,12 @@ export const dataSourceOptions: DataSourceOptions = {
   username: process.env.DATABASE_USERNAME || 'postgres',
   password: process.env.DATABASE_PASSWORD,
   database: process.env.DATABASE_NAME || 'tippmix',
-  entities: [__dirname + '/../**/*.entity{.ts,.js}'],
+  entities: [
+    __dirname + '/../**/*.entity{.ts,.js}',
+    '!' + __dirname + '/../**/archived/**/*.entity{.ts,.js}', // Exclude archived entities
+  ],
   migrations: [__dirname + '/migrations/**/*{.ts,.js}'],
-  synchronize: process.env.NODE_ENV === 'development', // visszaállítva
+  synchronize: process.env.NODE_ENV === 'development',
 };
 
 const dataSource = new DataSource(dataSourceOptions);

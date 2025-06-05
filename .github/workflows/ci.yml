@@ -18,7 +18,7 @@ jobs:
         image: postgres:15
         env:
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_PASSWORD: process.env.DATABASE_PASSWORD
           POSTGRES_DB: tippmix
         ports:
           - 5432:5432
@@ -73,7 +73,7 @@ jobs:
         working-directory: ./backend
         run: npm run test
         env:
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432/social_tippster_test
+          DATABASE_URL: postgres://postgres:postgres@localhost:5433/social_tippster_test
           JWT_SECRET: test-jwt-secret
           NODE_ENV: test
 
