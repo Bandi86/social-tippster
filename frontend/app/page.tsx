@@ -7,7 +7,7 @@ import { useState } from 'react';
 
 // Root komponensek importálása
 import CommunityStats from '@/components/root/CommunityStats';
-import GuestUserNotice from '@/components/root/GuestUserNotice';
+//import GuestUserNotice from '@/components/root/GuestUserNotice';
 import LiveMatches from '@/components/root/LiveMatches';
 import MainNavigation from '@/components/root/MainNavigation';
 import PostCreationArea from '@/components/root/PostCreationArea';
@@ -33,7 +33,7 @@ export default function Home() {
   return (
     <div className='min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900'>
       {/* Vendég felhasználói értesítő */}
-      {!isAuthenticated && <GuestUserNotice />}
+      {/* {!isAuthenticated && <GuestUserNotice />} */}
 
       {/* Fő konténer */}
       <div className='container mx-auto px-4 py-6'>

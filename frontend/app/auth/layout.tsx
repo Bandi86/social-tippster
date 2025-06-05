@@ -32,7 +32,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
     <div className='flex min-h-screen flex-col items-center justify-center bg-muted/40 p-4'>
       <div className='absolute top-4 left-4'>
         <Link href='/' className='text-lg font-bold'>
-          Social Tippster
+          Social Platform
         </Link>
       </div>
       <Card className='max-w-md w-full p-6 sm:p-8 bg-background'>{children}</Card>

@@ -15,7 +15,6 @@ import {
   MessageSquare,
   Pin,
   Share2,
-  TrendingUp,
 } from 'lucide-react';
 import Link from 'next/link';
 import React, { useState } from 'react';
@@ -162,14 +161,16 @@ export default function PostCard({ post, onPostUpdate, compact = false }: PostCa
 
   const getPostTypeIcon = (type: string) => {
     switch (type) {
-      case 'tip':
-        return <TrendingUp className='h-4 w-4' />;
+      case 'general':
+        return <FileText className='h-4 w-4' />;
       case 'discussion':
         return <MessageSquare className='h-4 w-4' />;
-      case 'news':
-        return <FileText className='h-4 w-4' />;
       case 'analysis':
         return <BarChart3 className='h-4 w-4' />;
+      case 'help_request':
+        return <MessageCircle className='h-4 w-4' />;
+      case 'news':
+        return <FileText className='h-4 w-4' />;
       default:
         return <FileText className='h-4 w-4' />;
     }
@@ -177,10 +178,11 @@ export default function PostCard({ post, onPostUpdate, compact = false }: PostCa
 
   const getPostTypeBadge = (type: string) => {
     const variants = {
-      tip: 'bg-green-500/20 text-green-400 border-green-500/30',
+      general: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
       discussion: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-      news: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-      analysis: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+      analysis: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+      help_request: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+      news: 'bg-red-500/20 text-red-400 border-red-500/30',
     } as const;
 
     return (
@@ -191,33 +193,6 @@ export default function PostCard({ post, onPostUpdate, compact = false }: PostCa
         {getPostTypeIcon(type)}
         <span className='ml-1 capitalize'>{type}</span>
       </Badge>
-    );
-  };
-
-  const renderTipDetails = () => {
-    if (post.type !== 'tip' || (!post.odds && !post.stake && !post.confidence)) return null;
-
-    return (
-      <div className='flex gap-4 text-sm text-gray-400 bg-gray-800/50 rounded-lg p-3 mt-3'>
-        {post.odds && (
-          <div className='flex items-center gap-1'>
-            <span className='font-medium text-green-400'>Odds:</span>
-            <span>{post.odds}</span>
-          </div>
-        )}
-        {post.stake && (
-          <div className='flex items-center gap-1'>
-            <span className='font-medium text-blue-400'>Tét:</span>
-            <span>{post.stake}/10</span>
-          </div>
-        )}
-        {post.confidence && (
-          <div className='flex items-center gap-1'>
-            <span className='font-medium text-amber-400'>Bizalom:</span>
-            <span>{post.confidence}/5</span>
-          </div>
-        )}
-      </div>
     );
   };
 
@@ -278,8 +253,6 @@ export default function PostCard({ post, onPostUpdate, compact = false }: PostCa
             <p className='text-gray-300 mb-3 line-clamp-3'>{post.excerpt}</p>
           )}
         </Link>
-
-        {renderTipDetails()}
 
         {/* Interaction buttons */}
         <div className='flex items-center justify-between mt-4 pt-3 border-t border-gray-700'>

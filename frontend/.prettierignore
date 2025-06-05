@@ -4,3 +4,8 @@ out
 coverage
 public
 *.log
+
+# Archived folders
+**/archived
+**/archived/**
+archived/**

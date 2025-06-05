@@ -14,7 +14,7 @@ const AdminSettingsPage = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [settings, setSettings] = useState({
-    siteName: 'Social Tippster',
+    siteName: 'Social Platform',
     siteDescription: 'Your premier social betting platform',
     allowRegistration: true,
     requireEmailVerification: true,

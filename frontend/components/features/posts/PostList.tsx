@@ -89,7 +89,7 @@ export default function PostList({
     if (initialPosts && initialPosts.length > 0) {
       return;
     }
-    
+
     const params = {
       page: 1,
       limit: 10,
@@ -98,22 +98,25 @@ export default function PostList({
       author: authorFilter || undefined,
       featured: featuredOnly || undefined,
     };
-    
+
     fetchPosts(params, false);
   }, [initialPosts, searchQuery, selectedType, authorFilter, featuredOnly, fetchPosts]);
 
   // Magyar: Debounced keresés implementálása
-  const debouncedSearch = useCallback((value: string) => {
-    if (searchTimeoutId) {
-      clearTimeout(searchTimeoutId);
-    }
-    
-    const timeoutId = setTimeout(() => {
-      setSearchQuery(value);
-    }, 300);
-    
-    setSearchTimeoutId(timeoutId);
-  }, [searchTimeoutId, setSearchQuery]);
+  const debouncedSearch = useCallback(
+    (value: string) => {
+      if (searchTimeoutId) {
+        clearTimeout(searchTimeoutId);
+      }
+
+      const timeoutId = setTimeout(() => {
+        setSearchQuery(value);
+      }, 300);
+
+      setSearchTimeoutId(timeoutId);
+    },
+    [searchTimeoutId, setSearchQuery],
+  );
 
   // Magyar: Cleanup timeout on unmount
   useEffect(() => {
@@ -125,34 +128,40 @@ export default function PostList({
   }, [searchTimeoutId]);
 
   // Magyar: Poszt frissítése optimalizálva
-  const handlePostUpdate = useCallback((postId: string, updates: Partial<Post>) => {
-    updatePostLocally(postId, updates);
-    if (onPostUpdate) {
-      const currentPosts = initialPosts || posts;
-      const updatedPost = currentPosts.find(post => post.id === postId);
-      if (updatedPost) {
-        onPostUpdate({ ...updatedPost, ...updates });
+  const handlePostUpdate = useCallback(
+    (postId: string, updates: Partial<Post>) => {
+      updatePostLocally(postId, updates);
+      if (onPostUpdate) {
+        const currentPosts = initialPosts || posts;
+        const updatedPost = currentPosts.find(post => post.id === postId);
+        if (updatedPost) {
+          onPostUpdate({ ...updatedPost, ...updates });
+        }
       }
-    }
-    toast({
-      title: 'Poszt frissítve',
-      description: 'A poszt sikeresen frissítve lett.',
-      variant: 'default',
-    });
-  }, [updatePostLocally, onPostUpdate, initialPosts, posts]);
+      toast({
+        title: 'Poszt frissítve',
+        description: 'A poszt sikeresen frissítve lett.',
+        variant: 'default',
+      });
+    },
+    [updatePostLocally, onPostUpdate, initialPosts, posts],
+  );
 
   // Magyar: Poszt törlése optimalizálva
-  const handlePostDelete = useCallback((postId: string) => {
-    removePostLocally(postId);
-    if (onPostDelete) {
-      onPostDelete(postId);
-    }
-    toast({
-      title: 'Poszt törölve',
-      description: 'A poszt sikeresen törölve lett.',
-      variant: 'default',
-    });
-  }, [removePostLocally, onPostDelete]);
+  const handlePostDelete = useCallback(
+    (postId: string) => {
+      removePostLocally(postId);
+      if (onPostDelete) {
+        onPostDelete(postId);
+      }
+      toast({
+        title: 'Poszt törölve',
+        description: 'A poszt sikeresen törölve lett.',
+        variant: 'default',
+      });
+    },
+    [removePostLocally, onPostDelete],
+  );
 
   // Magyar: További posztok betöltése optimalizálva
   const handleLoadMore = useCallback(() => {
@@ -167,19 +176,34 @@ export default function PostList({
       };
       fetchPosts(params, true);
     }
-  }, [isLoadingMore, hasMore, currentPage, searchQuery, selectedType, authorFilter, featuredOnly, fetchPosts]);
+  }, [
+    isLoadingMore,
+    hasMore,
+    currentPage,
+    searchQuery,
+    selectedType,
+    authorFilter,
+    featuredOnly,
+    fetchPosts,
+  ]);
 
   // Magyar: Keresés kezelése optimalizálva
-  const handleSearch = useCallback((value: string) => {
-    setLocalSearchQuery(value);
-    debouncedSearch(value);
-  }, [debouncedSearch]);
+  const handleSearch = useCallback(
+    (value: string) => {
+      setLocalSearchQuery(value);
+      debouncedSearch(value);
+    },
+    [debouncedSearch],
+  );
 
-  // Magyar: Típus szűrő kezelése optimalizálva  
-  const handleTypeChange = useCallback((value: string) => {
-    setLocalSelectedType(value);
-    setSelectedType(value);
-  }, [setSelectedType]);
+  // Magyar: Típus szűrő kezelése optimalizálva
+  const handleTypeChange = useCallback(
+    (value: string) => {
+      setLocalSelectedType(value);
+      setSelectedType(value);
+    },
+    [setSelectedType],
+  );
 
   // Magyar: Posztok listája optimalizálva (memoized)
   const postsToDisplay = useMemo(() => initialPosts || posts, [initialPosts, posts]);
@@ -187,10 +211,11 @@ export default function PostList({
   // Magyar: Típusonkénti darabszám optimalizálva (memoized)
   const postTypeCounts = useMemo(() => {
     return {
-      tip: postsToDisplay.filter(post => post.type === 'tip').length,
+      general: postsToDisplay.filter(post => post.type === 'general').length,
       discussion: postsToDisplay.filter(post => post.type === 'discussion').length,
       news: postsToDisplay.filter(post => post.type === 'news').length,
       analysis: postsToDisplay.filter(post => post.type === 'analysis').length,
+      help_request: postsToDisplay.filter(post => post.type === 'help_request').length,
     };
   }, [postsToDisplay]);
 
@@ -257,13 +282,14 @@ export default function PostList({
                   </SelectTrigger>
                   <SelectContent className='bg-gray-800 border-gray-600'>
                     <SelectItem value='all'>Összes típus</SelectItem>
-                    <SelectItem value='tip'>Tippek ({postTypeCounts.tip})</SelectItem>
+                    <SelectItem value='general'>Általános ({postTypeCounts.general})</SelectItem>
                     <SelectItem value='discussion'>
                       Beszélgetések ({postTypeCounts.discussion})
                     </SelectItem>
                     <SelectItem value='news'>Hírek ({postTypeCounts.news})</SelectItem>
-                    <SelectItem value='analysis'>
-                      Elemzések ({postTypeCounts.analysis})
+                    <SelectItem value='analysis'>Elemzések ({postTypeCounts.analysis})</SelectItem>
+                    <SelectItem value='help_request'>
+                      Segítségkérés ({postTypeCounts.help_request})
                     </SelectItem>
                   </SelectContent>
                 </Select>

@@ -3,30 +3,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
-import { TipCategory } from '../tipps/enums/tip.enums';
 
-export interface BettingSlipData {
+export interface BasicImageData {
   extractedText: string;
-  odds?: number;
-  stake?: number;
-  outcome?: string;
-  tipCategory?: TipCategory;
-  confidence?: number;
-  team1?: string;
-  team2?: string;
-  matchDate?: Date;
-  validityTime?: Date;
-  maxWinning?: number;
-  combinations?: string;
-  totalBet?: number;
-  submissionTime?: Date;
-}
-
-export interface BettingSlipResult {
   success: boolean;
-  data?: BettingSlipData;
   errors?: string[];
-  extractedText?: string;
 }
 
 /**
@@ -56,14 +37,13 @@ export class ImageProcessingService {
   }
 
   /**
-   * Process a betting slip image to extract relevant data.
-   * This is a simple implementation that delegates to the image-analysis module.
+   * Basic image processing for validation only
    * @deprecated Use image-analysis service for complete image processing.
    */
-  async processBettingSlipImage(filePath: string): Promise<BettingSlipResult> {
+  async processImage(filePath: string): Promise<BasicImageData> {
     await Promise.resolve(); // Artificial await to satisfy async/await linting
     try {
-      this.logger.log(`Processing betting slip image: ${filePath}`);
+      this.logger.log(`Processing image: ${filePath}`);
 
       // Basic file validation
       if (!this.validateImageFile(filePath)) {
@@ -74,21 +54,17 @@ export class ImageProcessingService {
         };
       }
 
-      // In a complete implementation, this would call the image-analysis service
-      // But for now, return a minimal valid result
-      this.logger.log('Image is valid, but OCR processing is unavailable');
+      // Basic validation only
+      this.logger.log('Image is valid');
       return {
-        success: false,
-        errors: [
-          'OCR processing is not implemented in this service. Use image-analysis service instead.',
-        ],
-        extractedText: 'OCR processing not available in this service.',
+        success: true,
+        extractedText: 'Basic image validation passed.',
       };
     } catch (error) {
-      this.logger.error('Error processing betting slip:', error);
+      this.logger.error('Error processing image:', error);
       return {
         success: false,
-        errors: [error instanceof Error ? error.message : 'Unknown error processing betting slip'],
+        errors: [error instanceof Error ? error.message : 'Unknown error processing image'],
         extractedText: '',
       };
     }

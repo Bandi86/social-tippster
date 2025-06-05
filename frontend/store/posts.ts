@@ -43,8 +43,17 @@ export interface Post {
   title: string;
   content: string;
   excerpt?: string;
-  type: 'tip' | 'discussion' | 'news' | 'analysis';
-  status: 'draft' | 'published' | 'archived' | 'hidden';
+  type: 'general' | 'discussion' | 'analysis' | 'help_request' | 'news';
+  status:
+    | 'draft'
+    | 'published'
+    | 'private'
+    | 'archived'
+    | 'deleted'
+    | 'reported'
+    | 'premium'
+    | 'inactive';
+  visibility: 'public' | 'followers_only' | 'registered_only' | 'private';
   author_id: string;
   author?: {
     user_id: string;
@@ -52,11 +61,7 @@ export interface Post {
     profile_image?: string;
     reputation_score: number;
   };
-  // Tip-specific fields
-  odds?: number;
-  stake?: number;
-  confidence?: number;
-  betting_market?: string;
+  categoryId?: string;
   // Statistics
   views_count: number;
   likes_count: number;
@@ -68,6 +73,14 @@ export interface Post {
   is_featured: boolean;
   is_premium: boolean;
   is_pinned: boolean;
+  comments_enabled: boolean;
+  sharing_enabled: boolean;
+  sharing_platforms?: string[];
+  // Media
+  image_url?: string;
+  // SEO
+  slug?: string;
+  meta_description?: string;
   // Timestamps
   created_at: string;
   updated_at: string;
@@ -75,6 +88,8 @@ export interface Post {
   // User interactions (if authenticated)
   user_vote?: 'like' | 'dislike' | null;
   user_bookmarked?: boolean;
+  // Tags
+  tags?: string[];
 }
 
 // Admin-specific interfaces
@@ -129,17 +144,27 @@ export interface PostsResponse {
 }
 
 export interface CreatePostData {
-  title: string;
   content: string;
-  type: 'tip' | 'discussion' | 'news' | 'analysis';
-  // Tip-specific optional fields
-  odds?: number;
-  stake?: number;
-  confidence?: number;
-  betting_market?: string;
-  // Content options
-  is_premium?: boolean;
+  type?: 'general' | 'discussion' | 'analysis' | 'help_request' | 'news';
+  status?:
+    | 'draft'
+    | 'published'
+    | 'private'
+    | 'archived'
+    | 'deleted'
+    | 'reported'
+    | 'premium'
+    | 'inactive';
+  visibility?: 'public' | 'followers_only' | 'registered_only' | 'private';
+  categoryId?: string;
   tags?: string[];
+  imageUrl?: string;
+  commentsEnabled?: boolean;
+  isFeatured?: boolean;
+  isPinned?: boolean;
+  isPremium?: boolean;
+  sharingEnabled?: boolean;
+  sharingPlatforms?: string[];
 }
 
 export interface FetchPostsParams {
@@ -853,7 +878,7 @@ export const usePostsStore = create<PostsState & PostsActions>()(
 
       togglePostVisibility: async (id: string, hidden: boolean) => {
         try {
-          const status = hidden ? 'hidden' : 'published';
+          const status = hidden ? 'archived' : 'published';
           await get().updatePost(id, { status });
         } catch (error) {
           console.error('Error toggling post visibility:', error);

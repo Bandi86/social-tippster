@@ -1,4 +1,4 @@
-// Seed script for Social Tippster database
+// Seed script for Social Platform database
 // Usage: npx ts-node backend/src/database/seed.ts
 
 import * as bcrypt from 'bcrypt';

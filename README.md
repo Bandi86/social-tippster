@@ -282,3 +282,10 @@ Environment variables and configuration files:
 ---
 
 **Project organized and maintained according to professional development standards** ✅
+
+### File Organization
+
+- **Clean Structure:** All test files in `/tests`, documentation in `/docs`
+- **Archived Content:** `archived/` folders are completely ignored by all development tools
+- **No Root Clutter:** Test, image, and debug files organized in designated folders
+- **Subproject Cleanliness:** Frontend and backend maintain clean directory structures

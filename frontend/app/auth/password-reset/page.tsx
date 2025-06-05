@@ -2,8 +2,8 @@ import { PasswordResetRequestForm } from '@/components/auth/password-reset-reque
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Reset Password | Social Tippster',
-  description: 'Request a password reset for your Social Tippster account',
+  title: 'Reset Password | Social Platform',
+  description: 'Request a password reset for your Social Platform account',
 };
 
 export default function PasswordResetRequestPage() {

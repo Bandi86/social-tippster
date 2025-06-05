@@ -50,5 +50,5 @@ export default function PostCreationArea({ onCreatePost, className = '' }: PostC
   }
 
   // Show CTA for unauthenticated users
-  return <AuthCta className={className} />;
+  //return <AuthCta className={className} />;
 }

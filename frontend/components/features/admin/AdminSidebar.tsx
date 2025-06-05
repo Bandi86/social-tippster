@@ -121,7 +121,7 @@ const AdminSidebar = () => {
           </div>
           <div className='flex flex-col'>
             <span className='text-xl font-bold text-amber-100'>Admin Panel</span>
-            <span className='text-xs text-amber-300/80 font-medium'>Social Tippster</span>
+            <span className='text-xs text-amber-300/80 font-medium'>Social Platform</span>
           </div>
         </div>
       </SidebarHeader>

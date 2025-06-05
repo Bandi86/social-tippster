@@ -34,5 +34,13 @@
     "tests/update-user-role.js",
     "tests/backend/auth-integration.spec.ts"
   ],
-  "exclude": ["node_modules", "dist", "**/*.test.ts"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.test.ts",
+    "**/archived/**",
+    "archived/**",
+    "docs/archived/**",
+    "tests/archived/**"
+  ]
 }

@@ -315,7 +315,7 @@ export const fetchQuickStats = async (): Promise<QuickStat[]> => {
 };
 
 // Közösségi statisztikák cache kezelése
-const COMMUNITY_STATS_CACHE_KEY = 'social_tippster_community_stats_cache';
+const COMMUNITY_STATS_CACHE_KEY = 'social_platform_community_stats_cache';
 const CACHE_DURATION = 3 * 60 * 1000; // 3 perc
 
 export const getCachedCommunityStats = (): RealTimeCommunityStats | null => {

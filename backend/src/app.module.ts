@@ -17,10 +17,8 @@ import { MatchModule } from './modules/data/match/match.module';
 import { PlayerModule } from './modules/data/player/player.module';
 import { SeasonModule } from './modules/data/season/season.module';
 import { TeamModule } from './modules/data/team/team.module';
-import { ImageAnalysisModule } from './modules/image-analysis/image-analysis.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { PostsModule } from './modules/posts/posts.module';
-import { TippsModule } from './modules/tipps/tipps.module';
 import { UploadsModule } from './modules/uploads/uploads.module';
 import { UsersModule } from './modules/users/users.module';
 
@@ -54,8 +52,6 @@ if (process.env.NODE_ENV !== 'development') {
     PlayerModule,
     SeasonModule,
     UploadsModule,
-    ImageAnalysisModule,
-    TippsModule,
   ],
   controllers: [
     AppController,

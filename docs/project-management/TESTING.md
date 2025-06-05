@@ -190,6 +190,37 @@ bash tests/backend/run-all-backend-tests.sh
 - Do **not** rely on test scripts or Jest configuration to start/stop the server.
 - This policy prevents port conflicts and ensures a stable test environment.
 
+## Test Exclusion for Archived Content (Updated June 5, 2025)
+
+### Comprehensive Archived Folder Isolation
+
+All testing frameworks now completely ignore archived folders and their contents:
+
+#### Jest Configuration
+
+- **testPathIgnorePatterns**: Excludes `**/archived/**`, `archived/**`, `docs/archived/**`, `tests/archived/**`
+- **Result**: No unit tests will be discovered or executed in archived folders
+- **Performance**: Faster test discovery and execution by skipping archived content
+
+#### Playwright Configuration
+
+- **testIgnore**: Excludes `**/archived/**`, `tests/archived/**`, `docs/archived/**`
+- **Result**: No E2E tests will be executed from archived locations
+- **Clean Reports**: Test reports won't include archived test artifacts
+
+#### Benefits
+
+- **Clean Test Runs**: Only active, relevant tests are executed
+- **Performance**: Faster test discovery and execution
+- **Clarity**: Test results focus on current implementation
+- **Maintenance**: Archived tests don't interfere with CI/CD pipelines
+
+### Archived Test Management
+
+- **Legacy Tests**: Preserved in archived folders for reference
+- **Migration**: Active tests migrated to proper test folder structure
+- **Documentation**: Archived test purposes documented in respective folders
+
 ## Status
 
 - All tests pass and follow project file organization and documentation standards.

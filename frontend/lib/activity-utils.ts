@@ -1,9 +1,26 @@
 /**
- * Aktivitás adatok kezelése és formázása
+ * Aexport type ActivityType =
+  | 'comment'
+  | 'like'
+  | 'share'
+  | 'follow'
+  | 'post_created'
+  | 'achievement';datok kezelése és formázása
  * Activity data management and formatting utilities
  */
 
-import { Eye, Heart, LucideIcon, MessageCircle, Share, TrendingUp, Users } from 'lucide-react';
+import {
+  Eye,
+  Heart,
+  LucideIcon,
+  MessageCircle,
+  PlusCircle,
+  Share,
+  TrendingUp,
+  Trophy,
+  Users,
+  XCircle,
+} from 'lucide-react';
 
 // Aktivitás típusok
 export type ActivityType =
@@ -29,7 +46,7 @@ export interface ActivityItem {
   };
   action: string;
   target?: {
-    type: 'post' | 'tip' | 'user';
+    type: 'post' | 'general' | 'user';
     title: string;
     id: string;
   };
@@ -47,7 +64,7 @@ export interface ActivityData {
 
 // Aktivitás típus metaadatai
 export const getActivityMeta = (type: ActivityType) => {
-  const meta = {
+  const meta: Record<ActivityType, { color: string; icon: LucideIcon; actionText: string }> = {
     comment: {
       color: 'blue-600',
       icon: MessageCircle,
@@ -64,19 +81,19 @@ export const getActivityMeta = (type: ActivityType) => {
       actionText: 'megosztotta',
     },
     tip_created: {
-      color: 'amber-600',
-      icon: TrendingUp,
-      actionText: 'új tippet oszott meg',
+      color: 'cyan-600',
+      icon: PlusCircle,
+      actionText: 'új tippet hozott létre',
     },
     tip_won: {
       color: 'emerald-600',
-      icon: TrendingUp,
-      actionText: 'nyert egy tippel',
+      icon: Trophy,
+      actionText: 'nyertes tippet zárt',
     },
     tip_lost: {
-      color: 'red-600',
-      icon: TrendingUp,
-      actionText: 'elvesztett egy tippet',
+      color: 'rose-600',
+      icon: XCircle,
+      actionText: 'vesztes tippet zárt',
     },
     follow: {
       color: 'purple-600',
@@ -108,7 +125,7 @@ export const formatActivityText = (activity: ActivityItem): string => {
       case 'post':
         text += ` a "${activity.target.title}" posztra`;
         break;
-      case 'tip':
+      case 'general':
         text += ` - ${activity.target.title}`;
         break;
       case 'user':
@@ -158,11 +175,11 @@ export const generateMockActivity = (): ActivityItem[] => {
   ];
 
   const posts = [
-    'Chelsea vs Arsenal',
+    'Chelsea vs Arsenal elemzés',
     'NBA előrejelzések',
-    'La Liga tippek',
-    'Champions League',
-    'Premier League',
+    'Liga beszélgetés',
+    'Champions League hírek',
+    'Premier League elemzés',
   ];
 
   const activities: ActivityItem[] = [];
@@ -170,7 +187,7 @@ export const generateMockActivity = (): ActivityItem[] => {
   for (let i = 0; i < 6; i++) {
     const user = users[Math.floor(Math.random() * users.length)];
     const post = posts[Math.floor(Math.random() * posts.length)];
-    const activityTypes: ActivityType[] = ['comment', 'like', 'share', 'tip_created'];
+    const activityTypes: ActivityType[] = ['comment', 'like', 'share', 'post_created'];
     const type = activityTypes[Math.floor(Math.random() * activityTypes.length)];
     const meta = getActivityMeta(type);
 
@@ -182,14 +199,11 @@ export const generateMockActivity = (): ActivityItem[] => {
         initials: generateInitials(user.name),
       },
       action: meta.actionText,
-      target:
-        type !== 'tip_created'
-          ? {
-              type: 'post',
-              title: post,
-              id: `post-${i}`,
-            }
-          : undefined,
+      target: {
+        type: 'post',
+        title: post,
+        id: `post-${i}`,
+      },
       timestamp: new Date(Date.now() - Math.random() * 3600000), // Utolsó 1 óra
       color: meta.color,
       icon: meta.icon,
@@ -226,7 +240,7 @@ export const validateActivityData = (data: any): data is ActivityData => {
 };
 
 // Aktivitás cache kezelése
-const ACTIVITY_CACHE_KEY = 'social_tippster_activity_cache';
+const ACTIVITY_CACHE_KEY = 'social_platform_activity_cache';
 const CACHE_DURATION = 2 * 60 * 1000; // 2 perc
 
 export const getCachedActivity = (): ActivityData | null => {

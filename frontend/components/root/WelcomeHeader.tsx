@@ -22,7 +22,7 @@ export default function WelcomeHeader() {
 
       return `${greeting}, ${user.username}!`;
     }
-    return 'Üdvözlünk a Social Tippster-ben!';
+    return 'Üdvözlünk a Social Platform-on!';
   };
 
   const getSubMessage = () => {

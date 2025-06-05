@@ -49,6 +49,11 @@ docker-compose.override.yml
 /temp/
 /errors/
 
+# Archived folders - ignore completely
+**/archived/
+**/archived/**
+archived/
+
 # Every Error folder in tests folder
 tests/**/errors/
 

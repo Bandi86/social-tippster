@@ -6,7 +6,7 @@
 import { BookOpen, MessageSquare, TrendingUp } from 'lucide-react';
 
 // Post action types
-export type PostActionType = 'post' | 'tip' | 'analysis';
+export type PostActionType = 'post' | 'general' | 'analysis';
 
 // Post action interface
 export interface PostAction {
@@ -27,11 +27,11 @@ export const POST_ACTIONS: PostAction[] = [
     placeholder: 'Mit gondolsz erről a meccsről?',
   },
   {
-    id: 'tip',
-    label: 'Tipp',
+    id: 'general',
+    label: 'Általános',
     icon: TrendingUp,
-    description: 'Fogadási tipp megosztása',
-    placeholder: 'Oszd meg a tipped...',
+    description: 'Általános vélemény vagy gondolat megosztása',
+    placeholder: 'Oszd meg a gondolataidat...',
   },
   {
     id: 'analysis',
@@ -62,7 +62,7 @@ export const getActionButtonStyles = (isSelected: boolean = false): string => {
 
 // Authentication CTA messages
 export const AUTH_CTA = {
-  title: 'Fedezd fel a legjobb tippeket!',
+  title: 'Csatlakozz a közösséghez!',
   description:
     'Böngészd az összes posztot és elemzést. Jelentkezz be, hogy te is posztolhass, kommentelj és szavazz!',
   loginButton: 'Bejelentkezés',

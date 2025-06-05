@@ -237,7 +237,7 @@ export const getDefaultStatItem = (id: string): StatItem => {
 };
 
 // Statisztikai adatok cache-elése
-const STATS_CACHE_KEY = 'social_tippster_stats_cache';
+const STATS_CACHE_KEY = 'social_platform_stats_cache';
 const CACHE_DURATION = 5 * 60 * 1000; // 5 perc
 
 export const getCachedStats = (): StatsData | null => {

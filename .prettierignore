@@ -7,3 +7,10 @@ coverage
 *.log
 .vscode
 .env
+
+# Archived folders
+**/archived
+**/archived/**
+archived/**
+docs/archived/**
+tests/archived/**

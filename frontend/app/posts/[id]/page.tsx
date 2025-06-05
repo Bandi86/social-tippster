@@ -19,7 +19,6 @@ import {
   Pin,
   Share2,
   Trash2,
-  TrendingUp,
 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -180,14 +179,16 @@ export default function PostDetailPage() {
 
   const getPostTypeIcon = (type: string) => {
     switch (type) {
-      case 'tip':
-        return <TrendingUp className='h-5 w-5' />;
+      case 'general':
+        return <MessageSquare className='h-5 w-5' />;
       case 'discussion':
         return <MessageSquare className='h-5 w-5' />;
       case 'news':
         return <FileText className='h-5 w-5' />;
       case 'analysis':
         return <BarChart3 className='h-5 w-5' />;
+      case 'help_request':
+        return <MessageCircle className='h-5 w-5' />;
       default:
         return <FileText className='h-5 w-5' />;
     }
@@ -195,10 +196,11 @@ export default function PostDetailPage() {
 
   const getPostTypeBadge = (type: string) => {
     const variants = {
-      tip: 'bg-green-500/20 text-green-400 border-green-500/30',
+      general: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
       discussion: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
       news: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
       analysis: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+      help_request: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
     } as const;
 
     return (
@@ -209,50 +211,6 @@ export default function PostDetailPage() {
         {getPostTypeIcon(type)}
         <span className='ml-1 capitalize'>{type}</span>
       </Badge>
-    );
-  };
-
-  const renderTipDetails = () => {
-    if (!post || post.type !== 'tip' || (!post.odds && !post.stake && !post.confidence))
-      return null;
-
-    return (
-      <Card className='bg-gradient-to-br from-green-900/20 to-green-800/20 border-green-700'>
-        <CardHeader>
-          <h3 className='text-green-400 font-semibold flex items-center gap-2'>
-            <TrendingUp className='h-4 w-4' />
-            Tipp részletei
-          </h3>
-        </CardHeader>
-        <CardContent>
-          <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-            {post.odds && (
-              <div className='text-center p-3 bg-gray-800/50 rounded-lg'>
-                <div className='text-sm text-gray-400 mb-1'>Odds</div>
-                <div className='text-lg font-semibold text-green-400'>{post.odds}</div>
-              </div>
-            )}
-            {post.stake && (
-              <div className='text-center p-3 bg-gray-800/50 rounded-lg'>
-                <div className='text-sm text-gray-400 mb-1'>Tét</div>
-                <div className='text-lg font-semibold text-blue-400'>{post.stake}/10</div>
-              </div>
-            )}
-            {post.confidence && (
-              <div className='text-center p-3 bg-gray-800/50 rounded-lg'>
-                <div className='text-sm text-gray-400 mb-1'>Bizalom</div>
-                <div className='text-lg font-semibold text-amber-400'>{post.confidence}/5</div>
-              </div>
-            )}
-          </div>
-          {post.betting_market && (
-            <div className='mt-4 p-3 bg-gray-800/50 rounded-lg'>
-              <div className='text-sm text-gray-400 mb-1'>Fogadási piac</div>
-              <div className='text-white'>{post.betting_market}</div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
     );
   };
 
@@ -381,8 +339,6 @@ export default function PostDetailPage() {
                 <div className='prose prose-lg prose-invert max-w-none'>
                   <div className='text-gray-300 whitespace-pre-wrap'>{post.content}</div>
                 </div>
-
-                {renderTipDetails()}
 
                 <Separator className='my-6 bg-gray-700' />
 

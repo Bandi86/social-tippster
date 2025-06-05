@@ -44,6 +44,10 @@ export default [
       'backend/node_modules/',
       'frontend/.next/',
       'backend/dist/',
+      '**/archived/**',
+      'archived/**',
+      'docs/archived/**',
+      'tests/archived/**',
     ],
   },
 ];

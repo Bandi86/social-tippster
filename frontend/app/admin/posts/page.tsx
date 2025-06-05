@@ -41,11 +41,11 @@ import {
   Heart,
   MessageSquare,
   MoreHorizontal,
+  Newspaper,
   Search,
   Star,
   StarOff,
   Trash2,
-  TrendingUp,
   View,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -241,14 +241,16 @@ export default function AdminPostsPage() {
 
   const getPostTypeIcon = (type: string) => {
     switch (type) {
-      case 'tip':
-        return <TrendingUp className='h-4 w-4' />;
+      case 'general':
+        return <FileText className='h-4 w-4' />;
       case 'discussion':
         return <MessageSquare className='h-4 w-4' />;
-      case 'question':
+      case 'help_request':
         return <AlertTriangle className='h-4 w-4' />;
       case 'analysis':
         return <BarChart3 className='h-4 w-4' />;
+      case 'news':
+        return <Newspaper className='h-4 w-4' />;
       default:
         return <FileText className='h-4 w-4' />;
     }
@@ -373,10 +375,11 @@ export default function AdminPostsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value='all'>Minden típus</SelectItem>
-                  <SelectItem value='tip'>Tipp</SelectItem>
+                  <SelectItem value='general'>Általános</SelectItem>
                   <SelectItem value='discussion'>Beszélgetés</SelectItem>
-                  <SelectItem value='question'>Kérdés</SelectItem>
+                  <SelectItem value='help_request'>Segítségkérés</SelectItem>
                   <SelectItem value='analysis'>Elemzés</SelectItem>
+                  <SelectItem value='news'>Hírek</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -456,7 +459,9 @@ export default function AdminPostsPage() {
                 <Button
                   variant='outline'
                   size='sm'
-                  onClick={() => handleBulkUpdate({ status: 'hidden' })}
+                  onClick={() =>
+                    handleBulkUpdate({ status: 'private' /* changed from 'hidden' */ })
+                  }
                   className='border-amber-600 text-amber-400 hover:bg-amber-900/50'
                 >
                   Elrejtés
@@ -618,10 +623,10 @@ export default function AdminPostsPage() {
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() =>
-                              handleToggleVisibility(post.id, post.status !== 'hidden')
+                              handleToggleVisibility(post.id, post.status !== 'private')
                             }
                           >
-                            {post.status === 'hidden' ? (
+                            {post.status === 'private' ? (
                               <>
                                 <Eye className='mr-2 h-4 w-4' />
                                 Megjelenítés

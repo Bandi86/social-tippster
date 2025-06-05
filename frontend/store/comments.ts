@@ -395,7 +395,7 @@ export const useCommentsStore = create<CommentsState & CommentsActions>()(
           post: {
             id: backendComment.postId,
             title: 'Post Title', // Backend doesn't provide post title in comment response, would need separate call
-            type: 'tip', // Backend doesn't provide post type in comment response, defaulting to tip
+            type: 'general', // Backend doesn't provide post type in comment response, defaulting to general
             author_username: 'Unknown', // Backend doesn't provide post author in comment response
           },
           parent_comment_id: backendComment.parentCommentId || undefined,

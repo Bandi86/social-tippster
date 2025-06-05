@@ -74,8 +74,8 @@ async function bootstrap() {
 
   // Swagger configuration
   const config = new DocumentBuilder()
-    .setTitle('Social Tippster API')
-    .setDescription('API dokumentáció a Social Tippster alkalmazáshoz')
+    .setTitle('Social Platform API')
+    .setDescription('API dokumentáció a Social Platform alkalmazáshoz')
     .setVersion('1.0')
     .addTag('auth', 'Authentication endpoints')
     .addTag('users', 'User management')

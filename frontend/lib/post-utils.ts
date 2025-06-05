@@ -3,14 +3,15 @@
  * Post type related utility functions and constants
  */
 
-import { BarChart3, FileText, MessageSquare, TrendingUp } from 'lucide-react';
+import { BarChart3, FileText, HelpCircle, MessageSquare, Newspaper } from 'lucide-react';
 
 // Magyar: Post típusok definíciói
 export const POST_TYPES = {
-  tip: 'tip',
+  general: 'general',
   discussion: 'discussion',
-  news: 'news',
   analysis: 'analysis',
+  help_request: 'help_request',
+  news: 'news',
 } as const;
 
 export type PostType = keyof typeof POST_TYPES;
@@ -18,14 +19,16 @@ export type PostType = keyof typeof POST_TYPES;
 // Magyar: Post típusok ikonjai
 export const getPostTypeIcon = (type: string) => {
   switch (type) {
-    case POST_TYPES.tip:
-      return TrendingUp;
+    case POST_TYPES.general:
+      return MessageSquare;
     case POST_TYPES.discussion:
       return MessageSquare;
     case POST_TYPES.news:
-      return FileText;
+      return Newspaper;
     case POST_TYPES.analysis:
       return BarChart3;
+    case POST_TYPES.help_request:
+      return HelpCircle;
     default:
       return FileText;
   }
@@ -34,10 +37,11 @@ export const getPostTypeIcon = (type: string) => {
 // Magyar: Post típusok stílus variánsai
 export const getPostTypeVariant = (type: string) => {
   const variants = {
-    [POST_TYPES.tip]: 'bg-green-500/20 text-green-400 border-green-500/30',
+    [POST_TYPES.general]: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
     [POST_TYPES.discussion]: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
     [POST_TYPES.news]: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
     [POST_TYPES.analysis]: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+    [POST_TYPES.help_request]: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
   } as const;
 
   return variants[type as keyof typeof variants] || variants[POST_TYPES.discussion];
@@ -46,23 +50,14 @@ export const getPostTypeVariant = (type: string) => {
 // Magyar: Post típus magyar nevei
 export const getPostTypeLabel = (type: string) => {
   const labels = {
-    [POST_TYPES.tip]: 'Tipp',
+    [POST_TYPES.general]: 'Általános',
     [POST_TYPES.discussion]: 'Beszélgetés',
     [POST_TYPES.news]: 'Hírek',
     [POST_TYPES.analysis]: 'Elemzés',
+    [POST_TYPES.help_request]: 'Segítség kérés',
   } as const;
 
   return labels[type as keyof typeof labels] || 'Poszt';
-};
-
-// Magyar: Tipp részletek validálása
-export const hasTipDetails = (post: {
-  type: string;
-  odds?: number;
-  stake?: number;
-  confidence?: number;
-}): boolean => {
-  return post.type === POST_TYPES.tip && !!(post.odds || post.stake || post.confidence);
 };
 
 // Magyar: Post statisztikák formázása

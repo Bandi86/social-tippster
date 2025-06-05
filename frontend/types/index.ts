@@ -75,11 +75,9 @@ export interface User {
   referral_count: number;
   reputation_score: number;
   role: UserRole;
-  successful_tips: number;
-  tip_success_rate: number;
   timezone?: string;
-  total_profit: number;
-  total_tips: number;
+  total_posts: number;
+  featured_posts: number;
   two_factor_enabled: boolean;
   updated_at: string;
   updated_by?: string;
@@ -90,7 +88,7 @@ export interface User {
 
 // =============================================================================
 // POST TYPES
-export type PostCategory = 'tip' | 'discussion' | 'question' | 'news' | 'analysis';
+export type PostCategory = 'general' | 'discussion' | 'help_request' | 'news' | 'analysis';
 export type SportType = 'football' | 'basketball' | 'tennis' | 'baseball' | 'other'; // bővíthető
 export type PostStatus = 'active' | 'archived' | 'deleted' | 'pending_review';
 export type PostVisibility = 'public' | 'private' | 'followers_only' | 'premium_only';
@@ -109,9 +107,6 @@ export interface LegacyPost {
   subcategory?: string;
   sport_type?: SportType;
   match_id?: string;
-  odds?: number;
-  stake_amount?: number;
-  potential_payout?: number;
   confidence_level?: number; // 1-10
   created_at: string;
   updated_at: string;

@@ -55,9 +55,6 @@ export default function ActivityItemComponent({
         case 'post':
           targetText = ` a "${activity.target.title}" posztra`;
           break;
-        case 'tip':
-          targetText = ` - ${activity.target.title}`;
-          break;
         case 'user':
           targetText = ` ${activity.target.title}`;
           break;

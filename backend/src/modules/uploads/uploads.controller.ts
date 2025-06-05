@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  Body,
   Controller,
   Logger,
   Post,
@@ -93,15 +92,7 @@ export class UploadsController {
       limits: { fileSize: 5 * 1024 * 1024 },
     }),
   )
-  async uploadPost(
-    @UploadedFile() file: unknown,
-    @Body() body: { processBettingSlip?: string },
-  ): Promise<{
-    url: string;
-    error?: string;
-    bettingSlipData?: any;
-    ocrText?: string;
-  }> {
+  uploadPost(@UploadedFile() file: unknown): { url: string; error?: string } {
     ensureDirSync(path.resolve('../../uploads/posts'));
 
     if (!isValidUploadedFile(file)) {
@@ -118,100 +109,6 @@ export class UploadsController {
       fs.renameSync(oldPath, newPath);
     }
 
-    const result: {
-      url: string;
-      error?: string;
-      bettingSlipData?: any;
-      ocrText?: string;
-    } = { url: `/uploads/posts/${newFilename}` };
-
-    // Process betting slip if requested
-    if (body.processBettingSlip === 'true') {
-      try {
-        this.logger.log('Processing betting slip image...');
-        const bettingSlipResult =
-          await this.imageProcessingService.processBettingSlipImage(newPath);
-
-        if (bettingSlipResult.success) {
-          result.bettingSlipData = bettingSlipResult.data;
-          result.ocrText = bettingSlipResult.extractedText;
-          this.logger.log('Betting slip processed successfully');
-        } else {
-          result.error = `Betting slip processing failed: ${bettingSlipResult.errors?.join(', ')}`;
-          result.ocrText = bettingSlipResult.extractedText;
-          this.logger.warn('Betting slip processing failed', bettingSlipResult.errors);
-        }
-      } catch (error) {
-        this.logger.error('Error processing betting slip:', error);
-        result.error = 'Failed to process betting slip';
-      }
-    }
-
-    return result;
-  }
-
-  @Post('betting-slip')
-  @UseInterceptors(
-    FileInterceptor('file', {
-      dest: '../../uploads/betting-slips',
-      fileFilter: (req, file, cb) => {
-        if (!file.mimetype || typeof file.mimetype !== 'string') {
-          return cb(new BadRequestException('Invalid file format'), false);
-        }
-
-        if (!/\/(jpg|jpeg|png)$/.test(file.mimetype)) {
-          return cb(new BadRequestException('Only image files are allowed!'), false);
-        }
-        cb(null, true);
-      },
-      limits: { fileSize: 10 * 1024 * 1024 }, // Larger limit for betting slips
-    }),
-  )
-  async uploadBettingSlip(@UploadedFile() file: unknown): Promise<{
-    url: string;
-    success: boolean;
-    data?: any;
-    errors?: string[];
-    extractedText?: string;
-  }> {
-    ensureDirSync(path.resolve('../../uploads/betting-slips'));
-
-    if (!isValidUploadedFile(file)) {
-      return {
-        url: '',
-        success: false,
-        errors: ['Invalid file upload'],
-      };
-    }
-
-    // Generate a new filename to avoid conflicts
-    const newFilename = UploadsService.generateFilename(file.originalname || 'betting-slip.jpg');
-    const oldPath = file.path;
-    const newPath = path.join(path.dirname(oldPath), newFilename);
-
-    // Rename the file to have a proper unique name
-    if (fs.existsSync(oldPath)) {
-      fs.renameSync(oldPath, newPath);
-    }
-
-    try {
-      this.logger.log('Processing betting slip image...');
-      const result = await this.imageProcessingService.processBettingSlipImage(newPath);
-
-      return {
-        url: `/uploads/betting-slips/${newFilename}`,
-        success: result.success,
-        data: result.data,
-        errors: result.errors,
-        extractedText: result.extractedText,
-      };
-    } catch (error) {
-      this.logger.error('Error processing betting slip:', error);
-      return {
-        url: `/uploads/betting-slips/${newFilename}`,
-        success: false,
-        errors: ['Failed to process betting slip image'],
-      };
-    }
+    return { url: `/uploads/posts/${newFilename}` };
   }
 }

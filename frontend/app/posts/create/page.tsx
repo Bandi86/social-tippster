@@ -28,13 +28,9 @@ import { CreatePostData } from '@/store/posts';
 const postSchema = z.object({
   title: z.string().min(1, 'A cím kötelező').max(255, 'A cím túl hosszú'),
   content: z.string().min(1, 'A tartalom kötelező'),
-  type: z.enum(['tip', 'discussion', 'news', 'analysis'], {
+  type: z.enum(['general', 'discussion', 'news', 'analysis', 'help_request'], {
     required_error: 'A poszt típusa kötelező',
   }),
-  odds: z.number().min(1.01).max(1000).optional(),
-  stake: z.number().min(1).max(10).optional(),
-  confidence: z.number().min(1).max(5).optional(),
-  betting_market: z.string().optional(),
   is_premium: z.boolean().optional(),
   tags: z.array(z.string()).optional(),
 });
@@ -57,7 +53,7 @@ export default function CreatePostPage() {
   } = useForm<PostFormData>({
     resolver: zodResolver(postSchema),
     defaultValues: {
-      type: 'discussion',
+      type: 'general',
       is_premium: false,
       tags: [],
     },
@@ -88,19 +84,11 @@ export default function CreatePostPage() {
 
     try {
       const postData: CreatePostData = {
-        title: data.title,
+        //title: data.title,
         content: data.content,
         type: data.type,
-        is_premium: data.is_premium,
+        isPremium: data.is_premium,
       };
-
-      // Add tip-specific fields if type is tip
-      if (data.type === 'tip') {
-        if (data.odds) postData.odds = data.odds;
-        if (data.stake) postData.stake = data.stake;
-        if (data.confidence) postData.confidence = data.confidence;
-        if (data.betting_market) postData.betting_market = data.betting_market;
-      }
 
       const newPost = await createPost(postData);
 
@@ -138,13 +126,15 @@ export default function CreatePostPage() {
             <span className='text-sm text-gray-400'>Előnézet</span>
             <span
               className={`px-2 py-1 rounded text-xs ${
-                watchedType === 'tip'
-                  ? 'bg-green-500/20 text-green-400'
+                watchedType === 'general'
+                  ? 'bg-gray-500/20 text-gray-400'
                   : watchedType === 'discussion'
                     ? 'bg-blue-500/20 text-blue-400'
                     : watchedType === 'news'
                       ? 'bg-purple-500/20 text-purple-400'
-                      : 'bg-orange-500/20 text-orange-400'
+                      : watchedType === 'analysis'
+                        ? 'bg-orange-500/20 text-orange-400'
+                        : 'bg-green-500/20 text-green-400'
               }`}
             >
               {watchedType}
@@ -183,7 +173,7 @@ export default function CreatePostPage() {
               <h1 className='text-3xl font-bold bg-gradient-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent'>
                 Új poszt létrehozása
               </h1>
-              <p className='text-gray-400'>Ossza meg tippjeit és gondolatait a közösséggel</p>
+              <p className='text-gray-400'>Ossza meg gondolatait és tartalmat a közösséggel</p>
             </div>
           </div>
 
@@ -234,89 +224,14 @@ export default function CreatePostPage() {
                       <SelectValue placeholder='Válasszon típust' />
                     </SelectTrigger>
                     <SelectContent className='bg-gray-800 border-gray-600'>
-                      <SelectItem value='tip'>Tipp - Fogadási tanács</SelectItem>
-                      <SelectItem value='discussion'>Beszélgetés - Általános téma</SelectItem>
-                      <SelectItem value='news'>Hírek - Sportesemények</SelectItem>
-                      <SelectItem value='analysis'>Elemzés - Részletes áttekintés</SelectItem>
+                      <SelectItem value='general'>📝 Általános</SelectItem>
+                      <SelectItem value='discussion'>💬 Beszélgetés</SelectItem>
+                      <SelectItem value='news'>📰 Hírek</SelectItem>
+                      <SelectItem value='analysis'>📊 Elemzés</SelectItem>
+                      <SelectItem value='help_request'>❓ Segítségkérés</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-
-                {/* Tip-specific fields */}
-                {watchedType === 'tip' && (
-                  <div className='space-y-4 p-4 bg-green-500/10 rounded-lg border border-green-500/20'>
-                    <h3 className='text-green-400 font-medium'>Tipp részletei</h3>
-
-                    <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-                      <div className='space-y-2'>
-                        <Label htmlFor='odds' className='text-gray-300'>
-                          Odds
-                        </Label>
-                        <Input
-                          id='odds'
-                          type='number'
-                          step='0.01'
-                          min='1.01'
-                          max='1000'
-                          {...register('odds', { valueAsNumber: true })}
-                          placeholder='2.50'
-                          className='bg-gray-800 border-gray-600 text-white'
-                        />
-                        {errors.odds && (
-                          <p className='text-red-400 text-sm'>{errors.odds.message}</p>
-                        )}
-                      </div>
-
-                      <div className='space-y-2'>
-                        <Label htmlFor='stake' className='text-gray-300'>
-                          Tét (1-10)
-                        </Label>
-                        <Input
-                          id='stake'
-                          type='number'
-                          min='1'
-                          max='10'
-                          {...register('stake', { valueAsNumber: true })}
-                          placeholder='5'
-                          className='bg-gray-800 border-gray-600 text-white'
-                        />
-                        {errors.stake && (
-                          <p className='text-red-400 text-sm'>{errors.stake.message}</p>
-                        )}
-                      </div>
-
-                      <div className='space-y-2'>
-                        <Label htmlFor='confidence' className='text-gray-300'>
-                          Bizalom (1-5)
-                        </Label>
-                        <Input
-                          id='confidence'
-                          type='number'
-                          min='1'
-                          max='5'
-                          {...register('confidence', { valueAsNumber: true })}
-                          placeholder='4'
-                          className='bg-gray-800 border-gray-600 text-white'
-                        />
-                        {errors.confidence && (
-                          <p className='text-red-400 text-sm'>{errors.confidence.message}</p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className='space-y-2'>
-                      <Label htmlFor='betting_market' className='text-gray-300'>
-                        Fogadási piac
-                      </Label>
-                      <Input
-                        id='betting_market'
-                        {...register('betting_market')}
-                        placeholder='pl. Győztes, Over/Under 2.5, stb.'
-                        className='bg-gray-800 border-gray-600 text-white'
-                      />
-                    </div>
-                  </div>
-                )}
 
                 {/* Content */}
                 <div className='space-y-2'>
@@ -326,7 +241,7 @@ export default function CreatePostPage() {
                   <Textarea
                     id='content'
                     {...register('content')}
-                    placeholder='Írja le részletesen a gondolatait, tippjeit...'
+                    placeholder='Írja le részletesen a gondolatait...'
                     rows={8}
                     className='bg-gray-800 border-gray-600 text-white resize-none'
                   />
@@ -342,7 +257,7 @@ export default function CreatePostPage() {
                   </Label>
                   <Input
                     id='tags'
-                    placeholder='Címkék vesszővel elválasztva (pl. futball, premier league, tipp)'
+                    placeholder='Címkék vesszővel elválasztva (pl. futball, premier league, elemzés)'
                     onChange={e => handleTagsChange(e.target.value)}
                     className='bg-gray-800 border-gray-600 text-white'
                   />
@@ -391,19 +306,15 @@ export default function CreatePostPage() {
           <div className='space-y-6'>
             {preview && renderPreview()}
 
-            {/* Tips */}
+            {/* Helpful Guidelines */}
             <Card className='bg-gradient-to-br from-blue-900/20 to-blue-800/20 border-blue-700'>
               <CardHeader>
-                <CardTitle className='text-blue-400'>Tippek a jó poszthoz</CardTitle>
+                <CardTitle className='text-blue-400'>Hasznos tanácsok</CardTitle>
               </CardHeader>
               <CardContent className='space-y-3 text-sm text-gray-300'>
                 <div className='flex items-start gap-2'>
                   <span className='text-blue-400'>•</span>
                   <span>Használjon szemléletes és informatív címet</span>
-                </div>
-                <div className='flex items-start gap-2'>
-                  <span className='text-blue-400'>•</span>
-                  <span>Tippek esetén adjon meg pontosságot növelő részleteket</span>
                 </div>
                 <div className='flex items-start gap-2'>
                   <span className='text-blue-400'>•</span>

@@ -1,5 +1,5 @@
 /**
- * API Client for Social Tippster
+ * API Client for Social Platform
  * Handles HTTP requests with automatic token management and refresh
  */
 import axios, { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios';

@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ImageProcessingService } from '../image-analysis/image-processing.service';
 import { User } from '../users/entities/user.entity';
 import {
   Post,
@@ -30,7 +29,7 @@ import { PostsService } from './posts.service';
     ]),
   ],
   controllers: [PostsController],
-  providers: [PostsService, ImageProcessingService],
+  providers: [PostsService],
   exports: [PostsService, TypeOrmModule],
 })
 export class PostsModule {}

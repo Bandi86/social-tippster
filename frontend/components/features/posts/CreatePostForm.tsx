@@ -35,10 +35,9 @@ export default function CreatePostForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [tagInput, setTagInput] = useState('');
   const [formData, setFormData] = useState<CreatePostData>({
-    title: '',
     content: '',
-    type: 'discussion',
-    is_premium: false,
+    type: 'general',
+    isPremium: false,
     tags: [],
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -49,26 +48,8 @@ export default function CreatePostForm({
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.title.trim()) {
-      newErrors.title = 'A cím kötelező';
-    } else if (formData.title.length > 255) {
-      newErrors.title = 'A cím túl hosszú';
-    }
-
     if (!formData.content.trim()) {
       newErrors.content = 'A tartalom kötelező';
-    }
-
-    if (formData.type === 'tip') {
-      if (formData.odds && (formData.odds < 1.01 || formData.odds > 1000)) {
-        newErrors.odds = 'Az odds 1.01 és 1000 között kell legyen';
-      }
-      if (formData.stake && (formData.stake < 1 || formData.stake > 10)) {
-        newErrors.stake = 'A tét 1 és 10 között kell legyen';
-      }
-      if (formData.confidence && (formData.confidence < 1 || formData.confidence > 5)) {
-        newErrors.confidence = 'A bizalom 1 és 5 között kell legyen';
-      }
     }
 
     setErrors(newErrors);
@@ -101,10 +82,9 @@ export default function CreatePostForm({
 
       // Reset form
       setFormData({
-        title: '',
         content: '',
-        type: 'discussion',
-        is_premium: false,
+        type: 'general',
+        isPremium: false,
         tags: [],
       });
       setErrors({});
@@ -153,11 +133,11 @@ export default function CreatePostForm({
 
   const getPostTypeInfo = (type: string) => {
     switch (type) {
-      case 'tip':
+      case 'general':
         return {
-          label: 'Tipp',
-          description: 'Fogadási tipp vagy előrejelzés',
-          color: 'bg-green-600',
+          label: 'Általános',
+          description: 'Általános poszt vagy megosztás',
+          color: 'bg-gray-600',
         };
       case 'discussion':
         return {
@@ -165,17 +145,23 @@ export default function CreatePostForm({
           description: 'Általános beszélgetés vagy kérdés',
           color: 'bg-blue-600',
         };
-      case 'news':
-        return {
-          label: 'Hírek',
-          description: 'Sport hírek vagy információk',
-          color: 'bg-red-600',
-        };
       case 'analysis':
         return {
           label: 'Elemzés',
           description: 'Részletes elemzés vagy statisztikák',
           color: 'bg-purple-600',
+        };
+      case 'help_request':
+        return {
+          label: 'Segítségkérés',
+          description: 'Kérdés vagy segítség kérése',
+          color: 'bg-orange-600',
+        };
+      case 'news':
+        return {
+          label: 'Hírek',
+          description: 'Sport hírek vagy információk',
+          color: 'bg-red-600',
         };
       default:
         return {
@@ -228,32 +214,24 @@ export default function CreatePostForm({
                 <SelectValue placeholder='Válassz típust' />
               </SelectTrigger>
               <SelectContent className='bg-gray-800 border-gray-600'>
-                {(['tip', 'discussion', 'news', 'analysis'] as const).map(type => {
-                  const info = getPostTypeInfo(type);
-                  return (
-                    <SelectItem key={type} value={type} className='text-white'>
-                      <div className='flex items-center gap-2'>
-                        <div className={`w-3 h-3 rounded-full ${info.color}`} />
-                        <span>{info.label}</span>
-                      </div>
-                    </SelectItem>
-                  );
-                })}
+                {(['general', 'discussion', 'analysis', 'help_request', 'news'] as const).map(
+                  type => {
+                    const info = getPostTypeInfo(type);
+                    return (
+                      <SelectItem key={type} value={type} className='text-white'>
+                        <div className='flex items-center gap-2'>
+                          <div className={`w-3 h-3 rounded-full ${info.color}`} />
+                          <span>{info.label}</span>
+                        </div>
+                      </SelectItem>
+                    );
+                  },
+                )}
               </SelectContent>
             </Select>
-            <p className='text-sm text-gray-400'>{getPostTypeInfo(formData.type).description}</p>
-          </div>
-
-          {/* Title */}
-          <div className='space-y-2'>
-            <label className='text-sm font-medium text-white'>Cím</label>
-            <Input
-              placeholder='Add meg a poszt címét...'
-              className='bg-gray-700 border-gray-600 text-white placeholder:text-gray-400'
-              value={formData.title}
-              onChange={e => updateFormData('title', e.target.value)}
-            />
-            {errors.title && <p className='text-sm text-red-400'>{errors.title}</p>}
+            <p className='text-sm text-gray-400'>
+              {getPostTypeInfo(formData.type || 'general').description}
+            </p>
           </div>
 
           {/* Content */}
@@ -267,64 +245,6 @@ export default function CreatePostForm({
             />
             {errors.content && <p className='text-sm text-red-400'>{errors.content}</p>}
           </div>
-
-          {/* Tip-specific fields */}
-          {formData.type === 'tip' && (
-            <div className='grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-700/50 rounded-lg'>
-              <div className='space-y-2'>
-                <label className='text-sm font-medium text-white'>Odds</label>
-                <Input
-                  type='number'
-                  step='0.01'
-                  placeholder='2.50'
-                  className='bg-gray-700 border-gray-600 text-white'
-                  value={formData.odds || ''}
-                  onChange={e => updateFormData('odds', parseFloat(e.target.value) || undefined)}
-                />
-                {errors.odds && <p className='text-sm text-red-400'>{errors.odds}</p>}
-              </div>
-
-              <div className='space-y-2'>
-                <label className='text-sm font-medium text-white'>Tét (1-10)</label>
-                <Input
-                  type='number'
-                  min='1'
-                  max='10'
-                  placeholder='5'
-                  className='bg-gray-700 border-gray-600 text-white'
-                  value={formData.stake || ''}
-                  onChange={e => updateFormData('stake', parseInt(e.target.value) || undefined)}
-                />
-                {errors.stake && <p className='text-sm text-red-400'>{errors.stake}</p>}
-              </div>
-
-              <div className='space-y-2'>
-                <label className='text-sm font-medium text-white'>Bizalom (1-5)</label>
-                <Input
-                  type='number'
-                  min='1'
-                  max='5'
-                  placeholder='3'
-                  className='bg-gray-700 border-gray-600 text-white'
-                  value={formData.confidence || ''}
-                  onChange={e =>
-                    updateFormData('confidence', parseInt(e.target.value) || undefined)
-                  }
-                />
-                {errors.confidence && <p className='text-sm text-red-400'>{errors.confidence}</p>}
-              </div>
-
-              <div className='md:col-span-3 space-y-2'>
-                <label className='text-sm font-medium text-white'>Fogadási piac</label>
-                <Input
-                  placeholder='pl. Match Winner, Over/Under 2.5...'
-                  className='bg-gray-700 border-gray-600 text-white'
-                  value={formData.betting_market || ''}
-                  onChange={e => updateFormData('betting_market', e.target.value)}
-                />
-              </div>
-            </div>
-          )}
 
           {/* Tags */}
           <div className='space-y-3'>
@@ -379,8 +299,8 @@ export default function CreatePostForm({
               </div>
             </div>
             <Switch
-              checked={formData.is_premium}
-              onCheckedChange={checked => updateFormData('is_premium', checked)}
+              checked={formData.isPremium}
+              onCheckedChange={checked => updateFormData('isPremium', checked)}
             />
           </div>
 

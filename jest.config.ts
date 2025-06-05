@@ -21,6 +21,11 @@ const config: Config = {
     '<rootDir>/node_modules/',
     '<rootDir>/dist/',
     '<rootDir>/tests/playwright/', // ⛔️ Kizárjuk a Playwright teszteket
+    '<rootDir>/archived/', // ⛔️ Kizárjuk az archived mappákat
+    '<rootDir>/docs/archived/',
+    '<rootDir>/tests/archived/',
+    '<rootDir>/frontend/archived/',
+    '<rootDir>/backend/archived/',
   ],
 
   transform: {
