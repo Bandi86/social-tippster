@@ -1,0 +1,1 @@
+# Edzok ertemezese mentese kezelese

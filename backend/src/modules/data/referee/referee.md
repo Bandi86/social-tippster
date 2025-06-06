@@ -1,0 +1,1 @@
+# Birok kezelese mentese ertelmezese

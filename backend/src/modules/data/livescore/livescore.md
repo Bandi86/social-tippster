@@ -1,0 +1,1 @@
+# elo esemenyek kezelese
