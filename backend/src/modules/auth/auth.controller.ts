@@ -35,8 +35,12 @@ export class AuthController {
   @ApiResponse({ status: 201, description: 'User successfully registered' })
   @ApiResponse({ status: 400, description: 'Bad Request - validation failed' })
   @ApiResponse({ status: 409, description: 'Conflict - user already exists' })
-  async register(@Body() registerDto: RegisterDto) {
-    return await this.authService.register(registerDto);
+  async register(
+    @Body() registerDto: RegisterDto,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return await this.authService.register(registerDto, req, res);
   }
 
   @Post('login')

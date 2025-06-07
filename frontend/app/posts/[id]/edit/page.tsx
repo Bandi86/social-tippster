@@ -72,7 +72,7 @@ export default function EditPostPage() {
     if (postId && isAuthenticated) {
       loadPost();
     } else if (!isAuthenticated) {
-      router.push('/auth/login');
+      router.push('/auth');
     }
   }, [postId, isAuthenticated, router]);
 
@@ -126,7 +126,6 @@ export default function EditPostPage() {
     setIsSubmitting(true);
 
     try {
-      
       const updateData: Partial<CreatePostData> = {
         // Remove 'title' if it's not a property of CreatePostData
         // title: data.title,

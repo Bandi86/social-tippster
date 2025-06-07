@@ -15,7 +15,7 @@ export function AdminGuard({ children }: AdminGuardProps) {
   useEffect(() => {
     if (!isLoading) {
       if (!isAuthenticated) {
-        router.push('/auth/login?redirect=/admin');
+        router.push('/auth?redirect=/admin');
         return;
       }
 

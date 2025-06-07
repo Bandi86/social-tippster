@@ -30,10 +30,10 @@ export default function FeaturePreview({ className = '' }: FeaturePreviewProps) 
       </div>
 
       <div className='space-y-2'>
-        <Link href='/auth/login'>
+        <Link href='/auth'>
           <Button className='w-full bg-amber-600 hover:bg-amber-700 mb-2'>Bejelentkezés</Button>
         </Link>
-        <Link href='/auth/register'>
+        <Link href='/auth'>
           <Button variant='outline' className='w-full border-amber-600 text-amber-400'>
             Új fiók létrehozása
           </Button>

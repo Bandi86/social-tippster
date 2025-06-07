@@ -28,10 +28,10 @@ export default function AuthCta({
         <p className='text-gray-400 mb-4'>{description}</p>
 
         <div className='flex gap-3 justify-center'>
-          <Link href='/auth/login'>
+          <Link href='/auth'>
             <Button className='bg-amber-600 hover:bg-amber-700'>{AUTH_CTA.loginButton}</Button>
           </Link>
-          <Link href='/auth/register'>
+          <Link href='/auth'>
             <Button
               variant='outline'
               className='border-amber-600 text-amber-400 hover:bg-amber-900/20'

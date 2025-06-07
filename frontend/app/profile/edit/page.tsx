@@ -70,7 +70,7 @@ export default function EditProfilePage() {
   // Redirect if not authenticated
   useEffect(() => {
     if (user === null) {
-      router.push('/auth/login');
+      router.push('/auth');
       return;
     }
 

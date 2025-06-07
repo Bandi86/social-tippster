@@ -1,4 +1,9 @@
-import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  OnModuleDestroy,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -37,8 +42,9 @@ export interface RefreshTokenPayload {
 }
 
 @Injectable()
-export class AuthService {
+export class AuthService implements OnModuleDestroy {
   private readonly failedAttempts = new Map<string, { count: number; lastAttempt: Date }>();
+  private readonly cleanupInterval: NodeJS.Timeout;
 
   constructor(
     private readonly usersService: UsersService,
@@ -54,14 +60,62 @@ export class AuthService {
     private readonly sessionExpiryService: SessionExpiryService,
     private readonly securityMonitoringService: SecurityMonitoringService,
     private readonly sentryService: SentryService,
-  ) {}
+  ) {
+    // Cleanup failed attempts every hour
+    this.cleanupInterval = setInterval(
+      () => {
+        this.cleanupFailedAttempts();
+      },
+      60 * 60 * 1000,
+    ); // 1 hour
+  }
+
+  onModuleDestroy(): void {
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval);
+    }
+  }
 
   /**
-   * Register a new user
+   * Clean up old failed login attempts to prevent memory leaks
    */
-  async register(registerDto: RegisterDto): Promise<UserResponseDto> {
+  private cleanupFailedAttempts(): void {
+    const now = new Date();
+    const cutoffTime = new Date(now.getTime() - 24 * 60 * 60 * 1000); // 24 hours ago
+
+    for (const [email, attempt] of this.failedAttempts.entries()) {
+      if (attempt.lastAttempt < cutoffTime) {
+        this.failedAttempts.delete(email);
+      }
+    }
+  }
+
+  /**
+   * Register a new user and automatically log them in
+   */
+  async register(
+    registerDto: RegisterDto,
+    request?: Request,
+    response?: Response,
+  ): Promise<{ access_token: string; user: UserResponseDto; message?: string }> {
     try {
-      return await this.usersService.create(registerDto);
+      // Create the user
+      await this.usersService.create(registerDto);
+
+      // Auto-login after successful registration
+      const loginDto = {
+        email: registerDto.email,
+        password: registerDto.password,
+        remember_me: false, // Default to false for new registrations
+      };
+
+      // Use the login flow to generate tokens and create session
+      const loginResponse = await this.login(loginDto, request, response);
+
+      return {
+        ...loginResponse,
+        message: 'Sikeres regisztráció és bejelentkezés',
+      };
     } catch (error) {
       if (error instanceof ConflictException) {
         throw error;
@@ -122,28 +176,37 @@ export class AuthService {
   }
 
   async validateUser(email: string, password: string): Promise<User | null> {
+    if (!email || !password) {
+      return null;
+    }
+
     // Check for failed login attempts (brute force protection)
     const failedAttempts = this.failedAttempts.get(email);
     if (failedAttempts && failedAttempts.count >= 5) {
       const timeDiff = new Date().getTime() - failedAttempts.lastAttempt.getTime();
       if (timeDiff < 15 * 60 * 1000) {
         // 15 minutes lockout
-        // Log brute force attempt
-        await this.securityMonitoringService.logBruteForceAttempt(
-          email,
-          'unknown', // IP will be logged in login method
-          'unknown', // UserAgent will be logged in login method
-          failedAttempts.count,
-          true,
-        );
+        try {
+          // Log brute force attempt
+          this.securityMonitoringService.logBruteForceAttempt(
+            email,
+            'unknown', // IP will be logged in login method
+            'unknown', // UserAgent will be logged in login method
+            failedAttempts.count,
+            true,
+          );
 
-        // Log brute force detection to Sentry
-        this.sentryService.logSecurityEvent('brute_force_detection', {
-          email,
-          attemptCount: failedAttempts.count,
-          lockoutDuration: '15 minutes',
-          timestamp: new Date().toISOString(),
-        });
+          // Log brute force detection to Sentry
+          this.sentryService.logSecurityEvent('brute_force_detection', {
+            email,
+            attemptCount: failedAttempts.count,
+            lockoutDuration: '15 minutes',
+            timestamp: new Date().toISOString(),
+          });
+        } catch (error) {
+          // Continue with lockout even if logging fails
+          console.error('Failed to log brute force attempt:', error);
+        }
 
         throw new UnauthorizedException(
           'Túl sok sikertelen bejelentkezési kísérlet. Próbálja újra 15 perc múlva.',
@@ -216,7 +279,7 @@ export class AuthService {
 
       // Log failed login to security monitoring
       const deviceInfo = this.extractDeviceInfo(request);
-      await this.securityMonitoringService.logFailedLogin(
+      this.securityMonitoringService.logFailedLogin(
         loginDto.email,
         deviceInfo.ip_address || 'unknown',
         request?.get('User-Agent') || 'unknown',
@@ -300,7 +363,7 @@ export class AuthService {
         if (comparison.is_suspicious) {
           // Log suspicious activity to security monitoring
           const user = await this.usersService.findById(userId);
-          await this.securityMonitoringService.logSuspiciousLogin(
+          this.securityMonitoringService.logSuspiciousLogin(
             userId,
             user?.email || 'unknown',
             currentFingerprint.ip_address || 'unknown',
@@ -655,14 +718,25 @@ export class AuthService {
       if (gracePeriodEnabled && gracePeriodMs > 0) {
         // Use grace period for smoother UX in concurrent request scenarios
         setTimeout(() => {
-          void this.refreshTokenRepository.update(validToken.id, { is_revoked: true });
-          // Log token revocation to Sentry
-          this.sentryService.logTokenEvent('token_revoked', user.user_id, {
-            tokenId: validToken.id,
-            revocationReason: 'Token rotation grace period expired',
-            gracePeriod: `${gracePeriodMs / 1000} seconds`,
-            rotationStrategy: 'grace_period',
-          });
+          void (async () => {
+            try {
+              await this.refreshTokenRepository.update(validToken.id, { is_revoked: true });
+              // Log token revocation to Sentry
+              this.sentryService.logTokenEvent('token_revoked', user.user_id, {
+                tokenId: validToken.id,
+                revocationReason: 'Token rotation grace period expired',
+                gracePeriod: `${gracePeriodMs / 1000} seconds`,
+                rotationStrategy: 'grace_period',
+              });
+            } catch (error) {
+              // Log error but don't throw since this is in a setTimeout
+              this.sentryService.captureAuthError(error as Error, {
+                operation: 'token_grace_period_revocation',
+                tokenId: validToken.id,
+                userId: user.user_id,
+              });
+            }
+          })();
         }, gracePeriodMs);
 
         // Log successful token rotation with grace period to Sentry
@@ -727,35 +801,51 @@ export class AuthService {
     userId: string,
     response?: Response,
   ): Promise<{ message: string }> {
+    if (!userId) {
+      throw new UnauthorizedException('User ID is required for logout');
+    }
+
     const refreshTokenValue = logoutDto.refresh_token;
     let sessionTerminated = false;
     let tokenRevoked = false;
 
     if (refreshTokenValue) {
-      // Find and revoke the refresh token
-      const storedTokens = await this.refreshTokenRepository.find({
-        where: { user_id: userId, is_revoked: false },
-      });
+      try {
+        // Find and revoke the refresh token
+        const storedTokens = await this.refreshTokenRepository.find({
+          where: { user_id: userId, is_revoked: false },
+        });
 
-      for (const token of storedTokens) {
-        const isValid = await bcrypt.compare(refreshTokenValue, token.token_hash);
-        if (isValid) {
-          // End session through lifecycle service
-          await this.sessionLifecycleService.endSessionByRefreshToken(token.id);
-          sessionTerminated = true;
+        for (const token of storedTokens) {
+          const isValid = await bcrypt.compare(refreshTokenValue, token.token_hash);
+          if (isValid) {
+            // End session through lifecycle service
+            await this.sessionLifecycleService.endSessionByRefreshToken(token.id);
+            sessionTerminated = true;
 
-          // Revoke token
-          await this.refreshTokenRepository.update(token.id, { is_revoked: true });
-          tokenRevoked = true;
+            // Revoke token
+            await this.refreshTokenRepository.update(token.id, {
+              is_revoked: true,
+              revoked_at: new Date(),
+              revoke_reason: 'User logout',
+            });
+            tokenRevoked = true;
 
-          // Log successful session termination to Sentry
-          this.sentryService.logTokenEvent('token_revoked', userId, {
-            tokenId: token.id,
-            revocationReason: 'User logout',
-            sessionTerminated: true,
-          });
-          break;
+            // Log successful session termination to Sentry
+            this.sentryService.logTokenEvent('token_revoked', userId, {
+              tokenId: token.id,
+              revocationReason: 'User logout',
+              sessionTerminated: true,
+            });
+            break;
+          }
         }
+      } catch (error) {
+        // Log error but don't prevent logout
+        this.sentryService.captureAuthError(error as Error, {
+          operation: 'logout_token_revocation',
+          userId,
+        });
       }
     }
 
@@ -960,5 +1050,55 @@ export class AuthService {
     if (userAgent.includes('iOS')) return 'iOS';
 
     return 'Unknown';
+  }
+
+  /**
+   * Cleanup expired refresh tokens from database
+   */
+  async cleanupExpiredTokens(): Promise<number> {
+    try {
+      const result = await this.refreshTokenRepository
+        .createQueryBuilder()
+        .update(RefreshToken)
+        .set({
+          is_revoked: true,
+          revoked_at: new Date(),
+          revoke_reason: 'Expired',
+        })
+        .where('expires_at < :now AND is_revoked = false', { now: new Date() })
+        .execute();
+
+      const tokensCleanedUp = result.affected || 0;
+
+      if (tokensCleanedUp > 0) {
+        // Log cleanup to Sentry
+        this.sentryService.logSecurityEvent('token_cleanup', {
+          tokensCleanedUp,
+          cleanupReason: 'Expired tokens',
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      return tokensCleanedUp;
+    } catch (error) {
+      this.sentryService.captureAuthError(error as Error, {
+        operation: 'token_cleanup',
+      });
+      return 0;
+    }
+  }
+
+  /**
+   * Validate token exists and is not revoked
+   */
+  private async validateTokenExists(tokenId: string): Promise<boolean> {
+    try {
+      const token = await this.refreshTokenRepository.findOne({
+        where: { id: tokenId, is_revoked: false },
+      });
+      return !!token && token.expires_at > new Date();
+    } catch {
+      return false;
+    }
   }
 }

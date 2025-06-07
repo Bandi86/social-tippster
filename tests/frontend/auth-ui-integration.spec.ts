@@ -17,7 +17,7 @@ test.describe('Authentication UI Integration Tests', () => {
   test('UI - Login form validation and submission', async ({ page }) => {
     console.log('📋 Testing login form UI...');
 
-    await page.goto('http://localhost:3000/auth/login');
+    await page.goto('http://localhost:3000/auth');
 
     // Test form presence
     await expect(page.locator('form')).toBeVisible();
@@ -30,7 +30,7 @@ test.describe('Authentication UI Integration Tests', () => {
 
     // Check for validation messages or form not submitting
     const currentUrl = page.url();
-    expect(currentUrl).toContain('/auth/login');
+    expect(currentUrl).toContain('/auth');
 
     // Test successful login
     await page.fill('input[name="email"]', testCredentials.email);
@@ -47,7 +47,7 @@ test.describe('Authentication UI Integration Tests', () => {
   test('UI - Registration form validation and submission', async ({ page }) => {
     console.log('📝 Testing registration form UI...');
 
-    await page.goto('http://localhost:3000/auth/register');
+    await page.goto('http://localhost:3000/auth');
 
     // Test form presence
     await expect(page.locator('form')).toBeVisible();
@@ -92,7 +92,7 @@ test.describe('Authentication UI Integration Tests', () => {
     await page.waitForTimeout(3000);
 
     // After registration, try to login with the same credentials
-    await page.goto('http://localhost:3000/auth/login');
+    await page.goto('http://localhost:3000/auth');
     await page.fill('input[name="email"]', uniqueEmail);
     await page.fill('input[name="password"]', password);
     await page.click('button[type="submit"]');
@@ -124,7 +124,7 @@ test.describe('Authentication UI Integration Tests', () => {
     }
 
     // Login
-    await page.goto('http://localhost:3000/auth/login');
+    await page.goto('http://localhost:3000/auth');
     await page.fill('input[name="email"]', testCredentials.email);
     await page.fill('input[name="password"]', testCredentials.password);
     await page.click('button[type="submit"]');
@@ -177,7 +177,7 @@ test.describe('Authentication UI Integration Tests', () => {
     }
 
     // Login and test access
-    await page.goto('http://localhost:3000/auth/login');
+    await page.goto('http://localhost:3000/auth');
     await page.fill('input[name="email"]', testCredentials.email);
     await page.fill('input[name="password"]', testCredentials.password);
     await page.click('button[type="submit"]');
@@ -201,7 +201,7 @@ test.describe('Authentication UI Integration Tests', () => {
     console.log('🚪 Testing logout UI functionality...');
 
     // Login first
-    await page.goto('http://localhost:3000/auth/login');
+    await page.goto('http://localhost:3000/auth');
     await page.fill('input[name="email"]', testCredentials.email);
     await page.fill('input[name="password"]', testCredentials.password);
     await page.click('button[type="submit"]');
@@ -270,7 +270,7 @@ test.describe('Authentication UI Integration Tests', () => {
   test('UI - Error message display and handling', async ({ page }) => {
     console.log('🚨 Testing error message display...');
 
-    await page.goto('http://localhost:3000/auth/login');
+    await page.goto('http://localhost:3000/auth');
 
     // Test with invalid credentials
     await page.fill('input[name="email"]', 'invalid@example.com');
@@ -298,7 +298,7 @@ test.describe('Authentication UI Integration Tests', () => {
 
     // Verify form still shows login page
     const currentUrl = page.url();
-    expect(currentUrl).toContain('/auth/login');
+    expect(currentUrl).toContain('/auth');
 
     console.log('✅ Error handling UI working correctly');
   });
@@ -306,7 +306,7 @@ test.describe('Authentication UI Integration Tests', () => {
   test('UI - Loading states during authentication', async ({ page }) => {
     console.log('⏳ Testing loading states...');
 
-    await page.goto('http://localhost:3000/auth/login');
+    await page.goto('http://localhost:3000/auth');
 
     await page.fill('input[name="email"]', testCredentials.email);
     await page.fill('input[name="password"]', testCredentials.password);

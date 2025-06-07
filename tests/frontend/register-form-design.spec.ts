@@ -5,7 +5,7 @@ test.describe('Registration Page Design', () => {
   test('should display registration form at full width with correct grid layout', async ({
     page,
   }) => {
-    await page.goto('http://localhost:3000/auth/register');
+    await page.goto('http://localhost:3000/auth');
 
     // Use only the unique data-testid for main container
     const mainContainer = page.locator('[data-testid="register-form-main"]');

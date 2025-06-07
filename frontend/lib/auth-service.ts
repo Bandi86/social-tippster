@@ -24,7 +24,8 @@ function transformRegisterData(formData: RegisterFormData, clientFingerprint?: a
     password: formData.password,
     first_name: formData.firstName,
     last_name: formData.lastName,
-    ...(clientFingerprint ? { clientFingerprint } : {}),
+    // Note: clientFingerprint is not sent in body for register endpoint
+    // The backend register endpoint doesn't support device fingerprinting yet
   };
 }
 
@@ -95,6 +96,8 @@ class AuthService {
       timezone: undefined,
       total_profit: 0,
       total_tips: 0,
+      total_posts: 0,
+      featured_posts: 0,
       two_factor_enabled:
         typeof backendUser.two_factor_enabled === 'boolean'
           ? backendUser.two_factor_enabled

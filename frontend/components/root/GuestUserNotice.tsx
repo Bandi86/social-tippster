@@ -17,7 +17,7 @@ export default function GuestUserNotice() {
             <span>Üdvözöljük! Böngéssze az összes tartalmat regisztráció nélkül.</span>
           </div>
           <div className='flex items-center gap-2'>
-            <Link href='/auth/login'>
+            <Link href='/auth'>
               <Button
                 size='sm'
                 variant='ghost'
@@ -26,7 +26,7 @@ export default function GuestUserNotice() {
                 Bejelentkezés
               </Button>
             </Link>
-            <Link href='/auth/register'>
+            <Link href='/auth'>
               <Button size='sm' className='bg-amber-600 hover:bg-amber-700 text-white'>
                 Regisztráció
               </Button>

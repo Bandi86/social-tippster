@@ -32,7 +32,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       !pathname.startsWith('/auth') &&
       pathname !== '/'
     ) {
-      router.push('/auth/login');
+      router.push('/auth');
       // Force re-initialize auth state after redirect
       initializeAuth();
     }

@@ -255,5 +255,95 @@ sortBy?: string = 'created_at';
 - Stack trace analysis can pinpoint exact error locations in complex ORM operations
 
 **Status:** ✅ Complete
-**Deployment:** Immediate (development environment)
-**Rollback Plan:** Revert sortBy default value if unexpected issues arise
+
+---
+
+## Registration Bug Fix - COMPLETED ✅
+
+**Time:** 2025-06-07 10:30 CET
+**Type:** Critical Bug Fix
+**Priority:** High
+**Component:** Authentication System / User Registration
+
+### Issue Description
+
+Users were unable to register on the Hungarian social tipping website due to multiple issues:
+
+1. **404 Error**: "Request failed with status code 404" during registration attempts
+2. **Incorrect Alerts**: "Session interruption" messages appearing for unregistered users
+3. **UX Issue**: Users had to manually login after successful registration
+
+### Root Cause Analysis
+
+- **Primary Cause**: Backend DTO was rejecting `deviceFingerprint` field from frontend requests, causing 400 errors
+- **Secondary Issue**: API client error interceptor was treating 404s as session expiry, triggering incorrect alerts
+- **Missing Feature**: Registration endpoint didn't automatically log users in after creation
+
+### Solution Applied
+
+#### Frontend Changes
+
+1. **File:** `frontend/lib/auth-service.ts`
+   - **Modified** `transformRegisterData` function to exclude unsupported `deviceFingerprint` field
+   - **Maintained** proper field mapping: `firstName`→`first_name`, `lastName`→`last_name`
+   - **Impact**: Eliminates 400 "property should not exist" errors
+
+#### Backend Changes
+
+1. **File:** `backend/src/modules/auth/auth.controller.ts`
+
+   - **Added** Request and Response parameters to registration endpoint
+   - **Enhanced** endpoint to support device fingerprinting for future features
+
+2. **File:** `backend/src/modules/auth/auth.service.ts`
+   - **Enhanced** registration method to auto-login users after successful registration
+   - **Modified** return type to match login response: `{ access_token, user, message }`
+   - **Added** automatic token generation and refresh cookie setting
+   - **Impact**: Seamless registration-to-authenticated user flow
+
+### Test Results
+
+✅ **Registration Status**: 201 Created responses
+✅ **Access Token**: Generated and returned correctly
+✅ **Refresh Cookie**: Set properly for session management
+✅ **Auto-Login**: Users automatically authenticated after registration
+✅ **Field Mapping**: firstName/lastName transformation working
+✅ **No 404 Errors**: Registration endpoint fully accessible
+✅ **No False Alerts**: Incorrect session interruption messages eliminated
+
+### User Experience Improvement
+
+**Before Fix:**
+
+- Registration failed with 404 error
+- Confusing "session interruption" alerts for new users
+- Required manual login step after registration
+- Broken user onboarding flow
+
+**After Fix:**
+
+- Registration completes successfully (201 status)
+- Users automatically logged in with valid tokens
+- Seamless flow from registration form to authenticated state
+- No error messages or additional manual steps required
+
+### Files Modified
+
+1. `frontend/lib/auth-service.ts` - Request body transformation fix
+2. `backend/src/modules/auth/auth.controller.ts` - Parameter enhancement
+3. `backend/src/modules/auth/auth.service.ts` - Auto-login implementation
+4. `docs/implementation-reports/AUTHENTICATION.md` - Documentation update
+
+### Testing Performed
+
+- ✅ End-to-end registration flow testing
+- ✅ Frontend form data transformation validation
+- ✅ Backend endpoint response verification
+- ✅ Token authentication testing
+- ✅ Browser-based UI registration testing
+
+### Status: COMPLETE 🎉
+
+The registration bug is fully resolved. The Hungarian social tipping website now has a fully functional user registration system with automatic login and seamless user experience.
+
+---

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="jest tests" tests="38" failures="31" errors="0" time="18.088">
-  <testsuite name="Authentication System Integration Tests" errors="0" failures="31" skipped="0" timestamp="2025-06-05T06:34:00" time="9.858" tests="31">
+<testsuites name="jest tests" tests="31" failures="31" errors="0" time="21.803">
+  <testsuite name="Authentication System Integration Tests" errors="0" failures="31" skipped="0" timestamp="2025-06-07T08:39:49" time="21.563" tests="31">
     <testcase classname="Authentication System Integration Tests User Registration should register a new user successfully" name="Authentication System Integration Tests User Registration should register a new user successfully" time="0.002">
       <failure>Error: Nest can&apos;t resolve dependencies of the UserLoginRepository (?). Please make sure that the argument DataSource at index [0] is available in the TypeOrmModule context.
 
@@ -32,7 +32,7 @@ Potential solutions:
     at async TestingModuleBuilder.compile (C:\Users\bandi\Documents\code\social-tippster\social-tippster\node_modules\@nestjs\testing\testing-module.builder.js:74:9)
     at async Object.&lt;anonymous&gt; (C:\Users\bandi\Documents\code\social-tippster\social-tippster\tests\backend\auth-integration.spec.ts:47:17)</failure>
     </testcase>
-    <testcase classname="Authentication System Integration Tests User Registration should reject registration with duplicate email" name="Authentication System Integration Tests User Registration should reject registration with duplicate email" time="0.02">
+    <testcase classname="Authentication System Integration Tests User Registration should reject registration with duplicate email" name="Authentication System Integration Tests User Registration should reject registration with duplicate email" time="0.027">
       <failure>Error: Nest can&apos;t resolve dependencies of the UserLoginRepository (?). Please make sure that the argument DataSource at index [0] is available in the TypeOrmModule context.
 
 Potential solutions:
@@ -63,7 +63,7 @@ Potential solutions:
     at async TestingModuleBuilder.compile (C:\Users\bandi\Documents\code\social-tippster\social-tippster\node_modules\@nestjs\testing\testing-module.builder.js:74:9)
     at async Object.&lt;anonymous&gt; (C:\Users\bandi\Documents\code\social-tippster\social-tippster\tests\backend\auth-integration.spec.ts:47:17)</failure>
     </testcase>
-    <testcase classname="Authentication System Integration Tests User Registration should reject registration with duplicate username" name="Authentication System Integration Tests User Registration should reject registration with duplicate username" time="0">
+    <testcase classname="Authentication System Integration Tests User Registration should reject registration with duplicate username" name="Authentication System Integration Tests User Registration should reject registration with duplicate username" time="0.001">
       <failure>Error: Nest can&apos;t resolve dependencies of the UserLoginRepository (?). Please make sure that the argument DataSource at index [0] is available in the TypeOrmModule context.
 
 Potential solutions:
@@ -218,7 +218,7 @@ Potential solutions:
     at async TestingModuleBuilder.compile (C:\Users\bandi\Documents\code\social-tippster\social-tippster\node_modules\@nestjs\testing\testing-module.builder.js:74:9)
     at async Object.&lt;anonymous&gt; (C:\Users\bandi\Documents\code\social-tippster\social-tippster\tests\backend\auth-integration.spec.ts:47:17)</failure>
     </testcase>
-    <testcase classname="Authentication System Integration Tests User Login should reject login with incorrect password" name="Authentication System Integration Tests User Login should reject login with incorrect password" time="0.001">
+    <testcase classname="Authentication System Integration Tests User Login should reject login with incorrect password" name="Authentication System Integration Tests User Login should reject login with incorrect password" time="0">
       <failure>Error: Nest can&apos;t resolve dependencies of the UserLoginRepository (?). Please make sure that the argument DataSource at index [0] is available in the TypeOrmModule context.
 
 Potential solutions:
@@ -280,7 +280,7 @@ Potential solutions:
     at async TestingModuleBuilder.compile (C:\Users\bandi\Documents\code\social-tippster\social-tippster\node_modules\@nestjs\testing\testing-module.builder.js:74:9)
     at async Object.&lt;anonymous&gt; (C:\Users\bandi\Documents\code\social-tippster\social-tippster\tests\backend\auth-integration.spec.ts:47:17)</failure>
     </testcase>
-    <testcase classname="Authentication System Integration Tests User Login should implement brute force protection" name="Authentication System Integration Tests User Login should implement brute force protection" time="0.001">
+    <testcase classname="Authentication System Integration Tests User Login should implement brute force protection" name="Authentication System Integration Tests User Login should implement brute force protection" time="0">
       <failure>Error: Nest can&apos;t resolve dependencies of the UserLoginRepository (?). Please make sure that the argument DataSource at index [0] is available in the TypeOrmModule context.
 
 Potential solutions:
@@ -528,7 +528,7 @@ Potential solutions:
     at async TestingModuleBuilder.compile (C:\Users\bandi\Documents\code\social-tippster\social-tippster\node_modules\@nestjs\testing\testing-module.builder.js:74:9)
     at async Object.&lt;anonymous&gt; (C:\Users\bandi\Documents\code\social-tippster\social-tippster\tests\backend\auth-integration.spec.ts:47:17)</failure>
     </testcase>
-    <testcase classname="Authentication System Integration Tests Token Refresh should reject refresh with invalid cookie" name="Authentication System Integration Tests Token Refresh should reject refresh with invalid cookie" time="0.001">
+    <testcase classname="Authentication System Integration Tests Token Refresh should reject refresh with invalid cookie" name="Authentication System Integration Tests Token Refresh should reject refresh with invalid cookie" time="0">
       <failure>Error: Nest can&apos;t resolve dependencies of the UserLoginRepository (?). Please make sure that the argument DataSource at index [0] is available in the TypeOrmModule context.
 
 Potential solutions:
@@ -590,7 +590,7 @@ Potential solutions:
     at async TestingModuleBuilder.compile (C:\Users\bandi\Documents\code\social-tippster\social-tippster\node_modules\@nestjs\testing\testing-module.builder.js:74:9)
     at async Object.&lt;anonymous&gt; (C:\Users\bandi\Documents\code\social-tippster\social-tippster\tests\backend\auth-integration.spec.ts:47:17)</failure>
     </testcase>
-    <testcase classname="Authentication System Integration Tests Logout should reject logout without token" name="Authentication System Integration Tests Logout should reject logout without token" time="0">
+    <testcase classname="Authentication System Integration Tests Logout should reject logout without token" name="Authentication System Integration Tests Logout should reject logout without token" time="0.001">
       <failure>Error: Nest can&apos;t resolve dependencies of the UserLoginRepository (?). Please make sure that the argument DataSource at index [0] is available in the TypeOrmModule context.
 
 Potential solutions:
@@ -914,7 +914,7 @@ Potential solutions:
     at async TestingModuleBuilder.compile (C:\Users\bandi\Documents\code\social-tippster\social-tippster\node_modules\@nestjs\testing\testing-module.builder.js:74:9)
     at async Object.&lt;anonymous&gt; (C:\Users\bandi\Documents\code\social-tippster\social-tippster\tests\backend\auth-integration.spec.ts:47:17)</failure>
     </testcase>
-    <testcase classname="Authentication System Integration Tests Analytics and Tracking should track failed logins with failure reasons" name="Authentication System Integration Tests Analytics and Tracking should track failed logins with failure reasons" time="0.001">
+    <testcase classname="Authentication System Integration Tests Analytics and Tracking should track failed logins with failure reasons" name="Authentication System Integration Tests Analytics and Tracking should track failed logins with failure reasons" time="0">
       <failure>Error: Nest can&apos;t resolve dependencies of the UserLoginRepository (?). Please make sure that the argument DataSource at index [0] is available in the TypeOrmModule context.
 
 Potential solutions:
@@ -978,24 +978,6 @@ Potential solutions:
     </testcase>
     <testcase classname=" Test execution failure: could be caused by test hooks like &apos;afterAll&apos;." name=" Test execution failure: could be caused by test hooks like &apos;afterAll&apos;." time="0">
       <failure>{&quot;message&quot;:&quot;&quot;,&quot;stack&quot;:&quot;TypeError: Cannot read properties of undefined (reading &apos;close&apos;)\n    at Object.&lt;anonymous&gt; (C:\\Users\\bandi\\Documents\\code\\social-tippster\\social-tippster\\tests\\backend\\auth-integration.spec.ts:100:15)\n    at Promise.then.completed (C:\\Users\\bandi\\Documents\\code\\social-tippster\\social-tippster\\node_modules\\jest-circus\\build\\utils.js:298:28)\n    at new Promise (&lt;anonymous&gt;)\n    at callAsyncCircusFn (C:\\Users\\bandi\\Documents\\code\\social-tippster\\social-tippster\\node_modules\\jest-circus\\build\\utils.js:231:10)\n    at _callCircusHook (C:\\Users\\bandi\\Documents\\code\\social-tippster\\social-tippster\\node_modules\\jest-circus\\build\\run.js:281:40)\n    at async _runTestsForDescribeBlock (C:\\Users\\bandi\\Documents\\code\\social-tippster\\social-tippster\\node_modules\\jest-circus\\build\\run.js:154:7)\n    at async _runTestsForDescribeBlock (C:\\Users\\bandi\\Documents\\code\\social-tippster\\social-tippster\\node_modules\\jest-circus\\build\\run.js:121:9)\n    at async run (C:\\Users\\bandi\\Documents\\code\\social-tippster\\social-tippster\\node_modules\\jest-circus\\build\\run.js:71:3)\n    at async runAndTransformResultsToJestFormat (C:\\Users\\bandi\\Documents\\code\\social-tippster\\social-tippster\\node_modules\\jest-circus\\build\\legacy-code-todo-rewrite\\jestAdapterInit.js:122:21)\n    at async jestAdapter (C:\\Users\\bandi\\Documents\\code\\social-tippster\\social-tippster\\node_modules\\jest-circus\\build\\legacy-code-todo-rewrite\\jestAdapter.js:79:19)\n    at async runTestInternal (C:\\Users\\bandi\\Documents\\code\\social-tippster\\social-tippster\\node_modules\\jest-runner\\build\\runTest.js:367:16)\n    at async runTest (C:\\Users\\bandi\\Documents\\code\\social-tippster\\social-tippster\\node_modules\\jest-runner\\build\\runTest.js:444:34)&quot;}</failure>
-    </testcase>
-  </testsuite>
-  <testsuite name="AnalyticsService - Session Management" errors="0" failures="0" skipped="0" timestamp="2025-06-05T06:34:10" time="1.064" tests="4">
-    <testcase classname="AnalyticsService - Session Management should create a user session" name="AnalyticsService - Session Management should create a user session" time="0.008">
-    </testcase>
-    <testcase classname="AnalyticsService - Session Management should end a user session" name="AnalyticsService - Session Management should end a user session" time="0.004">
-    </testcase>
-    <testcase classname="AnalyticsService - Session Management should get user sessions" name="AnalyticsService - Session Management should get user sessions" time="0.002">
-    </testcase>
-    <testcase classname="AnalyticsService - Session Management should create a user session with metadata" name="AnalyticsService - Session Management should create a user session with metadata" time="0.004">
-    </testcase>
-  </testsuite>
-  <testsuite name="AnalyticsService" errors="0" failures="0" skipped="0" timestamp="2025-06-05T06:34:11" time="0.948" tests="3">
-    <testcase classname="AnalyticsService should fetch user login history" name="AnalyticsService should fetch user login history" time="0.004">
-    </testcase>
-    <testcase classname="AnalyticsService should export login history as CSV" name="AnalyticsService should export login history as CSV" time="0.004">
-    </testcase>
-    <testcase classname="AnalyticsService should detect suspicious activity" name="AnalyticsService should detect suspicious activity" time="0.002">
     </testcase>
   </testsuite>
 </testsuites>

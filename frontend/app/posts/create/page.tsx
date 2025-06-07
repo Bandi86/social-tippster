@@ -66,7 +66,7 @@ export default function CreatePostPage() {
   // Redirect if not authenticated
   React.useEffect(() => {
     if (!isAuthenticated) {
-      router.push('/auth/login');
+      router.push('/auth');
     }
   }, [isAuthenticated, router]);
 

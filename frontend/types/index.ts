@@ -75,6 +75,10 @@ export interface User {
   referral_count: number;
   reputation_score: number;
   role: UserRole;
+  successful_tips: number;
+  tip_success_rate: number;
+  total_profit: number;
+  total_tips: number;
   timezone?: string;
   total_posts: number;
   featured_posts: number;
@@ -209,6 +213,7 @@ export interface RegisterData {
   password: string;
   first_name: string;
   last_name: string;
+  deviceFingerprint?: any;
 }
 
 export interface AuthResponse {

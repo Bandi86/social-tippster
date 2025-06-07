@@ -106,13 +106,13 @@ const UserNavbar = () => {
               ) : (
                 <div className='flex space-x-2'>
                   <Link
-                    href='/auth/login'
+                    href='/auth'
                     className='px-4 py-2 text-amber-300 hover:text-amber-100 border border-amber-500/50 hover:border-amber-400 rounded-lg transition-all duration-200 font-medium'
                   >
                     Belépés
                   </Link>
                   <Link
-                    href='/auth/register'
+                    href='/auth'
                     className='px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-all duration-200 font-medium'
                   >
                     Regisztráció
@@ -195,14 +195,14 @@ const UserNavbar = () => {
               ) : (
                 <div className='space-y-2'>
                   <Link
-                    href='/auth/login'
+                    href='/auth'
                     className='block w-full text-center px-4 py-3 text-amber-300 border border-amber-500/50 hover:border-amber-400 hover:bg-amber-500/10 rounded-lg transition-all duration-200 font-medium'
                     onClick={() => setMobileOpen(false)}
                   >
                     Belépés
                   </Link>
                   <Link
-                    href='/auth/register'
+                    href='/auth'
                     className='block w-full text-center px-4 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-all duration-200 font-medium'
                     onClick={() => setMobileOpen(false)}
                   >

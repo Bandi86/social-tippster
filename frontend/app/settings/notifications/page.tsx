@@ -88,7 +88,7 @@ export default function NotificationPreferencesPage() {
         <div className='text-center'>
           <h1 className='text-2xl font-bold mb-2'>Beállítások</h1>
           <p>Jelentkezz be a beállítások eléréséhez.</p>
-          <Link href='/auth/login' className='text-blue-600 underline'>
+          <Link href='/auth' className='text-blue-600 underline'>
             Bejelentkezés
           </Link>
         </div>

@@ -77,56 +77,56 @@ export function LoginForm({ onSuccess, redirectTo = '/', onRegisterClick }: Logi
 
   return (
     <div className='w-full max-w-md mx-auto'>
-      <div className='text-center mb-6'>
-        <h2 className='text-3xl font-bold text-white mb-2'>Bejelentkezés</h2>
-        <p className='text-gray-400'>Lépj be a Tippster FC közösségbe!</p>
+      <div className='text-center mb-2'>
+        <h2 className='text-lg font-bold text-white mb-0.5'>Bejelentkezés</h2>
+        <p className='text-gray-400 text-xs'>Lépj be a Tippster FC közösségbe!</p>
       </div>
-      <form onSubmit={handleSubmit(onSubmit)} className='space-y-5'>
+      <form onSubmit={handleSubmit(onSubmit)} className='space-y-2'>
         {error && (
           <Alert variant='destructive' className='bg-red-500/10 border-red-400 text-red-400'>
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
-        <div className='space-y-2'>
-          <Label htmlFor='email' className='text-white font-medium'>
+        <div className='space-y-1'>
+          <Label htmlFor='email' className='text-white font-medium text-xs'>
             E-mail cím
           </Label>
           <div className='relative'>
-            <Mail className='absolute left-3 top-3 h-5 w-5 text-gray-400' />
             <Input
               id='email'
               type='email'
               placeholder='Add meg az e-mail címed'
-              className='pl-11 bg-white/10 border-white/20 text-white placeholder-gray-400 focus:border-blue-400 h-12'
+              className='h-9 px-3 py-2 pl-10 bg-white/10 border-white/20 text-white placeholder-gray-400 focus:border-amber-400 focus:ring-2 focus:ring-amber-500/20 text-sm'
               {...register('email')}
             />
+            <Mail className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400' />
           </div>
-          {errors.email && <p className='text-sm text-red-400'>{errors.email.message}</p>}
+          {errors.email && <p className='text-xs text-red-400'>{errors.email.message}</p>}
         </div>
-        <div className='space-y-2'>
-          <Label htmlFor='password' className='text-white font-medium'>
+        <div className='space-y-1'>
+          <Label htmlFor='password' className='text-white font-medium text-xs'>
             Jelszó
           </Label>
           <div className='relative'>
-            <Lock className='absolute left-3 top-3 h-5 w-5 text-gray-400' />
             <Input
               id='password'
               type={showPassword ? 'text' : 'password'}
               placeholder='Add meg a jelszavad'
-              className='pl-11 pr-11 bg-white/10 border-white/20 text-white placeholder-gray-400 focus:border-blue-400 h-12'
+              className='h-9 px-3 py-2 pl-10 pr-10 bg-white/10 border-white/20 text-white placeholder-gray-400 focus:border-amber-400 focus:ring-2 focus:ring-amber-500/20 text-sm'
               {...register('password')}
             />
+            <Lock className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400' />
             <Button
               type='button'
               variant='ghost'
               size='sm'
-              className='absolute right-1 top-1 h-10 w-10 hover:bg-white/10 text-gray-400 hover:text-white'
+              className='absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 hover:bg-white/10 text-gray-400 hover:text-white p-0'
               onClick={() => setShowPassword(!showPassword)}
             >
               {showPassword ? <EyeOff className='h-4 w-4' /> : <Eye className='h-4 w-4' />}
             </Button>
           </div>
-          {errors.password && <p className='text-sm text-red-400'>{errors.password.message}</p>}
+          {errors.password && <p className='text-xs text-red-400'>{errors.password.message}</p>}
         </div>
         <div className='flex items-center justify-between'>
           <div className='flex items-center space-x-2'>
@@ -136,25 +136,25 @@ export function LoginForm({ onSuccess, redirectTo = '/', onRegisterClick }: Logi
               onCheckedChange={checked => setValue('rememberMe', !!checked)}
               className='border-white/20 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500'
             />
-            <Label htmlFor='rememberMe' className='text-sm font-normal text-white'>
+            <Label htmlFor='rememberMe' className='text-xs font-normal text-white'>
               Emlékezz rám
             </Label>
           </div>
           <Link
             href='/auth/forgot-password'
-            className='text-sm text-blue-400 hover:text-blue-300 hover:underline'
+            className='text-xs text-blue-400 hover:text-blue-300 hover:underline'
           >
             Elfelejtett jelszó?
           </Link>
         </div>
         <Button
           type='submit'
-          className='w-full h-12 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold text-lg transition-all duration-200 shadow-lg hover:shadow-xl'
+          className='w-full h-10 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-semibold text-sm transition-all duration-200 shadow-lg hover:shadow-xl'
           disabled={isSubmitting || isLoading}
         >
           {isSubmitting || isLoading ? (
             <>
-              <Loader2 className='mr-2 h-5 w-5 animate-spin' />
+              <Loader2 className='mr-2 h-4 w-4 animate-spin' />
               Bejelentkezés...
             </>
           ) : (
@@ -173,15 +173,15 @@ export function LoginForm({ onSuccess, redirectTo = '/', onRegisterClick }: Logi
           {onRegisterClick ? (
             <button
               type='button'
-              className='text-yellow-400 hover:text-yellow-300 font-semibold hover:underline transition-colors'
+              className='text-amber-400 hover:text-amber-300 font-semibold hover:underline transition-colors text-sm'
               onClick={onRegisterClick}
             >
               Hozz létre fiókot
             </button>
           ) : (
             <Link
-              href='/auth/register'
-              className='text-yellow-400 hover:text-yellow-300 font-semibold hover:underline transition-colors'
+              href='/auth'
+              className='text-amber-400 hover:text-amber-300 font-semibold hover:underline transition-colors text-sm'
             >
               Hozz létre fiókot
             </Link>

@@ -20,7 +20,7 @@ export default function UnauthenticatedNotice({
   if (compact) {
     return (
       <div className='text-xs text-center text-gray-500 mt-2'>
-        <Link href='/auth/login' className='text-amber-400 hover:text-amber-300 underline'>
+        <Link href='/auth' className='text-amber-400 hover:text-amber-300 underline'>
           Bejelentkezés
         </Link>{' '}
         az interakcióhoz
@@ -35,7 +35,7 @@ export default function UnauthenticatedNotice({
         <div className='flex items-center justify-between'>
           <span>{message}</span>
           {showLoginButton && (
-            <Link href='/auth/login'>
+            <Link href='/auth'>
               <Button
                 size='sm'
                 variant='outline'

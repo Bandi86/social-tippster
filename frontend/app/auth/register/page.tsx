@@ -1,5 +1,4 @@
-import RegisterFormNew from '@/components/auth/register-form-new';
-
+// This route is deprecated. Use /auth instead.
 export default function RegisterPage() {
-  return <RegisterFormNew />;
+  return null;
 }

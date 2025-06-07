@@ -376,10 +376,7 @@ export default function PostCard({ post, onPostUpdate, compact = false }: PostCa
         {!isAuthenticated && (
           <div className='mt-3 p-3 bg-gradient-to-r from-amber-900/20 to-amber-800/20 border border-amber-700/30 rounded-lg'>
             <p className='text-sm text-amber-300 text-center'>
-              <Link
-                href='/auth/login'
-                className='hover:text-amber-200 underline underline-offset-2'
-              >
+              <Link href='/auth' className='hover:text-amber-200 underline underline-offset-2'>
                 Jelentkezz be
               </Link>{' '}
               a szavazáshoz, kommenteléshez és könyvjelzőzéshez

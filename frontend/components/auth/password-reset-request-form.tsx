@@ -91,7 +91,7 @@ export function PasswordResetRequestForm() {
           <Button
             type='button'
             variant='link'
-            onClick={() => router.push('/auth/login')}
+            onClick={() => router.push('/auth')}
             className='text-amber-400 hover:text-amber-300'
           >
             Back to Login

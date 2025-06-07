@@ -22,8 +22,8 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
     }
   }, [isAuthenticated, isLoading, router]);
 
-  // If on the main auth page or register page, render children without restrictions
-  if (pathname === '/auth' || pathname === '/auth/register') {
+  // If on the main auth page, render children without restrictions
+  if (pathname === '/auth') {
     return <>{children}</>;
   }
 
