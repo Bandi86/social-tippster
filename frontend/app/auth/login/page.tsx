@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation';
+import LoginForm from '@/components/auth/login-form';
 
 export const metadata = {
   title: 'Sign In - SocialTippster',
@@ -6,5 +6,5 @@ export const metadata = {
 };
 
 export default function LoginPage() {
-  redirect('/auth');
+  return <LoginForm />;
 }

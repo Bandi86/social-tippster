@@ -5,6 +5,7 @@
 // ===============================
 
 // ---- Importok ----
+import { databaseConfig } from '@/lib/api-client'; // Add this import
 import axios from '@/lib/axios';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
@@ -23,6 +24,12 @@ async function axiosWithAuth(config: any) {
     'Content-Type': 'application/json',
     ...(config.headers || {}),
   };
+
+  // Add database name header if available
+  if (databaseConfig.databaseName) {
+    headers['X-Database-Name'] = databaseConfig.databaseName;
+  }
+
   if (token) headers.Authorization = `Bearer ${token}`;
   try {
     const response = await axios({ ...config, headers });
@@ -356,7 +363,7 @@ export const usePostsStore = create<PostsState & PostsActions>()(
         const cache = get().postsCache.get(cacheKey);
         const now = Date.now();
 
-        // Check cache first
+        // Ellenőrizzük a cache-t
         if (cache && now - cache.timestamp < CACHE_DURATION) {
           set({
             posts: append ? [...get().posts, ...cache.posts] : cache.posts,
@@ -377,9 +384,13 @@ export const usePostsStore = create<PostsState & PostsActions>()(
             error: null,
           });
 
+          // Biztonságos page és limit értékek
+          const page = Math.max(1, Number(params?.page) || 1);
+          const limit = Math.min(100, Math.max(1, Number(params?.limit) || 10));
+
           const searchParams = new URLSearchParams();
-          if (params?.page) searchParams.append('page', params.page.toString());
-          if (params?.limit) searchParams.append('limit', params.limit.toString());
+          searchParams.append('page', page.toString());
+          searchParams.append('limit', limit.toString());
           if (params?.type && params.type !== 'all') searchParams.append('type', params.type);
           if (params?.search) searchParams.append('search', params.search);
           if (params?.author) searchParams.append('author', params.author);
@@ -390,7 +401,7 @@ export const usePostsStore = create<PostsState & PostsActions>()(
             url: `${API_BASE_URL}/posts?${searchParams.toString()}`,
           });
 
-          // Update cache
+          // Cache frissítése
           get().postsCache.set(cacheKey, {
             posts: response.posts,
             meta: {
@@ -404,8 +415,8 @@ export const usePostsStore = create<PostsState & PostsActions>()(
             posts: append ? [...get().posts, ...response.posts] : response.posts,
             totalPosts: response.total,
             totalPages: response.totalPages,
-            currentPage: params.page || 1,
-            hasMore: (params.page || 1) < response.totalPages,
+            currentPage: page,
+            hasMore: page < response.totalPages,
             isLoading: false,
             isLoadingMore: false,
             error: null,

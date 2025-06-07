@@ -4,6 +4,7 @@
  * Megjegyzés: Tipp specifikus szűrők eltávolítva
  */
 
+import { Type } from 'class-transformer';
 import {
   IsArray,
   IsBoolean,
@@ -16,7 +17,7 @@ import {
   Max,
   Min,
 } from 'class-validator';
-import { PostStatus, PostType, PostVisibility } from '../enums/post.enums';
+import { PostStatus, PostType, PostVisibility, SortOrder } from '../enums/post.enums';
 
 export class FilterPostsDTO {
   @IsOptional()
@@ -131,22 +132,23 @@ export class FilterPostsDTO {
 
   // Pagination
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   @Min(1)
   page?: number = 1;
 
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   @Min(1)
   @Max(100)
   limit?: number = 20;
 
-  // Sorting
   @IsOptional()
   @IsString()
-  sortBy?: string = 'createdAt';
+  sortBy?: string = 'created_at';
 
   @IsOptional()
-  @IsEnum(['ASC', 'DESC'])
-  sortOrder?: 'ASC' | 'DESC' = 'DESC';
+  @IsEnum(SortOrder)
+  sortOrder?: SortOrder = SortOrder.DESC;
 }

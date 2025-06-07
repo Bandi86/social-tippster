@@ -56,6 +56,7 @@ async function bootstrap() {
       'X-Requested-With',
       'Access-Control-Allow-Origin',
       'Access-Control-Allow-Credentials',
+      'X-Database-Name', // Allow custom database name header
     ],
     exposedHeaders: ['Set-Cookie'],
     preflightContinue: false,

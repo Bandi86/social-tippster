@@ -4,6 +4,11 @@
  */
 import axios, { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 
+export const databaseConfig = {
+  databaseName: process.env.NEXT_PUBLIC_DATABASE_NAME || 'tippmix',
+  // other database configs...
+};
+
 class ApiClient {
   private client: AxiosInstance;
   private accessToken: string | null = null;
@@ -29,6 +34,11 @@ class ApiClient {
     this.client.interceptors.request.use(
       async (config: InternalAxiosRequestConfig) => {
         console.log('Making request to:', config.url, 'with token:', !!this.accessToken);
+
+        // Add database name header if available
+        if (!config.headers['X-Database-Name'] && databaseConfig.databaseName) {
+          config.headers['X-Database-Name'] = databaseConfig.databaseName;
+        }
 
         // Do not add Authorization header for refresh token requests
         if (config.url === '/auth/refresh') {

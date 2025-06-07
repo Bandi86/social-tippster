@@ -1,5 +1,11 @@
 # Social Tippster
 
+> **2025-06-07:**
+>
+> - ✅ **Critical Fix**: Posts API runtime error resolved - `/api/posts` endpoint now fully operational
+> - Fixed field name mismatch in `FilterPostsDTO` that was causing 500 Internal Server Error
+> - Posts loading functionality restored for all users
+
 > **2025-06-04:**
 >
 > - Image upload (storage/validation) and image analysis (OCR, tip extraction) are now handled by separate backend modules.

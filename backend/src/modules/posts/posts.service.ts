@@ -90,23 +90,37 @@ export class PostsService {
     filterDto: FilterPostsDTO,
     userId?: string,
   ): Promise<{ posts: Post[]; total: number }> {
-    const queryBuilder = this.createFilteredQuery(filterDto, userId);
+    try {
+      this.logger.log('Starting findAll with filterDto:', JSON.stringify(filterDto));
+      this.logger.log('UserId:', userId);
 
-    // Pagination
-    const page = filterDto.page || 1;
-    const limit = filterDto.limit || 20;
-    const skip = (page - 1) * limit;
+      const queryBuilder = this.createFilteredQuery(filterDto, userId);
+      this.logger.log('Query builder created successfully');
 
-    queryBuilder.skip(skip).take(limit);
+      // Pagination
+      const page = filterDto.page || 1;
+      const limit = filterDto.limit || 20;
+      const skip = (page - 1) * limit;
 
-    // Sorting
-    const sortBy = filterDto.sortBy || 'created_at';
-    const sortOrder = filterDto.sortOrder || 'DESC';
-    queryBuilder.orderBy(`post.${sortBy}`, sortOrder);
+      queryBuilder.skip(skip).take(limit);
 
-    const [posts, total] = await queryBuilder.getManyAndCount();
+      // Sorting
+      const sortBy = filterDto.sortBy || 'created_at';
+      const sortOrder = filterDto.sortOrder || 'DESC';
+      queryBuilder.orderBy(`post.${sortBy}`, sortOrder);
 
-    return { posts, total };
+      this.logger.log('About to execute query...');
+      const [posts, total] = await queryBuilder.getManyAndCount();
+      this.logger.log(`Query executed successfully - found ${posts.length} posts, total: ${total}`);
+
+      return { posts, total };
+    } catch (error) {
+      this.logger.error('Error in findAll:', error);
+      if (error instanceof Error) {
+        this.logger.error('Error stack:', error.stack);
+      }
+      throw error;
+    }
   }
 
   /**

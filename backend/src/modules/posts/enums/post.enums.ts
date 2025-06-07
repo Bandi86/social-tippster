@@ -31,3 +31,8 @@ export enum PostVisibility {
   PRIVATE = 'private',
   AUTHOR_ONLY = 'author_only',
 }
+
+export enum SortOrder {
+  ASC = 'ASC',
+  DESC = 'DESC',
+}

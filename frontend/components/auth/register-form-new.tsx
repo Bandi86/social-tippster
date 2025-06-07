@@ -11,7 +11,7 @@ import { motion } from 'framer-motion';
 import { Eye, EyeOff, Loader2, Mail, Shield, User, UserCheck } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import registerSchema, { RegisterFormData, RegisterFormProps } from './registerSchema';
 
@@ -20,6 +20,7 @@ export function RegisterFormNew({ onSuccess, redirectTo = '/auth/login' }: Regis
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const nativeCheckboxRef = useRef<HTMLInputElement>(null);
 
   const {
     register,
@@ -46,6 +47,18 @@ export function RegisterFormNew({ onSuccess, redirectTo = '/auth/login' }: Regis
   useEffect(() => {
     clearError();
   }, [clearError]);
+
+  useEffect(() => {
+    const native = nativeCheckboxRef.current;
+    if (!native) return;
+    const handler = () => {
+      if (native.checked !== watchAcceptTerms) {
+        setValue('acceptTerms', native.checked);
+      }
+    };
+    native.addEventListener('change', handler);
+    return () => native.removeEventListener('change', handler);
+  }, [setValue, watchAcceptTerms]);
 
   const onSubmit = async (data: RegisterFormData) => {
     try {
@@ -90,7 +103,11 @@ export function RegisterFormNew({ onSuccess, redirectTo = '/auth/login' }: Regis
   const passwordStrength = getPasswordStrength(watchPassword);
 
   return (
-    <div className='w-full max-w-md mx-auto'>
+    <div
+      className='w-full max-w-screen-2xl mx-auto px-4'
+      data-testid='register-form-main'
+      style={{ minWidth: 1100 }}
+    >
       <div className='text-center mb-6'>
         <h2 className='text-3xl font-bold text-white mb-2'>Regisztráció</h2>
         <p className='text-gray-400'>Csatlakozz a Tippster FC közösséghez!</p>
@@ -106,7 +123,11 @@ export function RegisterFormNew({ onSuccess, redirectTo = '/auth/login' }: Regis
           </motion.div>
         )}
         {/* Name fields */}
-        <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+        <div
+          className='grid grid-cols-1 md:grid-cols-2 gap-4'
+          data-testid='register-form-grid'
+          style={{ minWidth: 900 }}
+        >
           <div className='space-y-2'>
             <Label htmlFor='firstName' className='text-sm font-medium text-white'>
               Keresztnév
@@ -295,8 +316,28 @@ export function RegisterFormNew({ onSuccess, redirectTo = '/auth/login' }: Regis
         {/* Terms and conditions */}
         <div className='space-y-3'>
           <div className='flex items-start space-x-3'>
-            <Checkbox
+            {/* Visually hidden native checkbox for test automation and accessibility */}
+            <input
+              type='checkbox'
               id='acceptTerms'
+              name='acceptTerms'
+              checked={watchAcceptTerms}
+              ref={nativeCheckboxRef}
+              onChange={e => setValue('acceptTerms', e.target.checked)}
+              onInput={e => setValue('acceptTerms', e.currentTarget.checked)}
+              style={{
+                position: 'absolute',
+                opacity: 0,
+                pointerEvents: 'none',
+                width: 0,
+                height: 0,
+              }}
+              tabIndex={-1}
+              aria-hidden='true'
+              data-testid='acceptTerms-native-checkbox'
+            />
+            <Checkbox
+              id='acceptTerms-custom'
               checked={watchAcceptTerms}
               onCheckedChange={checked => setValue('acceptTerms', !!checked)}
               className='mt-1 border-white/30'

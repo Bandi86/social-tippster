@@ -53,47 +53,52 @@ test.describe('Authentication UI Integration Tests', () => {
     await expect(page.locator('form')).toBeVisible();
 
     // Look for common registration fields
-    const emailField = page.locator('input[name="email"], input[type="email"]');
-    const passwordField = page.locator('input[name="password"], input[type="password"]');
+    const emailField = page.locator('input[name="email"]');
+    const passwordField = page.locator('input[name="password"]');
+    const confirmPasswordField = page.locator('input[name="confirmPassword"]');
     const submitButton = page.locator(
       'button[type="submit"], button:has-text("Register"), button:has-text("Sign Up")',
     );
 
     await expect(emailField).toBeVisible();
     await expect(passwordField).toBeVisible();
+    await expect(confirmPasswordField).toBeVisible();
     await expect(submitButton).toBeVisible();
 
     // Test with unique email to avoid conflicts
     const uniqueEmail = `test${Date.now()}@example.com`;
+    const uniqueUsername = `testuser${Date.now()}`;
+    const password = 'TestPassword123!';
 
     await emailField.fill(uniqueEmail);
-    await passwordField.fill('TestPassword123!');
+    await passwordField.fill(password);
+    await confirmPasswordField.fill(password);
 
     // Fill username if present
     const usernameField = page.locator('input[name="username"]');
     if (await usernameField.isVisible()) {
-      await usernameField.fill(`testuser${Date.now()}`);
+      await usernameField.fill(uniqueUsername);
+    }
+
+    // Accept terms if present
+    const termsCheckbox = page.locator('input[type="checkbox"][id="acceptTerms-custom"]');
+    if (await termsCheckbox.isVisible()) {
+      await termsCheckbox.check();
     }
 
     await submitButton.click();
 
-    // Wait for either redirect or error message
+    // Wait for redirect or success
     await page.waitForTimeout(3000);
 
-    const currentUrl = page.url();
-    console.log('📍 After registration attempt, URL:', currentUrl);
-
-    // Either should redirect to home/login or stay with success message
-    const isRedirected =
-      currentUrl === 'http://localhost:3000/' || currentUrl.includes('/auth/login');
-    const hasSuccessMessage = await page
-      .locator('text=success, text=registered, text=account')
-      .isVisible()
-      .catch(() => false);
-
-    expect(isRedirected || hasSuccessMessage).toBe(true);
-
-    console.log('✅ Registration form UI working correctly');
+    // After registration, try to login with the same credentials
+    await page.goto('http://localhost:3000/auth/login');
+    await page.fill('input[name="email"]', uniqueEmail);
+    await page.fill('input[name="password"]', password);
+    await page.click('button[type="submit"]');
+    await page.waitForURL('http://localhost:3000/', { timeout: 10000 });
+    await expect(page).toHaveURL('http://localhost:3000/');
+    console.log('✅ Registration and login flow working');
   });
 
   test('UI - Navigation and authentication state display', async ({ page }) => {

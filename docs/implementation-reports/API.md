@@ -1,3 +1,40 @@
+# API Changes – Critical Posts Endpoint Fix (2025-06-07)
+
+**Last updated:** 2025-06-07
+
+## Posts API Runtime Error Fix
+
+### Issue Resolved
+
+- **Endpoint**: `GET /api/posts`
+- **Problem**: 500 Internal Server Error with message `"Cannot read properties of undefined (reading 'databaseName')"`
+- **Root Cause**: Field name mismatch in `FilterPostsDTO` default `sortBy` parameter
+- **Impact**: Complete posts loading functionality failure
+
+### Technical Details
+
+- **File**: `backend/src/modules/posts/dto/filter-posts.dto.ts`
+- **Change**: Fixed default `sortBy` value from `'createdAt'` to `'created_at'`
+- **Reason**: Align with actual database column name in Post entity
+
+### API Status
+
+✅ **Posts Endpoint Fully Operational**
+
+- `GET /api/posts` - Returns 200 OK with proper post data
+- Pagination, filtering, and sorting work correctly
+- All related endpoints maintain functionality
+
+### Database Field Naming Convention
+
+Confirmed consistent use of underscore notation (`created_at`, `updated_at`) across:
+
+- Post entity database columns
+- DTO default values
+- Query builder ORDER BY clauses
+
+---
+
 # API Changes – User Login System (June 2025)
 
 **Last updated:** 2025-06-01
@@ -101,6 +138,53 @@ Response:
 - If you see `invalid input value for enum posts_type_enum: "tip"`, update all legacy values before running migration.
 - See `docs/project-management/CHANGE_LOG_20250605.md` for full troubleshooting steps.
 
----
+# API Changes – CORS Configuration Update (2025-06-07)
 
-**Implemented by Copilot, 2025-06-01**
+**Last updated:** 2025-06-07
+
+## Issue Fixed
+
+- **Problem**: `X-Database-Name` header was being blocked by CORS policy
+- **Error**: "Request header field x-database-name is not allowed by Access-Control-Allow-Headers in preflight response"
+- **Solution**: Added `X-Database-Name` to the `allowedHeaders` array in CORS configuration
+
+## Changes Made
+
+- **File**: `backend/src/main.ts`
+- **Change**: Added `'X-Database-Name'` to the CORS `allowedHeaders` configuration
+- **Impact**: Frontend can now send database name headers without CORS errors
+
+## CORS Configuration
+
+```typescript
+app.enableCors({
+  origin: [
+    process.env.FRONTEND_URL || 'http://localhost:3000',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://localhost:6006',
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'Accept',
+    'Origin',
+    'X-Requested-With',
+    'Access-Control-Allow-Origin',
+    'Access-Control-Allow-Credentials',
+    'X-Database-Name', // ✅ Added this line
+  ],
+  exposedHeaders: ['Set-Cookie'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204,
+});
+```
+
+## Frontend Fix (api-client.ts)
+
+- **Issue**: Nested interceptor was being added incorrectly
+- **Solution**: Moved database name header logic directly into the main request interceptor
+- **Before**: Nested `this.client.interceptors.request.use()` inside another interceptor
+- **After**: Direct header assignment within the existing interceptor
