@@ -326,7 +326,7 @@ test.describe('Admin Panel Comprehensive Testing', () => {
       userCreation: '✅',
       loginPageAccess: currentUrl.includes('/login') ? '❌' : '✅',
       authenticationState: authState?.state?.isAuthenticated ? '✅' : '❌',
-      cookieManagement: !!refreshTokenCookie ? '✅' : '❌',
+      cookieManagement: refreshTokenCookie ? '✅' : '❌',
       adminApiAccess: apiTestResult.statsStatus === 200 ? '✅' : '❌',
       adminPanelAccess:
         adminUrl.includes('/admin') && !adminUrl.includes('/forbidden') ? '✅' : '❌',

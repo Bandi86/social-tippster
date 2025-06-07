@@ -4,7 +4,7 @@
  * Megjegyzés: Tipp specifikus szűrők eltávolítva
  */
 
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   IsArray,
   IsBoolean,
@@ -100,6 +100,11 @@ export class FilterPostsDTO {
   @IsOptional()
   @IsBoolean()
   isDeleted?: boolean;
+
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  @IsBoolean()
+  bookmarked?: boolean;
 
   @IsOptional()
   @IsNumber()

@@ -1,4 +1,4 @@
-/* eslint-disable no-console */
+ 
 "use strict";
 
 var assert = require("@sinonjs/referee-sinon").assert;

@@ -1,5 +1,5 @@
 "use strict";
-/* eslint-disable no-empty-function */
+ 
 
 var assert = require("@sinonjs/referee").assert;
 var className = require("./class-name");

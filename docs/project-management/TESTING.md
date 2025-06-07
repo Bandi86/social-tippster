@@ -226,4 +226,14 @@ All testing frameworks now completely ignore archived folders and their contents
 - All tests pass and follow project file organization and documentation standards.
 - Backend builds and runs successfully.
 
-_Last updated: 2025-06-04 by GitHub Copilot_
+---
+
+## Frontend Post Handling Changes (2025-06-07)
+
+- The post creation flow has been simplified. The dedicated page `frontend/app/posts/create/page.tsx` was removed. Post creation is now handled via a modal on the main page.
+- The dedicated post edit page `frontend/app/posts/[id]/edit/page.tsx` was removed. Editing functionality will be integrated into the post detail view or admin interface.
+- The main page's right sidebar structure was restored, but `PopularTags` and `SuggestedUsers` components were not found and are currently omitted.
+- E2E tests related to the removed pages (`/posts/create`, `/posts/[id]/edit`) will need to be updated or removed.
+- Tests for the main page's post creation modal should be verified or created.
+
+_Last updated: 2025-06-07 by GitHub Copilot_

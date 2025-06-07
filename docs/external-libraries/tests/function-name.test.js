@@ -63,7 +63,7 @@ describe("function-name", function () {
         refute.exception(function () {
             var fn;
             try {
-                // eslint-disable-next-line no-eval
+                 
                 fn = eval("(function*() {})")().constructor;
             } catch (e) {
                 // env doesn't support generators

@@ -141,6 +141,22 @@ export class PostsController {
     return this.postsService.toggleBookmark(id, user.user_id);
   }
 
+  @Delete(':id/bookmark')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Könyvjelző eltávolítása' })
+  @ApiResponse({ status: 200, description: 'Könyvjelző sikeresen eltávolítva' })
+  @ApiResponse({ status: 401, description: 'Nincs jogosultság' })
+  @ApiResponse({ status: 404, description: 'Poszt nem található' })
+  @ApiParam({ name: 'id', description: 'Poszt ID', type: 'string' })
+  async removeBookmark(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: User,
+  ): Promise<{ bookmarked: boolean }> {
+    return this.postsService.removeBookmark(id, user.user_id);
+  }
+
   @Post(':id/share')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()

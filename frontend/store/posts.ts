@@ -259,6 +259,7 @@ interface PostsActions {
   toggleBookmark: (id: string) => Promise<{ bookmarked: boolean }>;
   sharePost: (id: string, platform?: string) => Promise<void>;
   trackPostView: (id: string) => Promise<void>;
+  reportPost: (id: string, reason: string, additionalDetails?: string) => Promise<void>;
 
   // Admin-specific actions
   fetchAdminPosts: (params?: AdminPostsParams) => Promise<void>;
@@ -674,6 +675,21 @@ export const usePostsStore = create<PostsState & PostsActions>()(
         } catch (error) {
           console.error('Error sharing post:', error);
           const errorMessage = error instanceof Error ? error.message : 'Failed to share post';
+          set({ error: errorMessage });
+          throw error;
+        }
+      },
+
+      reportPost: async (id: string, reason: string, additionalDetails?: string) => {
+        try {
+          await axiosWithAuth({
+            method: 'POST',
+            url: `${API_BASE_URL}/posts/${id}/report`,
+            data: { reason, additional_details: additionalDetails },
+          });
+        } catch (error) {
+          console.error('Error reporting post:', error);
+          const errorMessage = error instanceof Error ? error.message : 'Failed to report post';
           set({ error: errorMessage });
           throw error;
         }

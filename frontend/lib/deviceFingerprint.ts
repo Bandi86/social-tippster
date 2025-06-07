@@ -178,10 +178,14 @@ async function generateAudioFingerprint(): Promise<string> {
           resolved = true;
           try {
             oscillator.stop();
-          } catch {}
+          } catch {
+            // Ignore errors when stopping oscillator
+          }
           try {
             audioContext.close();
-          } catch {}
+          } catch {
+            // Ignore errors when closing audio context
+          }
           resolve(value);
         }
       }

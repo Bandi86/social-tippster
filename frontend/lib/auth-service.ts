@@ -10,20 +10,20 @@ import {
   ChangePasswordFormData,
   LoginFormData,
   RefreshTokenResponse,
-  RegisterFormData,
+  RegisterData,
   ResetPasswordFormData,
   User,
 } from '@/types';
 import apiClient from './api-client';
 
-// Transform register form data to backend API format
-function transformRegisterData(formData: RegisterFormData, clientFingerprint?: any): any {
+// Transform register data to backend API format
+function transformRegisterData(formData: RegisterData, clientFingerprint?: any): any {
   return {
     username: formData.username,
     email: formData.email,
     password: formData.password,
-    first_name: formData.firstName,
-    last_name: formData.lastName,
+    first_name: formData.first_name,
+    last_name: formData.last_name,
     // Note: clientFingerprint is not sent in body for register endpoint
     // The backend register endpoint doesn't support device fingerprinting yet
   };
@@ -136,7 +136,7 @@ class AuthService {
   /**
    * Register new user
    */
-  async register(formData: RegisterFormData, clientFingerprint?: any): Promise<AuthResponse> {
+  async register(formData: RegisterData, clientFingerprint?: any): Promise<AuthResponse> {
     try {
       const registerData = transformRegisterData(formData, clientFingerprint);
       const response = await apiClient.post<BackendAuthResponse>('/auth/register', registerData);

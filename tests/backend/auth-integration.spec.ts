@@ -4,6 +4,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { TypeOrmModule, getRepositoryToken } from '@nestjs/typeorm';
 import cookieParser from 'cookie-parser';
+import * as jwt from 'jsonwebtoken';
 import request from 'supertest';
 import { Repository } from 'typeorm';
 import { AnalyticsModule } from '../../backend/src/modules/admin/analytics-dashboard/analytics.module';
@@ -475,7 +476,7 @@ describe('Authentication System Integration Tests', () => {
       expect(user!.password_hash).toBeDefined();
       expect(user!.password_hash).not.toBe(testUser.password);
       expect(user!.password_hash.length).toBeGreaterThan(50); // bcrypt hashes are typically 60 characters
-      expect(user!.password_hash).toMatch(/^[\$]2[ayb]\$.{56}$/); // bcrypt format
+      expect(user!.password_hash).toMatch(/^[$]2[ayb]\$.{56}$/); // bcrypt format
     });
 
     it('should store refresh token hashes securely', async () => {
@@ -495,7 +496,7 @@ describe('Authentication System Integration Tests', () => {
       expect(refreshToken).toBeDefined();
       expect(refreshToken!.token_hash).toBeDefined();
       expect(refreshToken!.token_hash.length).toBeGreaterThan(50); // bcrypt hashes
-      expect(refreshToken!.token_hash).toMatch(/^[\$]2[ayb]\$.{56}$/); // bcrypt format
+      expect(refreshToken!.token_hash).toMatch(/^[$]2[ayb]\$.{56}$/); // bcrypt format
     });
   });
 
@@ -528,7 +529,6 @@ describe('Authentication System Integration Tests', () => {
 
     it('should reject expired tokens', async () => {
       // Generate a token that expired 10 seconds ago using the test secret
-      const jwt = require('jsonwebtoken');
       const expiredToken = jwt.sign(
         { sub: '123', name: 'John Doe' },
         process.env.JWT_SECRET || 'test-secret',

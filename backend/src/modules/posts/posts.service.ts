@@ -253,6 +253,23 @@ export class PostsService {
   }
 
   /**
+   * Könyvjelző eltávolítása
+   */
+  async removeBookmark(postId: string, userId: string): Promise<{ bookmarked: boolean }> {
+    await this.findById(postId); // Ellenőrzi, hogy létezik-e a poszt
+
+    const existingBookmark = await this.postBookmarkRepository.findOne({
+      where: { post_id: postId, user_id: userId },
+    });
+
+    if (existingBookmark) {
+      await this.postBookmarkRepository.remove(existingBookmark);
+    }
+
+    return { bookmarked: false };
+  }
+
+  /**
    * Poszt megosztása
    */
   async sharePost(
@@ -401,6 +418,24 @@ export class PostsService {
       queryBuilder.andWhere('post.likes_count <= :likesCountMax', {
         likesCountMax: filterDto.likesCountMax,
       });
+    }
+
+    // Könyvjelző szűrő
+    if (filterDto.bookmarked !== undefined && userId) {
+      if (filterDto.bookmarked) {
+        queryBuilder
+          .innerJoin('post_bookmarks', 'bookmark', 'bookmark.post_id = post.id')
+          .andWhere('bookmark.user_id = :userId', { userId });
+      } else {
+        queryBuilder
+          .leftJoin(
+            'post_bookmarks',
+            'bookmark',
+            'bookmark.post_id = post.id AND bookmark.user_id = :userId',
+            { userId },
+          )
+          .andWhere('bookmark.id IS NULL');
+      }
     }
 
     return queryBuilder;

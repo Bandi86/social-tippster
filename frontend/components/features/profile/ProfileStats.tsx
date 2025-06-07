@@ -4,7 +4,7 @@
 
 import { DollarSign, MessageCircle, Target, TrendingUp, Users } from 'lucide-react';
 
-interface ProfileStats {
+interface ProfileStatsData {
   followers_count: number;
   following_count: number;
   posts_count: number;
@@ -14,7 +14,7 @@ interface ProfileStats {
 }
 
 interface ProfileStatsProps {
-  stats: ProfileStats;
+  stats: ProfileStatsData;
 }
 
 /**

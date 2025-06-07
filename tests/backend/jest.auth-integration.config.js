@@ -30,7 +30,6 @@ module.exports = {
     '!backend/src/modules/users/**/*.entity.ts',
   ],
   coverageDirectory: 'tests/coverage/auth-integration',
-  testEnvironment: 'node',
   setupFilesAfterEnv: ['<rootDir>/tests/backend/auth-test-setup.ts'],
   testTimeout: 60000,
   maxWorkers: 1,

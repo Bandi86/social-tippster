@@ -68,6 +68,7 @@ export const usePosts = () => {
     toggleBookmark: store.toggleBookmark,
     sharePost: store.sharePost,
     trackPostView: store.trackPostView,
+    reportPost: store.reportPost,
 
     // Local state management
     updatePostLocally: store.updatePostLocally,

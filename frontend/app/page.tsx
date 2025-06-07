@@ -19,6 +19,14 @@ import TopContributors from '@/components/root/TopContributors';
 import TrendingTopics from '@/components/root/TrendingTopics';
 import UserProfileQuickView from '@/components/root/UserProfileQuickView';
 import WelcomeHeader from '@/components/root/WelcomeHeader';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'; // Corrected path
+//import PopularTags from '@/components/root/PopularTags'; // Corrected path
+//import SuggestedUsers from '@/components/root/SuggestedUsers'; // Corrected path
 
 /**
  * Főoldal komponens
