@@ -1,5 +1,76 @@
 # Frontend Progress – Authentication UI Redesign (2025-06-03)
 
+## Posts Display Issue Resolution (2025-06-07)
+
+### Critical Bug Fix: "Még nincsenek posztok" Display Issue
+
+**Status**: ✅ **RESOLVED**
+
+Successfully identified and fixed a critical frontend display issue where the home page showed "No posts yet" message despite the backend API correctly returning posts data.
+
+#### Root Cause Analysis
+
+1. **Incorrect API Call Pattern**: Frontend Zustand store was using `axios.get('/posts?...')` instead of the required `axiosWithAuth` pattern
+2. **Parameter Mismatch**: Using `featured=true` parameter instead of backend-expected `isFeatured=true`
+3. **Missing Boolean Transformation**: Backend DTO lacked proper string-to-boolean conversion for query parameters
+
+#### Applied Fixes
+
+1. **Frontend Store Correction** (`frontend/store/posts.ts`):
+
+   ```typescript
+   // Before (incorrect):
+   const response = await axios.get(`/posts?${searchParams.toString()}`);
+
+   // After (correct):
+   const response = await axiosWithAuth({
+     method: 'GET',
+     url: `${API_BASE_URL}/posts?${searchParams.toString()}`,
+   });
+   ```
+
+2. **Parameter Name Fix**:
+
+   - Changed `featured=true` to `isFeatured=true` in `fetchFeaturedPosts` function
+   - Updated test validation scripts accordingly
+
+3. **Backend DTO Enhancement** (`backend/src/modules/posts/dto/filter-posts.dto.ts`):
+   ```typescript
+   @IsOptional()
+   @Transform(({ value }) => value === 'true' || value === true)
+   @IsBoolean()
+   isFeatured?: boolean;
+   ```
+
+#### Validation Results
+
+- **Main Posts Endpoint**: Returns 11 total posts successfully (10 per page)
+- **Featured Posts Endpoint**: Working correctly with proper boolean parameter handling
+- **Frontend State**: Store now properly fetches and processes posts data
+- **User Experience**: Home page displays actual posts instead of "No posts yet" message
+
+#### Technical Impact
+
+- **Data Flow**: Proper API communication between frontend and backend
+- **Error Resolution**: Eliminated 400 Bad Request errors for featured posts
+- **Performance**: Efficient data fetching with correct authentication headers
+- **User Interface**: Posts now properly populate on home page load
+
+#### Files Modified
+
+- `frontend/store/posts.ts` - Fixed API call patterns in `fetchPosts` and `fetchFeaturedPosts`
+- `backend/src/modules/posts/dto/filter-posts.dto.ts` - Added boolean transformation decorators
+- Test validation scripts updated to reflect parameter changes
+
+#### Verification
+
+- Created comprehensive test suite in `tests/frontend/final-validation.cjs`
+- Confirmed API endpoints return expected data structure
+- Validated frontend store integration with backend API
+- Tested both main posts and featured posts functionality
+
+This fix ensures that users see actual post content on the home page, resolving a critical user experience issue that was preventing proper content display.
+
 ## Post Components Refactoring (2025-06-07)
 
 ### Major Achievement: Component Architecture Improvement
@@ -306,3 +377,98 @@ Successfully completed a comprehensive refactoring of post-related components to
 ---
 
 _Last updated: 2025-06-07 by GitHub Copilot_
+
+## 2025-06-07: Profile Components & Build Fixes
+
+### ✅ Profile Components Implementation
+
+- **Created complete profile component system**:
+  - `ProfileSkeleton.tsx` - Loading states for profile pages
+  - `ProfileTabs.tsx` - Tab navigation with conditional visibility
+  - `ProfileContent.tsx` - Generic content wrapper with loading/empty states
+  - `index.ts` - Proper component exports
+- **Location**: `frontend/components/user/profile/`
+- **Features**: TypeScript, responsive design, reusable patterns
+
+### ✅ Admin API Integration Fixes
+
+- **Fixed import errors** in admin API files:
+  - Updated `comments.ts` and `users.ts` to use `apiClient`
+  - Corrected HTTP method calls (get, post, patch, delete)
+  - Fixed response data extraction patterns
+- **Result**: Zero build warnings, proper API integration
+
+### ✅ Build System Improvements
+
+- **Resolved all frontend build errors**
+- **Organized test files** per project guidelines (moved to tests/)
+- **Maintained TypeScript safety** throughout changes
+
+### ��� Current Status
+
+- **Frontend Build**: ✅ Clean compilation
+- **Profile Pages**: ✅ Ready for use
+- **Admin APIs**: ✅ Properly integrated
+- **Authentication**: ✅ Working correctly
+
+---
+
+# Frontend Progress – Authentication System Critical Fix (2025-06-08) ✅ RESOLVED
+
+### Frontend Auth Store URL Construction Issue
+
+Successfully identified and resolved a critical authentication bug that was preventing user login persistence and causing authentication failures.
+
+#### Problem Analysis
+
+- **Symptom**: Users could log in successfully but weren't recognized as authenticated
+- **Console Errors**: "Token validation failed, clearing auth" with 404 errors
+- **Root Cause**: Duplicate `/api` prefix in authentication request URLs
+- **Impact**: System defaulted to guest mode despite valid authentication tokens
+
+#### Technical Details
+
+**URL Construction Problem**:
+
+```typescript
+// BEFORE (Broken):
+const API_BASE_URL = 'http://localhost:3001'; // No /api
+fetch(`${API_BASE_URL}/api/auth/me`); // Results in correct URL
+
+// But with environment variable:
+// NEXT_PUBLIC_API_URL = 'http://localhost:3001/api'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL; // Contains /api
+fetch(`${API_BASE_URL}/api/auth/me`); // Results in /api/api/auth/me (404)
+```
+
+#### Solution Implementation ✅
+
+1. **Fixed API_BASE_URL constant**:
+
+   ```typescript
+   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+   ```
+
+2. **Corrected fetch endpoints in auth store**:
+
+   - `initialize()` method: Fixed to use `/auth/me`
+   - `refreshUserData()` method: Fixed to use `/auth/me`
+   - Token validation requests: Consistent URL construction
+
+3. **Files Modified**:
+   - `frontend/store/auth.ts`: Three fetch URL corrections
+
+#### Testing & Verification ✅
+
+- ✅ Authentication requests reach correct backend endpoints
+- ✅ User login persistence works across page refreshes
+- ✅ Token validation succeeds consistently
+- ✅ No more 404 errors in browser console
+- ✅ Seamless authentication flow without login loops
+
+#### Development Impact
+
+- **User Experience**: Fixed authentication persistence issues
+- **Developer Experience**: Eliminated confusing console errors
+- **System Reliability**: Stable authentication state management
+- **Code Quality**: Consistent URL handling across the application

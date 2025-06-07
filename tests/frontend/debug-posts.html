@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Posts API Debug</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  </head>
+  <body>
+    <h1>Posts API Debug Test</h1>
+    <div id="output"></div>
+    <button onclick="testPostsAPI()">Test Posts API</button>
+    <button onclick="testWithCredentials()">Test With Credentials</button>
+    <button onclick="testDirectFetch()">Test Direct Fetch</button>
+
+    <script>
+      const outputDiv = document.getElementById('output');
+
+      function log(message) {
+        outputDiv.innerHTML += `<p>${message}</p>`;
+        console.log(message);
+      }
+
+      async function testPostsAPI() {
+        outputDiv.innerHTML = '<h3>Testing Posts API...</h3>';
+
+        try {
+          // Test the exact same API call as the frontend
+          const response = await axios.get('http://localhost:3001/api/posts?page=1&limit=10', {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            timeout: 10000,
+          });
+
+          log(`✅ Status: ${response.status}`);
+          log(`✅ Posts Count: ${response.data.posts?.length || 0}`);
+          log(`✅ Total: ${response.data.total}`);
+
+          if (response.data.posts && response.data.posts.length > 0) {
+            log(`✅ First post: ${response.data.posts[0].title}`);
+          }
+        } catch (error) {
+          log(`❌ Error: ${error.message}`);
+          if (error.response) {
+            log(`❌ Status: ${error.response.status}`);
+            log(`❌ Data: ${JSON.stringify(error.response.data)}`);
+          }
+        }
+      }
+
+      async function testWithCredentials() {
+        outputDiv.innerHTML = '<h3>Testing With Credentials...</h3>';
+
+        try {
+          // Test with credentials like the frontend does
+          const response = await axios.get('http://localhost:3001/api/posts?page=1&limit=10', {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            withCredentials: true,
+            timeout: 10000,
+          });
+
+          log(`✅ Status: ${response.status}`);
+          log(`✅ Posts Count: ${response.data.posts?.length || 0}`);
+          log(`✅ Total: ${response.data.total}`);
+        } catch (error) {
+          log(`❌ Error: ${error.message}`);
+          if (error.response) {
+            log(`❌ Status: ${error.response.status}`);
+            log(`❌ Data: ${JSON.stringify(error.response.data)}`);
+          }
+        }
+      }
+
+      async function testDirectFetch() {
+        outputDiv.innerHTML = '<h3>Testing Direct Fetch...</h3>';
+
+        try {
+          const response = await fetch('http://localhost:3001/api/posts?page=1&limit=10', {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+
+          const data = await response.json();
+          log(`✅ Status: ${response.status}`);
+          log(`✅ Posts Count: ${data.posts?.length || 0}`);
+          log(`✅ Total: ${data.total}`);
+        } catch (error) {
+          log(`❌ Error: ${error.message}`);
+        }
+      }
+
+      // Auto-run the first test
+      testPostsAPI();
+    </script>
+  </body>
+</html>

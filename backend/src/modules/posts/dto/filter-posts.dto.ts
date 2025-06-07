@@ -82,22 +82,27 @@ export class FilterPostsDTO {
   commentsCountMax?: number;
 
   @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
   @IsBoolean()
   isFeatured?: boolean;
 
   @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
   @IsBoolean()
   isPinned?: boolean;
 
   @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
   @IsBoolean()
   isReported?: boolean;
 
   @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
   @IsBoolean()
   isPremium?: boolean;
 
   @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
   @IsBoolean()
   isDeleted?: boolean;
 

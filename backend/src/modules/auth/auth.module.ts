@@ -15,6 +15,7 @@ import { RefreshTokenStrategy } from './strategies/refresh-token.strategy';
 import { UserLogin } from '../admin/analytics-dashboard/entities/user-login.entity';
 import { UserSession } from '../admin/analytics-dashboard/entities/user-session.entity';
 import { RefreshToken } from './entities/refresh-token.entity';
+import { OptionalJwtAuthGuard } from './guards/optional-jwt-auth.guard';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
 import { DeviceFingerprintingService } from './services/device-fingerprinting.service';
 import { JwtValidationService } from './services/jwt-validation.service';
@@ -40,6 +41,7 @@ import { SessionLifecycleService } from './services/session-lifecycle.service';
     SecurityMonitoringService,
     SentryService,
     RefreshTokenGuard,
+    OptionalJwtAuthGuard,
     LocalStrategy,
     JwtStrategy,
     RefreshTokenStrategy,
@@ -53,6 +55,7 @@ import { SessionLifecycleService } from './services/session-lifecycle.service';
     SecurityMonitoringService,
     SentryService,
     RefreshTokenGuard,
+    OptionalJwtAuthGuard,
   ],
 })
 export class AuthModule {}

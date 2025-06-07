@@ -15,7 +15,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import registerSchema, { RegisterFormData, RegisterFormProps } from './registerSchema';
 
-export function RegisterFormNew({ onSuccess, redirectTo = '/auth' }: RegisterFormProps) {
+export function RegisterFormNew({ onSuccess, redirectTo = '/' }: RegisterFormProps) {
   const { register: registerUser, error, isLoading, clearError } = useAuth();
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);

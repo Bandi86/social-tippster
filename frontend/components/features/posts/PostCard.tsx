@@ -79,7 +79,7 @@ export default function PostCard({ post, onPostUpdate, compact = false }: PostCa
                 <span>•</span>
                 <div className='flex items-center gap-1'>
                   <Eye className='h-3 w-3' />
-                  <span>{post.views_count}</span>
+                 { <span>{post.views_count}</span>}
                 </div>
                 {/* Image Indicator - using existing component */}
                 <PostMetaIndicators post={post} />

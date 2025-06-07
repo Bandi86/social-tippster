@@ -1,7 +1,17 @@
 # Social Tippster
 
-> **2025-06-07:**
+> **2025-06-07 Update:**
 >
+> - ✅ **Frontend Posts Display Issue FIXED**: Resolved critical "Még nincsenek posztok" (No posts yet) message on home page
+>   - **Root Cause**: Frontend store using incorrect API call patterns and parameter names
+>   - **Fix Applied**: Updated Zustand store to use axiosWithAuth with proper URL construction
+>   - **Backend Enhancement**: Added boolean transform decorators for query parameters
+>   - **Result**: Home page now displays 10 posts out of 11 total available posts
+> - ✅ **Authentication Issues Resolved**: Fixed missing profile components and admin API imports
+> - ✅ **Profile Components**: Created complete ProfileSkeleton, ProfileTabs, and ProfileContent components
+> - ✅ **Build Fixes**: Resolved all frontend build errors, admin API integration corrected
+> - ✅ **Code Organization**: Moved test files to tests/ directory per project guidelines
+>   **2025-06-07:**
 > - ✅ **Post Components Refactoring**: Successfully completed comprehensive refactoring of post-related components
 >   - **PostCard**: Reduced from 486+ lines to 129 lines (~73% reduction) by leveraging existing sub-components
 >   - **PostList**: Extracted functionality into 4 specialized sub-components (PostListFilters, PostListEmptyState, PostListSkeleton, PostListLoadMore)

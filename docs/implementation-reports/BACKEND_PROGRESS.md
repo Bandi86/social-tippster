@@ -665,3 +665,74 @@ _Last updated: 2025-06-05 by GitHub Copilot_
 _Investigation completed: 2025-06-07 by GitHub Copilot_
 
 ---
+
+# Backend Progress – Authentication Service Critical Fixes & Code Quality Improvements (2025-06-08)
+
+## FilterPostsDTO Boolean Parameter Enhancement (2025-06-07)
+
+**Date:** 2025-06-07
+**Priority:** Medium
+**Component:** Posts Module DTO
+**Status:** ✅ COMPLETED
+
+### Issue Resolved
+
+Fixed a critical API parameter validation issue where boolean query parameters were being rejected due to string-to-boolean conversion problems.
+
+#### Problem
+
+- Frontend sending `isFeatured=true` as string in URL query parameters
+- Backend FilterPostsDTO expecting boolean values for `@IsBoolean()` decorated fields
+- Resulted in 400 Bad Request errors: "isFeatured must be a boolean value"
+- Affected multiple boolean filters: `isFeatured`, `isPinned`, `isReported`, `isPremium`, `isDeleted`
+
+#### Solution
+
+Added `@Transform` decorators to all boolean query parameters in FilterPostsDTO:
+
+```typescript
+@IsOptional()
+@Transform(({ value }) => value === 'true' || value === true)
+@IsBoolean()
+isFeatured?: boolean;
+
+@IsOptional()
+@Transform(({ value }) => value === 'true' || value === true)
+@IsBoolean()
+isPinned?: boolean;
+
+@IsOptional()
+@Transform(({ value }) => value === 'true' || value === true)
+@IsBoolean()
+isReported?: boolean;
+
+@IsOptional()
+@Transform(({ value }) => value === 'true' || value === true)
+@IsBoolean()
+isPremium?: boolean;
+
+@IsOptional()
+@Transform(({ value }) => value === 'true' || value === true)
+@IsBoolean()
+isDeleted?: boolean;
+```
+
+#### Technical Benefits
+
+- **API Compatibility**: Frontend can send boolean parameters as URL query strings
+- **Validation Consistency**: Proper string-to-boolean conversion for all boolean filters
+- **Error Prevention**: Eliminates 400 Bad Request errors for boolean parameters
+- **Development Experience**: Smoother API testing and frontend integration
+
+#### Validation Results
+
+- ✅ `GET /api/posts?isFeatured=true&limit=10` now works correctly
+- ✅ All boolean query parameters properly converted from strings
+- ✅ Featured posts endpoint functional for frontend store
+- ✅ Consistent with existing `bookmarked` parameter implementation
+
+#### Files Modified
+
+- `backend/src/modules/posts/dto/filter-posts.dto.ts` - Added Transform decorators for boolean fields
+
+This enhancement ensures robust API parameter handling and prevents validation errors when frontend applications send boolean values as query string parameters.

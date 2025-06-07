@@ -7,12 +7,12 @@
 // ---- Importok ----
 import { completeAuthReset } from '@/lib/auth-reset';
 import authService from '@/lib/auth-service';
-import { AuthActions, AuthState, AuthTokens, User } from '@/types';
+import { AuthActions, AuthState, AuthTokens, RegisterData, User } from '@/types';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 // ---- API BASE URL ----
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 // ---- Interface-k ----
 interface AuthStore extends AuthState, AuthActions {}
@@ -213,7 +213,7 @@ export const useAuthStore = create<AuthStore>()(
         }
       },
 
-      register: async (data: any, clientFingerprint?: any) => {
+      register: async (data: RegisterData, clientFingerprint?: object) => {
         try {
           set({ isLoading: true, error: null });
           const authResponse = await authService.register(data, clientFingerprint);
@@ -330,7 +330,7 @@ export const useAuthStore = create<AuthStore>()(
             console.log('Found persisted auth data, validating...');
             // Validate the token by trying to fetch user data
             try {
-              const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+              const response = await fetch(`${API_BASE_URL}/auth/me`, {
                 headers: {
                   Authorization: `Bearer ${persistedTokens.accessToken}`,
                 },
@@ -359,7 +359,7 @@ export const useAuthStore = create<AuthStore>()(
             // If we only have tokens but no user data, fetch user data
             console.log('Found token but no user data, fetching user...');
             try {
-              const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+              const response = await fetch(`${API_BASE_URL}/auth/me`, {
                 headers: {
                   Authorization: `Bearer ${persistedTokens.accessToken}`,
                 },

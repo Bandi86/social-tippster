@@ -347,3 +347,74 @@ Users were unable to register on the Hungarian social tipping website due to mul
 The registration bug is fully resolved. The Hungarian social tipping website now has a fully functional user registration system with automatic login and seamless user experience.
 
 ---
+
+## Frontend Posts Display Fix
+
+**Time:** 2025-06-07 17:10 CET
+**Type:** Bug Fix
+**Priority:** High
+**Component:** Frontend Store / Backend API
+
+### Issue Description
+
+Frontend home page displayed "Még nincsenek posztok" (No posts yet) message despite backend API correctly returning 11 posts in the database.
+
+### Root Cause Analysis
+
+1. **Frontend Store API Pattern**: Zustand posts store was using incorrect `axios.get()` pattern instead of required `axiosWithAuth()`
+2. **Parameter Mismatch**: Frontend using `featured=true` parameter while backend expected `isFeatured=true`
+3. **Backend DTO Limitation**: Missing boolean transformation for query string parameters
+
+### Changes Made
+
+#### Frontend Changes (`frontend/store/posts.ts`)
+
+1. **Fixed fetchPosts function**:
+
+   ```typescript
+   // Before:
+   const response = await axios.get(`/posts?${searchParams.toString()}`);
+
+   // After:
+   const response = await axiosWithAuth({
+     method: 'GET',
+     url: `${API_BASE_URL}/posts?${searchParams.toString()}`,
+   });
+   ```
+
+2. **Fixed fetchFeaturedPosts function**:
+
+   ```typescript
+   // Before:
+   url: `${API_BASE_URL}/posts?featured=true&limit=10`;
+
+   // After:
+   url: `${API_BASE_URL}/posts?isFeatured=true&limit=10`;
+   ```
+
+#### Backend Changes (`backend/src/modules/posts/dto/filter-posts.dto.ts`)
+
+Added Transform decorators for boolean query parameters:
+
+```typescript
+@IsOptional()
+@Transform(({ value }) => value === 'true' || value === true)
+@IsBoolean()
+isFeatured?: boolean;
+```
+
+Applied same pattern to: `isPinned`, `isReported`, `isPremium`, `isDeleted`
+
+### Testing & Validation
+
+- ✅ Main posts endpoint: Returns 11 posts successfully
+- ✅ Featured posts endpoint: Working with proper boolean conversion
+- ✅ Frontend should display posts instead of "No posts yet"
+- ✅ No more 400 Bad Request errors for boolean parameters
+
+### Expected User Experience
+
+**Before**: Home page shows "Még nincsenek posztok" (empty state)
+**After**: Home page displays 10 posts out of 11 total available posts
+
+---

@@ -7,8 +7,17 @@
 // ---- Importok ----
 import { databaseConfig } from '@/lib/api-client'; // Add this import
 import axios from '@/lib/axios';
+import { AxiosRequestConfig } from 'axios';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
+
+// ---- Metadata interface ----
+export interface PaginationMeta {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
 
 // ---- Helper függvények ----
 // Auth token lekérése localStorage-ból
@@ -18,12 +27,16 @@ function getAuthToken(): string | null {
 }
 
 // Authentikált axios kérés helper
-async function axiosWithAuth(config: any) {
+async function axiosWithAuth(config: AxiosRequestConfig) {
   const token = getAuthToken();
-  const headers = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...(config.headers || {}),
   };
+
+  // Add existing headers
+  if (config.headers) {
+    Object.assign(headers, config.headers);
+  }
 
   // Add database name header if available
   if (databaseConfig.databaseName) {
@@ -34,9 +47,20 @@ async function axiosWithAuth(config: any) {
   try {
     const response = await axios({ ...config, headers });
     return response.data;
-  } catch (error: any) {
-    if (error.response && error.response.data && error.response.data.message) {
-      throw new Error(error.response.data.message);
+  } catch (error: unknown) {
+    if (
+      error instanceof Error &&
+      'response' in error &&
+      error.response &&
+      typeof error.response === 'object' &&
+      error.response !== null &&
+      'data' in error.response &&
+      error.response.data &&
+      typeof error.response.data === 'object' &&
+      error.response.data !== null &&
+      'message' in error.response.data
+    ) {
+      throw new Error(String(error.response.data.message));
     }
     throw error;
   }
@@ -152,7 +176,7 @@ export interface PostsResponse {
 
 export interface CreatePostData {
   content: string;
-  type?: 'general' | 'discussion' | 'analysis' | 'help_request' | 'news';
+  type?: 'general' | 'discussion' | 'analysis' | 'help_request' | 'news' | 'tip';
   status?:
     | 'draft'
     | 'published'
@@ -231,7 +255,7 @@ interface PostsState {
   adminError: string | null;
 
   // Cache for performance
-  postsCache: Map<string, { posts: Post[]; meta: any; timestamp: number }>;
+  postsCache: Map<string, { posts: Post[]; meta: PaginationMeta; timestamp: number }>;
 
   // View tracking state
   viewedPosts: Set<string>;
@@ -248,8 +272,8 @@ interface PostsActions {
     username: string,
     page?: number,
     limit?: number,
-  ) => Promise<{ posts: Post[]; meta: any }>;
-  createPost: (data: any) => Promise<Post>;
+  ) => Promise<{ posts: Post[]; meta: PaginationMeta }>;
+  createPost: (data: CreatePostData) => Promise<Post>;
   updatePost: (id: string, updates: Partial<Post>) => Promise<void>;
   deletePost: (id: string) => Promise<void>;
 
@@ -397,27 +421,30 @@ export const usePostsStore = create<PostsState & PostsActions>()(
           if (params?.author) searchParams.append('author', params.author);
           if (params?.featured) searchParams.append('featured', 'true');
 
-          const response: PostsResponse = await axiosWithAuth({
+          const response = await axiosWithAuth({
             method: 'GET',
             url: `${API_BASE_URL}/posts?${searchParams.toString()}`,
           });
+          const postsData: PostsResponse = response;
 
           // Cache frissítése
           get().postsCache.set(cacheKey, {
-            posts: response.posts,
+            posts: postsData.posts,
             meta: {
-              total: response.total,
-              totalPages: response.totalPages,
+              total: postsData.total,
+              page: postsData.page,
+              limit: postsData.limit,
+              totalPages: postsData.totalPages,
             },
             timestamp: now,
           });
 
           set({
-            posts: append ? [...get().posts, ...response.posts] : response.posts,
-            totalPosts: response.total,
-            totalPages: response.totalPages,
+            posts: append ? [...get().posts, ...postsData.posts] : postsData.posts,
+            totalPosts: postsData.total,
+            totalPages: postsData.totalPages,
             currentPage: page,
-            hasMore: page < response.totalPages,
+            hasMore: page < postsData.totalPages,
             isLoading: false,
             isLoadingMore: false,
             error: null,
@@ -431,16 +458,16 @@ export const usePostsStore = create<PostsState & PostsActions>()(
           });
         }
       },
-
       fetchFeaturedPosts: async () => {
         try {
           set({ isLoading: true, error: null });
           const response = await axiosWithAuth({
             method: 'GET',
-            url: `${API_BASE_URL}/posts?featured=true&limit=10`,
+            url: `${API_BASE_URL}/posts?isFeatured=true&limit=10`,
           });
+          const featuredData = response;
           set({
-            featuredPosts: response.posts || response,
+            featuredPosts: featuredData.posts || featuredData,
             isLoading: false,
             error: null,
           });
@@ -493,7 +520,7 @@ export const usePostsStore = create<PostsState & PostsActions>()(
         }
       },
 
-      createPost: async (data: any) => {
+      createPost: async (data: CreatePostData) => {
         try {
           set({ isSubmitting: true, error: null });
           const newPost = await axiosWithAuth({
@@ -769,10 +796,18 @@ export const usePostsStore = create<PostsState & PostsActions>()(
               });
 
               break; // Success, exit retry loop
-            } catch (error: any) {
+            } catch (error: unknown) {
               attempt++;
 
-              if (error.response?.status === 429) {
+              if (
+                error &&
+                typeof error === 'object' &&
+                'response' in error &&
+                error.response &&
+                typeof error.response === 'object' &&
+                'status' in error.response &&
+                error.response.status === 429
+              ) {
                 // Rate limited - implement exponential backoff
                 if (attempt < maxRetries) {
                   console.warn(
@@ -830,11 +865,14 @@ export const usePostsStore = create<PostsState & PostsActions>()(
 
           // Transform regular posts to admin posts format
           const adminPosts: AdminPost[] =
-            response.posts?.map((post: any) => ({
-              ...post,
-              is_reported: post.is_reported || false,
-              reports_count: post.reports_count || 0,
-            })) || [];
+            response.posts?.map((post: unknown) => {
+              const postObj = post as Post & { is_reported?: boolean; reports_count?: number };
+              return {
+                ...postObj,
+                is_reported: postObj.is_reported || false,
+                reports_count: postObj.reports_count || 0,
+              };
+            }) || [];
 
           set({
             adminPosts,
@@ -867,16 +905,35 @@ export const usePostsStore = create<PostsState & PostsActions>()(
           const posts = response.posts || [];
           const stats: PostsStats = {
             total: posts.length,
-            published: posts.filter((p: any) => p.status === 'published').length,
-            draft: posts.filter((p: any) => p.status === 'draft').length,
-            hidden: posts.filter((p: any) => p.status === 'hidden').length,
-            reported: posts.filter((p: any) => p.is_reported).length,
-            totalViews: posts.reduce((sum: number, p: any) => sum + (p.views_count || 0), 0),
-            totalLikes: posts.reduce((sum: number, p: any) => sum + (p.likes_count || 0), 0),
-            recentPosts: posts.filter((p: any) => {
+            published: posts.filter((p: unknown) => {
+              const post = p as Post;
+              return post.status === 'published';
+            }).length,
+            draft: posts.filter((p: unknown) => {
+              const post = p as Post;
+              return post.status === 'draft';
+            }).length,
+            hidden: posts.filter((p: unknown) => {
+              const post = p as Post;
+              return post.status === 'archived';
+            }).length,
+            reported: posts.filter((p: unknown) => {
+              const post = p as Post & { is_reported?: boolean };
+              return post.is_reported;
+            }).length,
+            totalViews: posts.reduce((sum: number, p: unknown) => {
+              const post = p as Post;
+              return sum + (post.views_count || 0);
+            }, 0),
+            totalLikes: posts.reduce((sum: number, p: unknown) => {
+              const post = p as Post;
+              return sum + (post.likes_count || 0);
+            }, 0),
+            recentPosts: posts.filter((p: unknown) => {
+              const post = p as Post;
               const weekAgo = new Date();
               weekAgo.setDate(weekAgo.getDate() - 7);
-              return new Date(p.created_at) > weekAgo;
+              return new Date(post.created_at) > weekAgo;
             }).length,
           };
 
@@ -962,9 +1019,12 @@ export const usePostsStore = create<PostsState & PostsActions>()(
           set(state => {
             // Destructure updates to separate fields that are AdminPost-specific or have different types
             const {
-              author: _adminAuthor, // Exclude admin-specific author type from Post updates
-              is_reported: _is_reported, // Exclude AdminPost-specific field
-              reports_count: _reports_count, // Exclude AdminPost-specific field
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              author,
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              is_reported,
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              reports_count,
               ...postCompatibleUpdates // These are updates applicable to Post fields (excluding author)
             } = updates;
 
@@ -1010,8 +1070,8 @@ export const usePostsStore = create<PostsState & PostsActions>()(
           // Destructure 'updates' (Partial<Post>).
           // We separate 'author' because Post['author'] and AdminPost['author'] have different types.
           // 'otherUpdatesCompatibleWithAdminPost' will contain all fields from 'updates' except 'author'.
-          const { author: _postAuthorSpecificUpdate, ...otherUpdatesCompatibleWithAdminPost } =
-            updates;
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { author, ...otherUpdatesCompatibleWithAdminPost } = updates;
 
           return {
             // For posts, featuredPosts, and currentPost, 'updates' (Partial<Post>) can be applied directly.

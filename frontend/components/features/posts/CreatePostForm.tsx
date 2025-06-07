@@ -27,11 +27,7 @@ interface CreatePostFormProps {
   compact?: boolean;
 }
 
-export default function CreatePostForm({
-  onSubmit,
-  onCancel,
-  compact = false,
-}: CreatePostFormProps) {
+export default function CreatePostForm({ onSubmit, onCancel }: CreatePostFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [tagInput, setTagInput] = useState('');
   const [formData, setFormData] = useState<CreatePostData>({
@@ -101,7 +97,7 @@ export default function CreatePostForm({
     }
   };
 
-  const updateFormData = (field: keyof CreatePostData, value: any) => {
+  const updateFormData = (field: keyof CreatePostData, value: unknown) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     // Clear error for this field
     if (errors[field]) {
@@ -163,6 +159,12 @@ export default function CreatePostForm({
           description: 'Sport hírek vagy információk',
           color: 'bg-red-600',
         };
+      case 'tip':
+        return {
+          label: 'Tipp',
+          description: 'Sport tipp vagy jóslat',
+          color: 'bg-green-600',
+        };
       default:
         return {
           label: 'Ismeretlen',
@@ -214,19 +216,19 @@ export default function CreatePostForm({
                 <SelectValue placeholder='Válassz típust' />
               </SelectTrigger>
               <SelectContent className='bg-gray-800 border-gray-600'>
-                {(['general', 'discussion', 'analysis', 'help_request', 'news'] as const).map(
-                  type => {
-                    const info = getPostTypeInfo(type);
-                    return (
-                      <SelectItem key={type} value={type} className='text-white'>
-                        <div className='flex items-center gap-2'>
-                          <div className={`w-3 h-3 rounded-full ${info.color}`} />
-                          <span>{info.label}</span>
-                        </div>
-                      </SelectItem>
-                    );
-                  },
-                )}
+                {(
+                  ['general', 'discussion', 'analysis', 'help_request', 'news', 'tip'] as const
+                ).map(type => {
+                  const info = getPostTypeInfo(type);
+                  return (
+                    <SelectItem key={type} value={type} className='text-white'>
+                      <div className='flex items-center gap-2'>
+                        <div className={`w-3 h-3 rounded-full ${info.color}`} />
+                        <span>{info.label}</span>
+                      </div>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
             <p className='text-sm text-gray-400'>
@@ -251,7 +253,15 @@ export default function CreatePostForm({
             <label className='text-sm font-medium text-white'>Címkék (max 5)</label>
             <div className='flex gap-2'>
               <Input
-                placeholder='Adj hozzá címkét...'
+                placeholder={
+                  formData.type === 'tip'
+                    ? 'pl: barcelona, odds, la-liga'
+                    : formData.type === 'analysis'
+                      ? 'pl: statisztika, teljesítmény, forma'
+                      : formData.type === 'news'
+                        ? 'pl: transfer, eredmény, sérülés'
+                        : 'pl: foci, meccs, eredmény'
+                }
                 value={tagInput}
                 onChange={e => setTagInput(e.target.value)}
                 onKeyPress={handleTagKeyPress}

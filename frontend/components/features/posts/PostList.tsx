@@ -5,7 +5,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { usePosts } from '@/hooks/usePosts';
-import { calculatePostTypeCounts } from '@/lib/post-utils';
 import { Post } from '@/store/posts';
 
 import PostCard from './PostCard';
@@ -207,7 +206,13 @@ export default function PostList({
 
   // Magyar: Típusonkénti darabszám optimalizálva (memoized)
   const postTypeCounts = useMemo(() => {
-    return calculatePostTypeCounts(postsToDisplay);
+    return {
+      general: postsToDisplay.filter(post => post.type === 'general').length,
+      discussion: postsToDisplay.filter(post => post.type === 'discussion').length,
+      news: postsToDisplay.filter(post => post.type === 'news').length,
+      analysis: postsToDisplay.filter(post => post.type === 'analysis').length,
+      help_request: postsToDisplay.filter(post => post.type === 'help_request').length,
+    };
   }, [postsToDisplay]);
 
   // Magyar: Keresési eredmény információ (memoized)

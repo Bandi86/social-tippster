@@ -89,7 +89,7 @@ export class PostsService {
   async findAll(
     filterDto: FilterPostsDTO,
     userId?: string,
-  ): Promise<{ posts: Post[]; total: number }> {
+  ): Promise<{ posts: Post[]; total: number; page: number; limit: number; totalPages: number }> {
     try {
       this.logger.log('Starting findAll with filterDto:', JSON.stringify(filterDto));
       this.logger.log('UserId:', userId);
@@ -113,7 +113,10 @@ export class PostsService {
       const [posts, total] = await queryBuilder.getManyAndCount();
       this.logger.log(`Query executed successfully - found ${posts.length} posts, total: ${total}`);
 
-      return { posts, total };
+      // Calculate pagination metadata
+      const totalPages = Math.ceil(total / limit);
+
+      return { posts, total, page, limit, totalPages };
     } catch (error) {
       this.logger.error('Error in findAll:', error);
       if (error instanceof Error) {

@@ -62,7 +62,13 @@ export class PostsController {
   async findAll(
     @Query() filterDto: FilterPostsDTO,
     @CurrentUser() user?: User,
-  ): Promise<{ posts: PostEntity[]; total: number }> {
+  ): Promise<{
+    posts: PostEntity[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
     return this.postsService.findAll(filterDto, user?.user_id);
   }
 
