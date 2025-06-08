@@ -11,9 +11,10 @@ import {
   IsOptional,
   IsString,
   IsUUID,
-  IsUrl,
+  Matches,
   MaxLength,
   MinLength,
+  ValidateIf,
 } from 'class-validator';
 import { PostStatus, PostType, PostVisibility } from '../enums/post.enums';
 
@@ -45,7 +46,10 @@ export class CreatePostDTO {
   tags?: string[];
 
   @IsOptional()
-  @IsUrl()
+  @ValidateIf((o: CreatePostDTO) => o.imageUrl !== undefined && o.imageUrl !== '')
+  @Matches(/^(https?:\/\/(localhost(:\d+)?|[\w.-]+\.[a-z]{2,})(\/.*)?|\/uploads\/.*)$/i, {
+    message: 'Invalid URL format. Must be a valid HTTP/HTTPS URL or upload path.',
+  })
   imageUrl?: string;
 
   @IsOptional()

@@ -4,11 +4,14 @@ import {
   Logger,
   Post,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import * as fs from 'fs';
 import * as path from 'path';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ImageProcessingService } from './image-processing.service';
 import { UploadsService } from './uploads.service';
 
@@ -33,6 +36,9 @@ function isValidUploadedFile(
 }
 
 @Controller('uploads')
+@UseGuards(JwtAuthGuard)
+@ApiTags('uploads')
+@ApiBearerAuth()
 export class UploadsController {
   private readonly logger = new Logger(UploadsController.name);
 
@@ -41,7 +47,7 @@ export class UploadsController {
   @Post('profile')
   @UseInterceptors(
     FileInterceptor('file', {
-      dest: '../../uploads/profile',
+      dest: './uploads/profile', // Changed from './backend/uploads/profile'
       fileFilter: (req, file, cb) => {
         if (!file.mimetype || typeof file.mimetype !== 'string') {
           return cb(new BadRequestException('Invalid file format'), false);
@@ -56,7 +62,7 @@ export class UploadsController {
     }),
   )
   uploadProfile(@UploadedFile() file: unknown): { url: string; error?: string } {
-    ensureDirSync(path.resolve('../../uploads/profile'));
+    ensureDirSync(path.resolve('./uploads/profile')); // Changed from './backend/uploads/profile'
 
     if (!isValidUploadedFile(file)) {
       return { url: '', error: 'Invalid file upload' };
@@ -78,7 +84,7 @@ export class UploadsController {
   @Post('post')
   @UseInterceptors(
     FileInterceptor('file', {
-      dest: '../../uploads/posts',
+      dest: './uploads/posts', // Changed from './backend/uploads/posts'
       fileFilter: (req, file, cb) => {
         if (!file.mimetype || typeof file.mimetype !== 'string') {
           return cb(new BadRequestException('Invalid file format'), false);
@@ -93,7 +99,7 @@ export class UploadsController {
     }),
   )
   uploadPost(@UploadedFile() file: unknown): { url: string; error?: string } {
-    ensureDirSync(path.resolve('../../uploads/posts'));
+    ensureDirSync(path.resolve('./uploads/posts')); // Changed from './backend/uploads/posts'
 
     if (!isValidUploadedFile(file)) {
       return { url: '', error: 'Invalid file upload' };

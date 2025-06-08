@@ -102,7 +102,9 @@ async function bootstrap() {
   });
 
   // Serve static uploads (profile, posts, etc.)
-  app.useStaticAssets(join(__dirname, '..', '..', 'uploads'), { prefix: '/uploads/' });
+  const uploadsPath = join(process.cwd(), 'uploads'); // Changed from 'backend', 'uploads'
+  console.log(`Static uploads path: ${uploadsPath}`);
+  app.useStaticAssets(uploadsPath, { prefix: '/uploads/' });
 
   await app.listen(3001);
   const baseUrl = `http://localhost:3001`;

@@ -45,32 +45,26 @@ export const useAuthStore = create<AuthStore>()(
         const tokens = accessToken ? { ...currentTokens, accessToken } : null;
         set({ tokens });
 
-        // Sync with API client
+        // Sync with API client only
         if (typeof window !== 'undefined') {
           import('../lib/api-client').then(({ apiClient }) => {
             apiClient.setAccessToken(accessToken);
           });
-          if (accessToken) {
-            localStorage.setItem('authToken', accessToken);
-          } else {
-            localStorage.removeItem('authToken');
-          }
+          // Remove the separate localStorage 'authToken' storage
+          // Token is now managed only through Zustand persistence
         }
       },
 
       setTokens: (tokens: AuthTokens | null) => {
         set({ tokens, isAuthenticated: !!tokens?.accessToken });
 
-        // Sync with API client
+        // Sync with API client only
         if (typeof window !== 'undefined') {
           import('../lib/api-client').then(({ apiClient }) => {
             apiClient.setAccessToken(tokens?.accessToken || null);
           });
-          if (tokens?.accessToken) {
-            localStorage.setItem('authToken', tokens.accessToken);
-          } else {
-            localStorage.removeItem('authToken');
-          }
+          // Remove the separate localStorage 'authToken' storage
+          // Token is now managed only through Zustand persistence
         }
       },
 
@@ -107,7 +101,7 @@ export const useAuthStore = create<AuthStore>()(
           isInitialized: false, // Force re-initialization
         });
 
-        // Use comprehensive auth reset
+        // Use comprehensive auth reset to clean any legacy localStorage entries
         if (typeof window !== 'undefined') {
           completeAuthReset();
 
@@ -189,16 +183,13 @@ export const useAuthStore = create<AuthStore>()(
             lastActivity: new Date().toISOString(),
           });
 
-          // Sync with API client
+          // Sync with API client only
           if (typeof window !== 'undefined') {
             import('../lib/api-client').then(({ apiClient }) => {
               apiClient.setAccessToken(authResponse.tokens.accessToken);
             });
-            if (authResponse.tokens.accessToken) {
-              localStorage.setItem('authToken', authResponse.tokens.accessToken);
-            } else {
-              localStorage.removeItem('authToken');
-            }
+            // Remove the separate localStorage 'authToken' storage
+            // Token is now managed only through Zustand persistence
           }
         } catch (error) {
           console.error('Login error:', error);
@@ -226,11 +217,13 @@ export const useAuthStore = create<AuthStore>()(
             lastActivity: new Date().toISOString(),
           });
 
-          // Sync with API client
+          // Sync with API client only
           if (typeof window !== 'undefined') {
             import('../lib/api-client').then(({ apiClient }) => {
               apiClient.setAccessToken(authResponse.tokens.accessToken);
             });
+            // Remove the separate localStorage 'authToken' storage
+            // Token is now managed only through Zustand persistence
           }
         } catch (error) {
           console.error('Registration error:', error);
@@ -273,16 +266,13 @@ export const useAuthStore = create<AuthStore>()(
             sessionExpiry: refreshResponse.sessionExpiry || get().sessionExpiry,
           });
 
-          // Sync with API client
+          // Sync with API client only
           if (typeof window !== 'undefined') {
             import('../lib/api-client').then(({ apiClient }) => {
               apiClient.setAccessToken(refreshResponse.tokens.accessToken);
             });
-            if (refreshResponse.tokens.accessToken) {
-              localStorage.setItem('authToken', refreshResponse.tokens.accessToken);
-            } else {
-              localStorage.removeItem('authToken');
-            }
+            // Remove the separate localStorage 'authToken' storage
+            // Token is now managed only through Zustand persistence
           }
 
           set({ isLoading: false });

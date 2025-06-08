@@ -1,12 +1,8 @@
+import { getAuthToken } from '@/lib/auth-token'; // Centralized token access
 import axios from '@/lib/axios';
 import { create } from 'zustand';
 
 // Helper functions
-function getAuthToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem('authToken');
-}
-
 async function axiosWithAuth(config: any) {
   const token = getAuthToken();
   const headers = {

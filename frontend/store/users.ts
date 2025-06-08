@@ -5,18 +5,13 @@
 // ===============================
 
 // ---- Importok ----
+import { getAuthToken } from '@/lib/auth-token'; // Centralized token access
 import axios from '@/lib/axios';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { ChangePasswordData, FetchUsersParams, UpdateProfileData, User, UserStats } from '../types';
 
 // ---- Helper függvények ----
-// Auth token lekérése localStorage-ból
-function getAuthToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem('authToken');
-}
-
 // Authentikált axios kérés helper
 async function axiosWithAuth(config: any) {
   const token = getAuthToken();

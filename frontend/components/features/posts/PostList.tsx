@@ -212,6 +212,8 @@ export default function PostList({
       news: postsToDisplay.filter(post => post.type === 'news').length,
       analysis: postsToDisplay.filter(post => post.type === 'analysis').length,
       help_request: postsToDisplay.filter(post => post.type === 'help_request').length,
+      //tipp: postsToDisplay.filter(post => post.type === 'tipp').length,
+      all: postsToDisplay.length,
     };
   }, [postsToDisplay]);
 

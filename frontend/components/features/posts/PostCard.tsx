@@ -2,7 +2,7 @@
 
 import { formatDistanceToNow } from 'date-fns';
 import { hu } from 'date-fns/locale';
-import { Crown, Eye, Pin } from 'lucide-react';
+import { Crown, Pin } from 'lucide-react'; // Removed Eye
 import Link from 'next/link';
 import React from 'react';
 
@@ -14,7 +14,7 @@ import { Post } from '@/store/posts';
 
 import PostContent from './PostContent';
 import PostInteractionBar from './PostInteractionBar';
-import PostMetaIndicators from './PostMetaIndicators';
+// Removed PostMetaIndicators import
 import PostTypeBadge from './PostTypeBadge';
 
 interface PostCardProps {
@@ -64,9 +64,11 @@ export default function PostCard({ post, onPostUpdate, compact = false }: PostCa
                 >
                   {post.author?.username || 'Ismeretlen felhasználó'}
                 </Link>
-                {post.author?.reputation_score && post.author.reputation_score > 100 && (
+
+               {/* Removed reputation score and eye icon right now
+                 {post.author?.reputation_score && post.author.reputation_score > 100 && (
                   <Crown className='h-4 w-4 text-amber-400' />
-                )}
+                )} */}
                 {post.is_pinned && <Pin className='h-4 w-4 text-amber-400' />}
                 {post.is_featured && <Crown className='h-4 w-4 text-amber-400' />}
               </div>
@@ -76,13 +78,17 @@ export default function PostCard({ post, onPostUpdate, compact = false }: PostCa
                 <span>
                   {formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: hu })}
                 </span>
-                <span>•</span>
-                <div className='flex items-center gap-1'>
-                  <Eye className='h-3 w-3' />
-                 { <span>{post.views_count}</span>}
-                </div>
-                {/* Image Indicator - using existing component */}
-                <PostMetaIndicators post={post} />
+                {/* View count: only show if > 0, styled nicely */}
+                {typeof post.views_count === 'number' && post.views_count > 0 && (
+                  <>
+                    <span>•</span>
+                    <div className='flex items-center gap-1'>
+                      {/* Eye icon removed, but you can add it back if desired */}
+                      <span className='font-semibold text-amber-300'>{post.views_count}</span>
+                      <span className='text-xs text-amber-200'>megtekintés</span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -101,6 +107,7 @@ export default function PostCard({ post, onPostUpdate, compact = false }: PostCa
           content={post.content}
           excerpt={post.excerpt}
           postId={post.id}
+          imageUrl={post.image_url}
           maxLength={compact ? 80 : 120}
         />
 

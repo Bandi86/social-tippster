@@ -8,11 +8,18 @@ export const completeAuthReset = () => {
 
   console.log('🔄 Starting complete auth reset...');
 
-  // 1. Clear localStorage
+  // 1. Clear localStorage (including legacy 'authToken' entries)
   try {
     const localStorageKeys = Object.keys(localStorage);
     console.log('📦 LocalStorage keys before clearing:', localStorageKeys);
 
+    // First, specifically remove the problematic 'authToken' entry
+    if (localStorage.getItem('authToken')) {
+      localStorage.removeItem('authToken');
+      console.log('🗑️ Removed legacy authToken from localStorage');
+    }
+
+    // Then clear all other auth-related entries
     localStorageKeys.forEach(key => {
       if (
         key.includes('auth') ||
@@ -20,7 +27,6 @@ export const completeAuthReset = () => {
         key.includes('user') ||
         key.includes('session') ||
         key === 'auth-storage' ||
-        key === 'authToken' ||
         key === 'accessToken'
       ) {
         localStorage.removeItem(key);

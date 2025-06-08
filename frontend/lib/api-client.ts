@@ -76,8 +76,8 @@ class ApiClient {
           if (error.response?.status === 404) {
             console.log('Refresh request 404 - user not found, clearing auth and logging out');
             this.clearAuth();
-            // Optionally, show a toast if available
-            if (typeof window !== 'undefined') {
+            // Only show toast if user was actually authenticated before this error
+            if (typeof window !== 'undefined' && this.accessToken) {
               import('@/hooks/use-toast')
                 .then(({ toast }) => {
                   toast({
@@ -100,6 +100,13 @@ class ApiClient {
           (error.response?.status === 401 || error.response?.status === 404) &&
           !originalRequest._retry
         ) {
+          // Only attempt token refresh if user actually has a token (i.e., was authenticated)
+          if (!this.accessToken) {
+            // Guest user encountering 401/404 - this is normal, don't show error messages
+            console.log('Guest user 401/404 - no token to refresh, proceeding normally');
+            return Promise.reject(error);
+          }
+
           // 404 on any endpoint that means user/session not found, treat as logout
           if (
             error.response?.status === 404 &&

@@ -1,8 +1,9 @@
 'use client';
 
-import { AlertCircle, Send, X } from 'lucide-react';
+import { AlertCircle, ImageIcon, Send, X } from 'lucide-react';
 import { useState } from 'react';
 
+import ImageUpload from '@/components/shared/ImageUpload';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,6 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -30,13 +32,16 @@ interface CreatePostFormProps {
 export default function CreatePostForm({ onSubmit, onCancel }: CreatePostFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [tagInput, setTagInput] = useState('');
+  const [activeTab, setActiveTab] = useState<'content' | 'media'>('content');
   const [formData, setFormData] = useState<CreatePostData>({
     content: '',
     type: 'general',
     isPremium: false,
     tags: [],
+    imageUrl: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [imageError, setImageError] = useState<string>('');
 
   const { isAuthenticated } = useAuth();
   const { createPost } = usePosts();
@@ -46,6 +51,13 @@ export default function CreatePostForm({ onSubmit, onCancel }: CreatePostFormPro
 
     if (!formData.content.trim()) {
       newErrors.content = 'A tartalom kötelező';
+    } else if (formData.content.trim().length < 10) {
+      newErrors.content = 'A tartalom legalább 10 karakter hosszú legyen';
+    }
+
+    // Check if we have some content (text or image)
+    if (!formData.content.trim() && !formData.imageUrl) {
+      newErrors.content = 'Adj meg tartalmat vagy tölts fel egy képet';
     }
 
     setErrors(newErrors);
@@ -70,26 +82,82 @@ export default function CreatePostForm({ onSubmit, onCancel }: CreatePostFormPro
 
     setIsSubmitting(true);
     try {
-      await createPost(formData);
-      toast({
-        title: 'Siker',
-        description: 'Poszt sikeresen létrehozva!',
-      });
+      // Prepare data for API - ensure we send the correct field names
+      const postData = {
+        content: formData.content,
+        type: formData.type || 'general',
+        tags: formData.tags || [],
+        imageUrl: formData.imageUrl || undefined,
+        isPremium: formData.isPremium || false,
+        // Map frontend fields to backend fields
+        commentsEnabled: true,
+        sharingEnabled: true,
+        status: 'published' as CreatePostData['status'],
+        visibility: 'public' as CreatePostData['visibility'],
+      };
 
-      // Reset form
-      setFormData({
-        content: '',
-        type: 'general',
-        isPremium: false,
-        tags: [],
-      });
-      setErrors({});
-      onSubmit?.();
-    } catch (error) {
+      console.log('📤 Creating post with data:', postData);
+      const result = await createPost(postData);
+
+      // Only show success if the post was actually created
+      if (result) {
+        toast({
+          title: 'Siker',
+          description: 'Poszt sikeresen létrehozva!',
+        });
+
+        // Reset form
+        setFormData({
+          content: '',
+          type: 'general',
+          isPremium: false,
+          tags: [],
+          imageUrl: '',
+        });
+        setErrors({});
+        setImageError('');
+        setActiveTab('content');
+        onSubmit?.();
+      }
+    } catch (error: unknown) {
       console.error('Poszt létrehozási hiba:', error);
+
+      // Handle specific error types from the enhanced store error handling
+      let errorTitle = 'Hiba';
+      let errorDescription = 'A poszt létrehozása sikertelen';
+
+      if (error && typeof error === 'object' && error !== null) {
+        const errorObj = error as { code?: string; message?: string };
+
+        // Handle enhanced API errors from the store
+        if (errorObj.code === 'FILE_TOO_LARGE') {
+          errorTitle = 'Fájl túl nagy';
+          errorDescription =
+            errorObj.message || 'A feltöltött fájl túl nagy. Maximum 5MB méret engedélyezett.';
+          setImageError(errorDescription);
+        } else if (errorObj.code === 'BAD_REQUEST') {
+          errorTitle = 'Hibás kérés';
+          errorDescription =
+            errorObj.message ||
+            'A küldött adatok hibásak. Kérjük ellenőrizd a megadott információkat.';
+        } else if (errorObj.code === 'UNAUTHORIZED') {
+          errorTitle = 'Nincs jogosultság';
+          errorDescription = errorObj.message || 'Nincs jogosultságod a művelet végrehajtásához.';
+        } else if (errorObj.code === 'FORBIDDEN') {
+          errorTitle = 'Tiltott művelet';
+          errorDescription = errorObj.message || 'A művelet végrehajtása nem engedélyezett.';
+        } else if (errorObj.code === 'SERVER_ERROR') {
+          errorTitle = 'Szerver hiba';
+          errorDescription =
+            errorObj.message || 'Szerver hiba történt. Kérjük próbáld újra később.';
+        } else if (errorObj.message) {
+          errorDescription = errorObj.message;
+        }
+      }
+
       toast({
-        title: 'Hiba',
-        description: 'A poszt létrehozása sikertelen',
+        title: errorTitle,
+        description: errorDescription,
         variant: 'destructive',
       });
     } finally {
@@ -125,6 +193,15 @@ export default function CreatePostForm({ onSubmit, onCancel }: CreatePostFormPro
       e.preventDefault();
       addTag();
     }
+  };
+
+  const handleImageUpload = (imageUrl: string | null) => {
+    updateFormData('imageUrl', imageUrl || '');
+    setImageError('');
+  };
+
+  const handleImageError = (error: string) => {
+    setImageError(error);
   };
 
   const getPostTypeInfo = (type: string) => {
@@ -236,16 +313,55 @@ export default function CreatePostForm({ onSubmit, onCancel }: CreatePostFormPro
             </p>
           </div>
 
-          {/* Content */}
-          <div className='space-y-2'>
-            <label className='text-sm font-medium text-white'>Tartalom</label>
-            <Textarea
-              placeholder='Írd le a poszt tartalmát...'
-              className='bg-gray-700 border-gray-600 text-white placeholder:text-gray-400 min-h-[120px]'
-              value={formData.content}
-              onChange={e => updateFormData('content', e.target.value)}
-            />
-            {errors.content && <p className='text-sm text-red-400'>{errors.content}</p>}
+          {/* Content with Tabs */}
+          <div className='space-y-4'>
+            <Tabs
+              value={activeTab}
+              onValueChange={value => setActiveTab(value as 'content' | 'media')}
+              className='w-full'
+            >
+              <TabsList className='grid w-full grid-cols-2 bg-gray-700 border-gray-600'>
+                <TabsTrigger
+                  value='content'
+                  className='text-white data-[state=active]:bg-amber-600'
+                >
+                  <Send className='h-4 w-4 mr-2' />
+                  Tartalom
+                </TabsTrigger>
+                <TabsTrigger value='media' className='text-white data-[state=active]:bg-amber-600'>
+                  <ImageIcon className='h-4 w-4 mr-2' />
+                  Kép
+                  {formData.imageUrl && <div className='w-2 h-2 bg-green-400 rounded-full ml-2' />}
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value='content' className='space-y-3'>
+                <label className='text-sm font-medium text-white'>Poszt szövege</label>
+                <Textarea
+                  placeholder='Írd le a poszt tartalmát... (opcionális, ha képet töltesz fel)'
+                  className='bg-gray-700 border-gray-600 text-white placeholder:text-gray-400 min-h-[120px]'
+                  value={formData.content}
+                  onChange={e => updateFormData('content', e.target.value)}
+                />
+                {errors.content && <p className='text-sm text-red-400'>{errors.content}</p>}
+              </TabsContent>
+
+              <TabsContent value='media' className='space-y-3'>
+                <label className='text-sm font-medium text-white'>Kép feltöltése</label>
+                <ImageUpload
+                  value={formData.imageUrl}
+                  onChange={handleImageUpload}
+                  onError={handleImageError}
+                  maxSize={5}
+                  className='w-full'
+                  placeholder='Kattints ide vagy húzz ide egy képet'
+                />
+                {imageError && <p className='text-sm text-red-400'>{imageError}</p>}
+                <p className='text-xs text-gray-400'>
+                  A kép opcionális. Ha képet töltesz fel, akkor a szöveg nem kötelező.
+                </p>
+              </TabsContent>
+            </Tabs>
           </div>
 
           {/* Tags */}
@@ -300,6 +416,23 @@ export default function CreatePostForm({ onSubmit, onCancel }: CreatePostFormPro
             )}
           </div>
 
+          {/* Content Preview */}
+          {formData.content && formData.imageUrl && (
+            <div className='border border-gray-600 rounded-lg p-4 bg-gray-700/30'>
+              <label className='text-sm font-medium text-white mb-3 block'>Előnézet</label>
+              <div className='space-y-3'>
+                <p className='text-gray-300 text-sm'>{formData.content}</p>
+                <div className='w-full h-32 bg-gray-600 rounded overflow-hidden'>
+                  <img
+                    src={formData.imageUrl}
+                    alt='Preview'
+                    className='w-full h-full object-cover'
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Premium Toggle */}
           <div className='flex flex-row items-center justify-between rounded-lg border border-gray-600 p-4 bg-gray-700/30'>
             <div className='space-y-0.5'>
@@ -312,6 +445,31 @@ export default function CreatePostForm({ onSubmit, onCancel }: CreatePostFormPro
               checked={formData.isPremium}
               onCheckedChange={checked => updateFormData('isPremium', checked)}
             />
+          </div>
+
+          {/* Post Summary */}
+          <div className='bg-gray-700/30 rounded-lg p-3 border border-gray-600'>
+            <div className='text-xs text-gray-400 space-y-1'>
+              <div>
+                Típus:{' '}
+                <span className='text-amber-400'>
+                  {getPostTypeInfo(formData.type || 'general').label}
+                </span>
+              </div>
+              <div>
+                Tartalom:{' '}
+                <span className='text-white'>
+                  {formData.content ? `${formData.content.length} karakter` : 'Nincs szöveg'}
+                </span>
+              </div>
+              <div>
+                Kép:{' '}
+                <span className='text-white'>{formData.imageUrl ? 'Feltöltve' : 'Nincs kép'}</span>
+              </div>
+              <div>
+                Címkék: <span className='text-white'>{formData.tags?.length || 0}/5</span>
+              </div>
+            </div>
           </div>
 
           {/* Submit Button */}

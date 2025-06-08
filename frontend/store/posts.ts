@@ -6,6 +6,7 @@
 
 // ---- Importok ----
 import { databaseConfig } from '@/lib/api-client'; // Add this import
+import { getAuthToken } from '@/lib/auth-token'; // Centralized token access
 import axios from '@/lib/axios';
 import { AxiosRequestConfig } from 'axios';
 import { create } from 'zustand';
@@ -20,10 +21,75 @@ export interface PaginationMeta {
 }
 
 // ---- Helper függvények ----
-// Auth token lekérése localStorage-ból
-function getAuthToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem('authToken');
+// Enhanced error interface for better error handling
+interface ApiError extends Error {
+  status?: number;
+  statusText?: string;
+  code?: string;
+}
+
+// Public axios kérés helper (nem igényel token-t)
+async function axiosPublic(config: AxiosRequestConfig) {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+
+  // Add existing headers
+  if (config.headers) {
+    Object.assign(headers, config.headers);
+  }
+
+  // Add database name header if available
+  if (databaseConfig.databaseName) {
+    headers['X-Database-Name'] = databaseConfig.databaseName;
+  }
+
+  console.log('🌐 Making public request to:', config.url);
+
+  try {
+    const response = await axios({ ...config, headers });
+    console.log('✅ Public API request successful:', config.url, response.status);
+    return response.data;
+  } catch (error: unknown) {
+    // Enhanced error handling for public requests
+    if (
+      error instanceof Error &&
+      'response' in error &&
+      error.response &&
+      typeof error.response === 'object' &&
+      error.response !== null
+    ) {
+      const response = error.response as {
+        status?: number;
+        statusText?: string;
+        data?: { message?: string; [key: string]: unknown };
+      };
+      const apiError = new Error() as ApiError;
+
+      // Preserve status information
+      apiError.status = response.status;
+      apiError.statusText = response.statusText;
+
+      // Handle specific error cases
+      if (response.status === 413) {
+        apiError.message = 'A feltöltött fájl túl nagy. Maximum 5MB méret engedélyezett.';
+        apiError.code = 'FILE_TOO_LARGE';
+      } else if (response.status === 400 && response.data?.message) {
+        apiError.message = String(response.data.message);
+        apiError.code = 'BAD_REQUEST';
+      } else if (response.status === 500) {
+        apiError.message = 'Szerver hiba történt. Kérjük, próbálja újra később.';
+        apiError.code = 'SERVER_ERROR';
+      } else if (response.data?.message) {
+        apiError.message = String(response.data.message);
+      } else {
+        apiError.message = `HTTP ${response.status}: ${response.statusText || 'Ismeretlen hiba'}`;
+      }
+
+      throw apiError;
+    }
+    throw error;
+  }
 }
 
 // Authentikált axios kérés helper
@@ -43,24 +109,66 @@ async function axiosWithAuth(config: AxiosRequestConfig) {
     headers['X-Database-Name'] = databaseConfig.databaseName;
   }
 
-  if (token) headers.Authorization = `Bearer ${token}`;
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+    console.log('🔐 Making authenticated request to:', config.url);
+  } else {
+    console.error('❌ No auth token available for request to:', config.url);
+    // For authenticated requests without token, throw an error instead of proceeding
+    const apiError = new Error('Authentication required') as ApiError;
+    apiError.status = 401;
+    apiError.code = 'UNAUTHORIZED';
+    apiError.message = 'Bejelentkezés szükséges a művelet végrehajtásához.';
+    throw apiError;
+  }
+
   try {
     const response = await axios({ ...config, headers });
+    console.log('✅ API request successful:', config.url, response.status);
     return response.data;
   } catch (error: unknown) {
+    // Enhanced error handling to preserve status codes and provide better error messages
     if (
       error instanceof Error &&
       'response' in error &&
       error.response &&
       typeof error.response === 'object' &&
-      error.response !== null &&
-      'data' in error.response &&
-      error.response.data &&
-      typeof error.response.data === 'object' &&
-      error.response.data !== null &&
-      'message' in error.response.data
+      error.response !== null
     ) {
-      throw new Error(String(error.response.data.message));
+      const response = error.response as {
+        status?: number;
+        statusText?: string;
+        data?: { message?: string; [key: string]: unknown };
+      };
+      const apiError = new Error() as ApiError;
+
+      // Preserve status information
+      apiError.status = response.status;
+      apiError.statusText = response.statusText;
+
+      // Handle specific error cases
+      if (response.status === 413) {
+        apiError.message = 'A feltöltött fájl túl nagy. Maximum 5MB méret engedélyezett.';
+        apiError.code = 'FILE_TOO_LARGE';
+      } else if (response.status === 400 && response.data?.message) {
+        apiError.message = String(response.data.message);
+        apiError.code = 'BAD_REQUEST';
+      } else if (response.status === 401) {
+        apiError.message = 'Bejelentkezés szükséges a művelet végrehajtásához.';
+        apiError.code = 'UNAUTHORIZED';
+      } else if (response.status === 403) {
+        apiError.message = 'Nincs jogosultság a művelet végrehajtásához.';
+        apiError.code = 'FORBIDDEN';
+      } else if (response.status === 500) {
+        apiError.message = 'Szerver hiba történt. Kérjük, próbálja újra később.';
+        apiError.code = 'SERVER_ERROR';
+      } else if (response.data?.message) {
+        apiError.message = String(response.data.message);
+      } else {
+        apiError.message = `HTTP ${response.status}: ${response.statusText || 'Ismeretlen hiba'}`;
+      }
+
+      throw apiError;
     }
     throw error;
   }
@@ -421,7 +529,7 @@ export const usePostsStore = create<PostsState & PostsActions>()(
           if (params?.author) searchParams.append('author', params.author);
           if (params?.featured) searchParams.append('featured', 'true');
 
-          const response = await axiosWithAuth({
+          const response = await axiosPublic({
             method: 'GET',
             url: `${API_BASE_URL}/posts?${searchParams.toString()}`,
           });
@@ -461,7 +569,7 @@ export const usePostsStore = create<PostsState & PostsActions>()(
       fetchFeaturedPosts: async () => {
         try {
           set({ isLoading: true, error: null });
-          const response = await axiosWithAuth({
+          const response = await axiosPublic({
             method: 'GET',
             url: `${API_BASE_URL}/posts?isFeatured=true&limit=10`,
           });
@@ -483,10 +591,33 @@ export const usePostsStore = create<PostsState & PostsActions>()(
       fetchPostById: async (id: string) => {
         try {
           set({ isLoading: true, error: null });
-          const post = await axiosWithAuth({
-            method: 'GET',
-            url: `${API_BASE_URL}/posts/${id}`,
-          });
+
+          // Try public access first for guest users
+          const token = getAuthToken();
+          let post;
+
+          try {
+            // Try public request first (works for public posts)
+            post = await axiosPublic({
+              method: 'GET',
+              url: `${API_BASE_URL}/posts/${id}`,
+            });
+            console.log('✅ Post fetched via public API:', id);
+          } catch (publicError: unknown) {
+            // If public request fails and user is authenticated, try with auth
+            const apiError = publicError as ApiError;
+            if (token && (apiError?.status === 401 || apiError?.status === 403)) {
+              console.log('🔐 Retrying post fetch with authentication:', id);
+              post = await axiosWithAuth({
+                method: 'GET',
+                url: `${API_BASE_URL}/posts/${id}`,
+              });
+            } else {
+              // If no token or other error, throw the original error
+              throw publicError;
+            }
+          }
+
           set({
             currentPost: post,
             isLoading: false,
@@ -724,6 +855,13 @@ export const usePostsStore = create<PostsState & PostsActions>()(
 
       trackPostView: async (id: string) => {
         try {
+          // Skip view tracking for guest users (no authentication token)
+          const token = getAuthToken();
+          if (!token) {
+            console.log('🔍 Skipping view tracking for guest user on post:', id);
+            return;
+          }
+
           const state = get();
           const now = Date.now();
 

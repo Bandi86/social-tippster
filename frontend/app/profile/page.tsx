@@ -3,10 +3,10 @@
 'use client';
 
 import { AuthGuard } from '@/components/auth/AuthGuard';
+import UserProfileCard from '@/components/shared/UserProfileCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PostList from '@/components/user/PostList';
-import UserProfileCard from '@/components/user/UserProfileCard';
 import { ProfileContent, ProfileSkeleton, ProfileTabs } from '@/components/user/profile';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';

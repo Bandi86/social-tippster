@@ -8,9 +8,9 @@ interface ProfileStatsData {
   followers_count: number;
   following_count: number;
   posts_count: number;
-  tips_count: number;
-  success_rate: number;
-  total_profit: number;
+  comments_count: number;
+  likes_received: number;
+  reputation_score: number;
 }
 
 interface ProfileStatsProps {
@@ -53,34 +53,31 @@ export default function ProfileStats({ stats }: ProfileStatsProps) {
         <div className='text-sm text-gray-400'>Posztok</div>
       </div>
 
-      {/* Tippek - Tips */}
+      {/* Kommentek - Comments */}
       <div className='text-center'>
         <div className='flex items-center justify-center gap-1 text-gray-400 mb-1'>
           <Target className='h-4 w-4' />
         </div>
-        <div className='text-2xl font-bold text-white'>{stats.tips_count}</div>
-        <div className='text-sm text-gray-400'>Tippek</div>
+        <div className='text-2xl font-bold text-white'>{stats.comments_count}</div>
+        <div className='text-sm text-gray-400'>Kommentek</div>
       </div>
 
-      {/* Sikerességi ráta - Success Rate */}
+      {/* Kedvelések - Likes Received */}
       <div className='text-center'>
         <div className='flex items-center justify-center gap-1 text-gray-400 mb-1'>
           <TrendingUp className='h-4 w-4' />
         </div>
-        <div className='text-2xl font-bold text-white'>{stats.success_rate}%</div>
-        <div className='text-sm text-gray-400'>Sikerességi ráta</div>
+        <div className='text-2xl font-bold text-white'>{stats.likes_received}</div>
+        <div className='text-sm text-gray-400'>Kedvelések</div>
       </div>
 
-      {/* Profit - Total Profit */}
+      {/* Hírnév - Reputation Score */}
       <div className='text-center'>
         <div className='flex items-center justify-center gap-1 text-gray-400 mb-1'>
           <DollarSign className='h-4 w-4' />
         </div>
-        <div className='text-2xl font-bold text-white'>
-          {stats.total_profit >= 0 ? '+' : ''}
-          {stats.total_profit}
-        </div>
-        <div className='text-sm text-gray-400'>Profit</div>
+        <div className='text-2xl font-bold text-white'>{stats.reputation_score}</div>
+        <div className='text-sm text-gray-400'>Hírnév</div>
       </div>
     </div>
   );

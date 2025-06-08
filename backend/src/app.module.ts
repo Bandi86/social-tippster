@@ -24,7 +24,7 @@ import { UsersModule } from './modules/users/users.module';
 
 // Only apply ThrottlerGuard in production
 const guards: Array<{ provide: typeof APP_GUARD; useClass: typeof ThrottlerGuard }> = [];
-if (process.env.NODE_ENV !== 'development') {
+if (process.env.NODE_ENV !== 'development' && process.env.NODE_ENV !== 'test') {
   guards.push({
     provide: APP_GUARD,
     useClass: ThrottlerGuard,

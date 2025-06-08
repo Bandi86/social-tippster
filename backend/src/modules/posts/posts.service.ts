@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, SelectQueryBuilder } from 'typeorm';
+import { UserRole } from '../users/entities/user.entity';
 import { CreatePostDTO } from './dto/create-post.dto';
 import { FilterPostsDTO } from './dto/filter-posts.dto';
 import { PostBookmark } from './entities/post-bookmark.entity';
@@ -57,6 +58,8 @@ export class PostsService {
         title,
         author_id: authorId,
         created_by: authorName,
+        // Fix field name mapping
+        image_url: createPostDto.imageUrl,
         // Default értékek biztosítása
         type: createPostDto.type || PostType.DISCUSSION,
         status: createPostDto.status || PostStatus.PUBLISHED,
@@ -170,6 +173,12 @@ export class PostsService {
       updateData['title'] = this.generateTitleFromContent(updateData.content);
     }
 
+    // Fix field name mapping for imageUrl -> image_url
+    if (updateData.imageUrl !== undefined) {
+      post.image_url = updateData.imageUrl;
+      delete updateData.imageUrl; // Remove to avoid TypeScript errors
+    }
+
     Object.assign(post, updateData);
     post.updated_at = new Date();
 
@@ -181,12 +190,14 @@ export class PostsService {
 
   /**
    * Poszt törlése (soft delete)
+   * Admin felhasználók bármelyik posztot törölhetik
    */
-  async delete(id: string, userId: string): Promise<void> {
+  async delete(id: string, userId: string, userRole?: UserRole): Promise<void> {
     const post = await this.findById(id);
 
-    if (post.author_id !== userId) {
-      throw new ForbiddenException('Only the author can delete this post');
+    // Admin felhasználók bármelyik posztot törölhetik
+    if (post.author_id !== userId && userRole !== UserRole.ADMIN) {
+      throw new ForbiddenException('Only the author or admin can delete this post');
     }
 
     await this.postRepository.update(id, {
@@ -195,7 +206,7 @@ export class PostsService {
       updated_at: new Date(),
     });
 
-    this.logger.log(`Post deleted: ${id} by user ${userId}`);
+    this.logger.log(`Post deleted: ${id} by user ${userId} (role: ${userRole || 'user'})`);
   }
 
   /**

@@ -180,7 +180,7 @@ export default function ProfilePage() {
           </Button>
 
           {/* Felhasználó profil kártya - moduláris komponens */}
-          <UserProfileCard userProfile={userProfile} onFollowChange={handleFollowChange} />
+          <UserProfileCard user={{ ...userProfile.user, id: userProfile.user.user_id }} />
 
           {/* Profil tartalom tabok - moduláris komponensekkel */}
           <div className='space-y-4'>

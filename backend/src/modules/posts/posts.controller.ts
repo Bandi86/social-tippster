@@ -114,7 +114,7 @@ export class PostsController {
   @ApiResponse({ status: 404, description: 'Poszt nem található' })
   @ApiParam({ name: 'id', description: 'Poszt ID', type: 'string' })
   async remove(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User): Promise<void> {
-    return this.postsService.delete(id, user.user_id);
+    return this.postsService.delete(id, user.user_id, user.role);
   }
 
   @Post(':id/like')

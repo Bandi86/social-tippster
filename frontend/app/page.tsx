@@ -7,7 +7,7 @@ import { useState } from 'react';
 
 // Root komponensek importálása
 import CommunityStats from '@/components/root/CommunityStats';
-//import GuestUserNotice from '@/components/root/GuestUserNotice';
+import GuestUserNotice from '@/components/root/GuestUserNotice';
 import LiveMatches from '@/components/root/LiveMatches';
 import MainNavigation from '@/components/root/MainNavigation';
 import PostCreationArea from '@/components/root/PostCreationArea';
@@ -19,12 +19,6 @@ import TopContributors from '@/components/root/TopContributors';
 import TrendingTopics from '@/components/root/TrendingTopics';
 import UserProfileQuickView from '@/components/root/UserProfileQuickView';
 import WelcomeHeader from '@/components/root/WelcomeHeader';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'; // Corrected path
 //import PopularTags from '@/components/root/PopularTags'; // Corrected path
 //import SuggestedUsers from '@/components/root/SuggestedUsers'; // Corrected path
 
@@ -41,7 +35,7 @@ export default function Home() {
   return (
     <div className='min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900'>
       {/* Vendég felhasználói értesítő */}
-      {/* {!isAuthenticated && <GuestUserNotice />} */}
+      {!isAuthenticated && <GuestUserNotice />}
 
       {/* Fő konténer */}
       <div className='container mx-auto px-4 py-6'>

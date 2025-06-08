@@ -2,8 +2,8 @@
 // Refactored UserProfileCard - uses new modular components
 'use client';
 
-import { UserProfile } from '@/lib/api/users';
-import { ProfileCard } from './profile';
+import { UserProfile } from '@/store/users';
+import ProfileCard from '../features/profile/ProfileCard';
 
 interface UserProfileCardProps {
   userProfile: UserProfile;

@@ -4,6 +4,7 @@ import {
   Delete,
   ForbiddenException,
   Get,
+  Logger,
   Param,
   ParseUUIDPipe,
   Post,
@@ -26,6 +27,7 @@ import {
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CommentsService } from '../comments/comments.service';
+import { PostsService } from '../posts/posts.service';
 import { User, UserRole } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
 import { AnalyticsService } from './analytics-dashboard/analytics.service';
@@ -49,9 +51,12 @@ import {
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('JWT-auth')
 export class AdminController {
+  private readonly logger = new Logger(AdminController.name);
+
   constructor(
     private readonly usersService: UsersService,
     private readonly commentsService: CommentsService,
+    private readonly postsService: PostsService,
     private readonly analyticsService: AnalyticsService,
   ) {}
 
@@ -360,5 +365,62 @@ export class AdminController {
       currentUser,
       bulkData.reason,
     );
+  }
+
+  // Posts Management
+  @Delete('posts/:id')
+  @ApiOperation({ summary: 'Poszt törlése (csak admin)' })
+  @ApiParam({ name: 'id', description: 'Poszt UUID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Poszt törölve',
+    schema: { example: { message: 'Poszt sikeresen törölve' } },
+  })
+  async deletePost(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() currentUser: User,
+  ): Promise<{ message: string }> {
+    this.checkAdminRole(currentUser); // Admin jogosultság ellenőrzése
+    await this.postsService.delete(id, currentUser.user_id, currentUser.role);
+    return { message: 'Poszt sikeresen törölve' };
+  }
+
+  @Post('posts/bulk-delete')
+  @ApiOperation({ summary: 'Tömeges poszt törlés (csak admin)' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        postIds: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Post ID-k tömbje',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Tömeges törlés eredménye',
+    schema: { example: { message: 'Tömeges törlés befejezve', processed: 5 } },
+  })
+  async bulkDeletePosts(
+    @Body() bulkData: { postIds: string[] },
+    @CurrentUser() currentUser: User,
+  ): Promise<{ message: string; processed: number }> {
+    this.checkAdminRole(currentUser); // Admin jogosultság ellenőrzése
+
+    let processed = 0;
+    for (const postId of bulkData.postIds) {
+      try {
+        await this.postsService.delete(postId, currentUser.user_id, currentUser.role);
+        processed++;
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        this.logger.warn(`Failed to delete post ${postId}: ${errorMessage}`);
+      }
+    }
+
+    return { message: 'Tömeges törlés befejezve', processed };
   }
 }

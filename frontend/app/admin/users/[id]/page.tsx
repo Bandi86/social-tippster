@@ -27,16 +27,12 @@ import {
   XCircle,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
-interface UserPageProps {
-  params: {
-    id: string;
-  };
-}
-
-const UserPage = ({ params }: UserPageProps) => {
+const UserPage = () => {
+  const params = useParams();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -45,7 +41,8 @@ const UserPage = ({ params }: UserPageProps) => {
     const loadUser = async () => {
       try {
         setLoading(true);
-        const userData = await fetchUserById(params.id);
+        const userId = params.id as string;
+        const userData = await fetchUserById(userId);
         setUser(userData);
       } catch (error) {
         console.error('Failed to load user:', error);
@@ -58,15 +55,17 @@ const UserPage = ({ params }: UserPageProps) => {
     loadUser();
   }, [params.id]);
 
-  const handleAction = async (action: string, actionFn: () => Promise<void>) => {
+  const handleAction = async (action: string, actionFn: () => Promise<unknown>) => {
     setActionLoading(action);
     try {
       await actionFn();
       toast.success(`User ${action} successfully`);
       // Reload user data
-      const userData = await fetchUserById(params.id);
+      const userId = params.id as string;
+      const userData = await fetchUserById(userId);
       setUser(userData);
     } catch (error) {
+      console.error(`Failed to ${action} user:`, error);
       toast.error(`Failed to ${action} user`);
     } finally {
       setActionLoading(null);
