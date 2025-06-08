@@ -48,6 +48,7 @@ docker-compose.override.yml
 /backend/uploads/
 /frontend/uploads/
 
+/tests/
 /temp/
 /errors/
 
