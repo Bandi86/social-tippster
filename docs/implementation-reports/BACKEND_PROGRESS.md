@@ -852,3 +852,93 @@ Created comprehensive integration tests that verify:
 - `backend/src/modules/posts/dto/create-post.dto.ts`
 - `backend/src/modules/uploads/uploads.controller.ts` (verified)
 - `tests/backend/test-post-creation.js` (new integration test)
+
+---
+
+# Backend Progress – Docker Compose Microservices Orchestration (2025-06-09)
+
+---
+
+## Containerization & Orchestration
+
+**Date:** 2025-06-09
+**Component:** All backend_new microservices
+**Status:** ✅ COMPLETED
+
+### What Was Done
+
+- Dockerfiles created/updated for all backend_new services (dev & prod targets)
+- Each service now has its own .env and .gitignore
+- All services have package.json and required dependencies (tsconfig-paths fixed)
+- backend_new/docker-compose.yml updated:
+  - Each service has a dedicated Postgres DB
+  - Redis and RabbitMQ included
+  - Dev-mode (hot reload) support for all services
+  - Frontend_new integrated as a service
+- npm install run in all backend_new services (no errors)
+
+### Verification
+
+- All containers build and start via `docker compose up --build`
+- All .env/.gitignore present and correct
+- Ready for full-stack integration testing
+
+---
+
+# Backend Progress – Admin Service Containerization & Integration (2025-06-09)
+
+**Date:** 2025-06-09
+**Component:** Admin Microservice
+**Status:** ✅ COMPLETED
+
+### Summary
+
+- Telepítve: Prisma, @prisma/client, redis, amqplib (RabbitMQ) az admin service-ben.
+- Létrehozva: `prisma/schema.prisma` fake modellel, datasource és generator blokkal.
+- Prisma kliens generálva.
+- Dockerfile frissítve: Prisma, Redis, RabbitMQ támogatás, dev/prod build, optimalizált context.
+- docker-compose.yml frissítve:
+  - Külön Postgres DB az admin service-nek (postgres_admin)
+  - Admin service production és dev konténer (admin, admin_dev)
+  - Helyes environment változók: DATABASE_URL, REDIS_URL, RABBITMQ_URL
+  - depends_on: postgres_admin, redis, rabbitmq
+  - Volume mount dev módban
+
+#### Verification
+
+- ✅ Sikeres Prisma generálás
+- ✅ Függőségek telepítve
+- ✅ Konténerizáció működik (dev/prod)
+
+_Last updated: 2025-06-09 by GitHub Copilot_
+
+---
+
+## Dependency Management: TypeORM, Prisma, Redis (2025-06-09)
+
+### Summary
+
+- Reviewed all backend services for TypeORM and Prisma usage after Docker Compose/monorepo containerization and dependency upgrades.
+- Significant TypeORM usage remains in multiple backend modules (users, posts, comments, admin, league, auth, etc.).
+- Removing TypeORM and @nestjs/typeorm is not feasible without a full migration of all repositories, modules, and services to Prisma.
+- Current state: hybrid backend (TypeORM + Prisma).
+- **Decision:** Keep TypeORM and @nestjs/typeorm for now. Use `redis@4.7.1` everywhere for compatibility. Full migration to Prisma-only is a major future task.
+
+### Details
+
+- TypeORM and @nestjs/typeorm are still required for core backend modules. Removing them would break repository logic and require major refactoring.
+- Prisma is used for new features and some microservices, but not all legacy/business logic.
+- Redis version fixed to 4.7.1 to avoid peer dependency conflicts with TypeORM.
+- All Docker Compose builds and service starts tested with this stack; no critical dependency errors remain.
+- Deprecation warnings (rimraf, glob, superagent, eslint, etc.) do not block builds, but root dev dependencies should be updated in the future.
+
+### Next Steps
+
+- Document this decision in `BACKEND_PROGRESS.md` and `ENVIRONMENT_SETUP.md`.
+- Plan a phased migration to Prisma-only if desired in the future.
+- Continue to use `upgrade-nest.sh` for dependency management, ensuring redis@4.7.1 is used.
+- Monitor for any runtime or migration errors during further development.
+
+_Last updated: 2025-06-09 by GitHub Copilot_
+
+---

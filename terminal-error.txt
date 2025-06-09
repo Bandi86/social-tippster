@@ -1,0 +1,996 @@
+ 4 more (@nestjs/swagger, @nestjs/testing, @nestjs/typeorm, the root project)
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: auth-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   9 more (@nestjs/core, @nestjs/jwt, @nestjs/mapped-types, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/jwt@10.2.0
+npm warn node_modules/@nestjs/jwt
+npm warn   @nestjs/jwt@"^10.2.0" from the root project
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: auth-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   9 more (@nestjs/core, @nestjs/jwt, @nestjs/mapped-types, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/passport@10.0.3
+npm warn node_modules/@nestjs/passport
+npm warn   @nestjs/passport@"^10.0.2" from the root project
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: auth-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   9 more (@nestjs/core, @nestjs/jwt, @nestjs/mapped-types, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^10.0.0" from @nestjs/platform-express@10.4.19
+npm warn node_modules/@nestjs/platform-express
+npm warn   peerOptional @nestjs/platform-express@"^10.0.0" from @nestjs/core@10.4.19
+npm warn   2 more (@nestjs/testing, the root project)
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: auth-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   9 more (@nestjs/core, @nestjs/jwt, @nestjs/mapped-types, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^10.0.0" from @nestjs/testing@10.4.19
+npm warn node_modules/@nestjs/testing
+npm warn   dev @nestjs/testing@"^10.0.0" from the root project
+npm error code ERESOLVE
+npm error ERESOLVE could not resolve
+npm error
+npm error While resolving: auth-service@1.0.0
+npm error Found: @nestjs/core@10.4.19
+npm error node_modules/@nestjs/core
+npm error   peer @nestjs/core@"^10.0.0" from @nestjs/platform-express@10.4.19
+npm error   node_modules/@nestjs/platform-express
+npm error     peerOptional @nestjs/platform-express@"^10.0.0" from @nestjs/core@10.4.19
+npm error     peerOptional @nestjs/platform-express@"^10.0.0" from @nestjs/testing@10.4.19
+npm error     node_modules/@nestjs/testing
+npm error       dev @nestjs/testing@"^10.0.0" from the root project
+npm error     1 more (the root project)
+npm error   peer @nestjs/core@"^9.0.0 || ^10.0.0" from @nestjs/swagger@7.4.2
+npm error   node_modules/@nestjs/swagger
+npm error     @nestjs/swagger@"11.2.0" from the root project
+npm error   3 more (@nestjs/testing, @nestjs/typeorm, the root project)
+npm error
+npm error Could not resolve dependency:
+npm error @nestjs/core@"11.1.3" from the root project
+npm error
+npm error Conflicting peer dependency: @nestjs/platform-express@11.1.3
+npm error node_modules/@nestjs/platform-express
+npm error   peerOptional @nestjs/platform-express@"^11.0.0" from @nestjs/core@11.1.3
+npm error   node_modules/@nestjs/core
+npm error     @nestjs/core@"11.1.3" from the root project
+npm error
+npm error Fix the upstream dependency conflict, or retry
+npm error this command with --force or --legacy-peer-deps
+npm error to accept an incorrect (and potentially broken) dependency resolution.
+npm error
+npm error
+npm error For a full report see:
+npm error C:\Users\bandi\AppData\Local\npm-cache\_logs\2025-06-09T15_41_26_729Z-eresolve-report.txt
+npm error A complete log of this run can be found in: C:\Users\bandi\AppData\Local\npm-cache\_logs\2025-06-09T15_41_26_729Z-debug-0.log
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: chat-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   4 more (@nestjs/core, @nestjs/platform-express, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn node_modules/@nestjs/config
+npm warn   @nestjs/config@"^3.1.1" from the root project
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: chat-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   4 more (@nestjs/core, @nestjs/platform-express, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^10.0.0" from @nestjs/core@10.4.19
+npm warn node_modules/@nestjs/core
+npm warn   peer @nestjs/core@"^10.0.0" from @nestjs/platform-express@10.4.19
+npm warn   node_modules/@nestjs/platform-express
+npm warn   2 more (@nestjs/testing, the root project)
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: chat-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   4 more (@nestjs/core, @nestjs/platform-express, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^10.0.0" from @nestjs/platform-express@10.4.19
+npm warn node_modules/@nestjs/platform-express
+npm warn   peerOptional @nestjs/platform-express@"^10.0.0" from @nestjs/core@10.4.19
+npm warn   2 more (@nestjs/testing, the root project)
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: chat-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   4 more (@nestjs/core, @nestjs/platform-express, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^10.0.0" from @nestjs/testing@10.4.19
+npm warn node_modules/@nestjs/testing
+npm warn   dev @nestjs/testing@"^10.0.0" from the root project
+npm error code ERESOLVE
+npm error ERESOLVE could not resolve
+npm error
+npm error While resolving: chat-service@1.0.0
+npm error Found: @nestjs/core@10.4.19
+npm error node_modules/@nestjs/core
+npm error   peer @nestjs/core@"^10.0.0" from @nestjs/platform-express@10.4.19
+npm error   node_modules/@nestjs/platform-express
+npm error     peerOptional @nestjs/platform-express@"^10.0.0" from @nestjs/core@10.4.19
+npm error     peerOptional @nestjs/platform-express@"^10.0.0" from @nestjs/testing@10.4.19
+npm error     node_modules/@nestjs/testing
+npm error       dev @nestjs/testing@"^10.0.0" from the root project
+npm error     1 more (the root project)
+npm error   peer @nestjs/core@"^10.0.0" from @nestjs/testing@10.4.19
+npm error   node_modules/@nestjs/testing
+npm error     dev @nestjs/testing@"^10.0.0" from the root project
+npm error   1 more (the root project)
+npm error
+npm error Could not resolve dependency:
+npm error @nestjs/core@"11.1.3" from the root project
+npm error
+npm error Conflicting peer dependency: @nestjs/platform-express@11.1.3
+npm error node_modules/@nestjs/platform-express
+npm error   peerOptional @nestjs/platform-express@"^11.0.0" from @nestjs/core@11.1.3
+npm error   node_modules/@nestjs/core
+npm error     @nestjs/core@"11.1.3" from the root project
+npm error
+npm error Fix the upstream dependency conflict, or retry
+npm error this command with --force or --legacy-peer-deps
+npm error to accept an incorrect (and potentially broken) dependency resolution.
+npm error
+npm error
+npm error For a full report see:
+npm error C:\Users\bandi\AppData\Local\npm-cache\_logs\2025-06-09T15_41_30_086Z-eresolve-report.txt
+npm error A complete log of this run can be found in: C:\Users\bandi\AppData\Local\npm-cache\_logs\2025-06-09T15_41_30_086Z-debug-0.log
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: data-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   4 more (@nestjs/core, @nestjs/platform-express, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn node_modules/@nestjs/config
+npm warn   @nestjs/config@"^3.1.1" from the root project
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: data-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   4 more (@nestjs/core, @nestjs/platform-express, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^10.0.0" from @nestjs/core@10.4.19
+npm warn node_modules/@nestjs/core
+npm warn   peer @nestjs/core@"^10.0.0" from @nestjs/platform-express@10.4.19
+npm warn   node_modules/@nestjs/platform-express
+npm warn   2 more (@nestjs/testing, the root project)
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: data-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   4 more (@nestjs/core, @nestjs/platform-express, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^10.0.0" from @nestjs/platform-express@10.4.19
+npm warn node_modules/@nestjs/platform-express
+npm warn   peerOptional @nestjs/platform-express@"^10.0.0" from @nestjs/core@10.4.19
+npm warn   2 more (@nestjs/testing, the root project)
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: data-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   4 more (@nestjs/core, @nestjs/platform-express, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^10.0.0" from @nestjs/testing@10.4.19
+npm warn node_modules/@nestjs/testing
+npm warn   dev @nestjs/testing@"^10.0.0" from the root project
+npm error code ERESOLVE
+npm error ERESOLVE could not resolve
+npm error
+npm error While resolving: data-service@1.0.0
+npm error Found: @nestjs/core@10.4.19
+npm error node_modules/@nestjs/core
+npm error   peer @nestjs/core@"^10.0.0" from @nestjs/platform-express@10.4.19
+npm error   node_modules/@nestjs/platform-express
+npm error     peerOptional @nestjs/platform-express@"^10.0.0" from @nestjs/core@10.4.19
+npm error     peerOptional @nestjs/platform-express@"^10.0.0" from @nestjs/testing@10.4.19
+npm error     node_modules/@nestjs/testing
+npm error       dev @nestjs/testing@"^10.0.0" from the root project
+npm error     1 more (the root project)
+npm error   peer @nestjs/core@"^10.0.0" from @nestjs/testing@10.4.19
+npm error   node_modules/@nestjs/testing
+npm error     dev @nestjs/testing@"^10.0.0" from the root project
+npm error   1 more (the root project)
+npm error
+npm error Could not resolve dependency:
+npm error @nestjs/core@"11.1.3" from the root project
+npm error
+npm error Conflicting peer dependency: @nestjs/platform-express@11.1.3
+npm error node_modules/@nestjs/platform-express
+npm error   peerOptional @nestjs/platform-express@"^11.0.0" from @nestjs/core@11.1.3
+npm error   node_modules/@nestjs/core
+npm error     @nestjs/core@"11.1.3" from the root project
+npm error
+npm error Fix the upstream dependency conflict, or retry
+npm error this command with --force or --legacy-peer-deps
+npm error to accept an incorrect (and potentially broken) dependency resolution.
+npm error
+npm error
+npm error For a full report see:
+npm error C:\Users\bandi\AppData\Local\npm-cache\_logs\2025-06-09T15_41_34_604Z-eresolve-report.txt
+npm error A complete log of this run can be found in: C:\Users\bandi\AppData\Local\npm-cache\_logs\2025-06-09T15_41_34_604Z-debug-0.log
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: image-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   4 more (@nestjs/core, @nestjs/platform-express, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn node_modules/@nestjs/config
+npm warn   @nestjs/config@"^3.1.1" from the root project
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: image-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   4 more (@nestjs/core, @nestjs/platform-express, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^10.0.0" from @nestjs/core@10.4.19
+npm warn node_modules/@nestjs/core
+npm warn   peer @nestjs/core@"^10.0.0" from @nestjs/platform-express@10.4.19
+npm warn   node_modules/@nestjs/platform-express
+npm warn   2 more (@nestjs/testing, the root project)
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: image-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   4 more (@nestjs/core, @nestjs/platform-express, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^10.0.0" from @nestjs/platform-express@10.4.19
+npm warn node_modules/@nestjs/platform-express
+npm warn   peerOptional @nestjs/platform-express@"^10.0.0" from @nestjs/core@10.4.19
+npm warn   2 more (@nestjs/testing, the root project)
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: image-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   4 more (@nestjs/core, @nestjs/platform-express, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^10.0.0" from @nestjs/testing@10.4.19
+npm warn node_modules/@nestjs/testing
+npm warn   dev @nestjs/testing@"^10.0.0" from the root project
+npm error code ERESOLVE
+npm error ERESOLVE could not resolve
+npm error
+npm error While resolving: image-service@1.0.0
+npm error Found: @nestjs/core@10.4.19
+npm error node_modules/@nestjs/core
+npm error   peer @nestjs/core@"^10.0.0" from @nestjs/platform-express@10.4.19
+npm error   node_modules/@nestjs/platform-express
+npm error     peerOptional @nestjs/platform-express@"^10.0.0" from @nestjs/core@10.4.19
+npm error     peerOptional @nestjs/platform-express@"^10.0.0" from @nestjs/testing@10.4.19
+npm error     node_modules/@nestjs/testing
+npm error       dev @nestjs/testing@"^10.0.0" from the root project
+npm error     1 more (the root project)
+npm error   peer @nestjs/core@"^10.0.0" from @nestjs/testing@10.4.19
+npm error   node_modules/@nestjs/testing
+npm error     dev @nestjs/testing@"^10.0.0" from the root project
+npm error   1 more (the root project)
+npm error
+npm error Could not resolve dependency:
+npm error @nestjs/core@"11.1.3" from the root project
+npm error
+npm error Conflicting peer dependency: @nestjs/platform-express@11.1.3
+npm error node_modules/@nestjs/platform-express
+npm error   peerOptional @nestjs/platform-express@"^11.0.0" from @nestjs/core@11.1.3
+npm error   node_modules/@nestjs/core
+npm error     @nestjs/core@"11.1.3" from the root project
+npm error
+npm error Fix the upstream dependency conflict, or retry
+npm error this command with --force or --legacy-peer-deps
+npm error to accept an incorrect (and potentially broken) dependency resolution.
+npm error
+npm error
+npm error For a full report see:
+npm error C:\Users\bandi\AppData\Local\npm-cache\_logs\2025-06-09T15_41_39_059Z-eresolve-report.txt
+npm error A complete log of this run can be found in: C:\Users\bandi\AppData\Local\npm-cache\_logs\2025-06-09T15_41_39_059Z-debug-0.log
+
+added 191 packages, and audited 193 packages in 20s
+
+44 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: live-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   4 more (@nestjs/core, @nestjs/platform-express, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn node_modules/@nestjs/config
+npm warn   @nestjs/config@"^3.1.1" from the root project
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: live-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   4 more (@nestjs/core, @nestjs/platform-express, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^10.0.0" from @nestjs/core@10.4.19
+npm warn node_modules/@nestjs/core
+npm warn   peer @nestjs/core@"^10.0.0" from @nestjs/platform-express@10.4.19
+npm warn   node_modules/@nestjs/platform-express
+npm warn   2 more (@nestjs/testing, the root project)
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: live-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   4 more (@nestjs/core, @nestjs/platform-express, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^10.0.0" from @nestjs/platform-express@10.4.19
+npm warn node_modules/@nestjs/platform-express
+npm warn   peerOptional @nestjs/platform-express@"^10.0.0" from @nestjs/core@10.4.19
+npm warn   2 more (@nestjs/testing, the root project)
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: live-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   4 more (@nestjs/core, @nestjs/platform-express, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^10.0.0" from @nestjs/testing@10.4.19
+npm warn node_modules/@nestjs/testing
+npm warn   dev @nestjs/testing@"^10.0.0" from the root project
+npm error code ERESOLVE
+npm error ERESOLVE could not resolve
+npm error
+npm error While resolving: live-service@1.0.0
+npm error Found: @nestjs/core@10.4.19
+npm error node_modules/@nestjs/core
+npm error   peer @nestjs/core@"^10.0.0" from @nestjs/platform-express@10.4.19
+npm error   node_modules/@nestjs/platform-express
+npm error     peerOptional @nestjs/platform-express@"^10.0.0" from @nestjs/core@10.4.19
+npm error     peerOptional @nestjs/platform-express@"^10.0.0" from @nestjs/testing@10.4.19
+npm error     node_modules/@nestjs/testing
+npm error       dev @nestjs/testing@"^10.0.0" from the root project
+npm error     1 more (the root project)
+npm error   peer @nestjs/core@"^10.0.0" from @nestjs/testing@10.4.19
+npm error   node_modules/@nestjs/testing
+npm error     dev @nestjs/testing@"^10.0.0" from the root project
+npm error   1 more (the root project)
+npm error
+npm error Could not resolve dependency:
+npm error @nestjs/core@"11.1.3" from the root project
+npm error
+npm error Conflicting peer dependency: @nestjs/platform-express@11.1.3
+npm error node_modules/@nestjs/platform-express
+npm error   peerOptional @nestjs/platform-express@"^11.0.0" from @nestjs/core@11.1.3
+npm error   node_modules/@nestjs/core
+npm error     @nestjs/core@"11.1.3" from the root project
+npm error
+npm error Fix the upstream dependency conflict, or retry
+npm error this command with --force or --legacy-peer-deps
+npm error to accept an incorrect (and potentially broken) dependency resolution.
+npm error
+npm error
+npm error For a full report see:
+npm error C:\Users\bandi\AppData\Local\npm-cache\_logs\2025-06-09T15_42_03_324Z-eresolve-report.txt
+npm error A complete log of this run can be found in: C:\Users\bandi\AppData\Local\npm-cache\_logs\2025-06-09T15_42_03_324Z-debug-0.log
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: log-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   4 more (@nestjs/core, @nestjs/platform-express, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn node_modules/@nestjs/config
+npm warn   @nestjs/config@"^3.1.1" from the root project
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: log-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   4 more (@nestjs/core, @nestjs/platform-express, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^10.0.0" from @nestjs/core@10.4.19
+npm warn node_modules/@nestjs/core
+npm warn   peer @nestjs/core@"^10.0.0" from @nestjs/platform-express@10.4.19
+npm warn   node_modules/@nestjs/platform-express
+npm warn   2 more (@nestjs/testing, the root project)
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: log-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   4 more (@nestjs/core, @nestjs/platform-express, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^10.0.0" from @nestjs/platform-express@10.4.19
+npm warn node_modules/@nestjs/platform-express
+npm warn   peerOptional @nestjs/platform-express@"^10.0.0" from @nestjs/core@10.4.19
+npm warn   2 more (@nestjs/testing, the root project)
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: log-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   4 more (@nestjs/core, @nestjs/platform-express, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^10.0.0" from @nestjs/testing@10.4.19
+npm warn node_modules/@nestjs/testing
+npm warn   dev @nestjs/testing@"^10.0.0" from the root project
+npm error code ERESOLVE
+npm error ERESOLVE could not resolve
+npm error
+npm error While resolving: log-service@1.0.0
+npm error Found: @nestjs/core@10.4.19
+npm error node_modules/@nestjs/core
+npm error   peer @nestjs/core@"^10.0.0" from @nestjs/platform-express@10.4.19
+npm error   node_modules/@nestjs/platform-express
+npm error     peerOptional @nestjs/platform-express@"^10.0.0" from @nestjs/core@10.4.19
+npm error     peerOptional @nestjs/platform-express@"^10.0.0" from @nestjs/testing@10.4.19
+npm error     node_modules/@nestjs/testing
+npm error       dev @nestjs/testing@"^10.0.0" from the root project
+npm error     1 more (the root project)
+npm error   peer @nestjs/core@"^10.0.0" from @nestjs/testing@10.4.19
+npm error   node_modules/@nestjs/testing
+npm error     dev @nestjs/testing@"^10.0.0" from the root project
+npm error   1 more (the root project)
+npm error
+npm error Could not resolve dependency:
+npm error @nestjs/core@"11.1.3" from the root project
+npm error
+npm error Conflicting peer dependency: @nestjs/platform-express@11.1.3
+npm error node_modules/@nestjs/platform-express
+npm error   peerOptional @nestjs/platform-express@"^11.0.0" from @nestjs/core@11.1.3
+npm error   node_modules/@nestjs/core
+npm error     @nestjs/core@"11.1.3" from the root project
+npm error
+npm error Fix the upstream dependency conflict, or retry
+npm error this command with --force or --legacy-peer-deps
+npm error to accept an incorrect (and potentially broken) dependency resolution.
+npm error
+npm error
+npm error For a full report see:
+npm error C:\Users\bandi\AppData\Local\npm-cache\_logs\2025-06-09T15_42_07_650Z-eresolve-report.txt
+npm error A complete log of this run can be found in: C:\Users\bandi\AppData\Local\npm-cache\_logs\2025-06-09T15_42_07_650Z-debug-0.log
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: notifications-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   4 more (@nestjs/core, @nestjs/platform-express, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn node_modules/@nestjs/config
+npm warn   @nestjs/config@"^3.1.1" from the root project
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: notifications-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   4 more (@nestjs/core, @nestjs/platform-express, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^10.0.0" from @nestjs/core@10.4.19
+npm warn node_modules/@nestjs/core
+npm warn   peer @nestjs/core@"^10.0.0" from @nestjs/platform-express@10.4.19
+npm warn   node_modules/@nestjs/platform-express
+npm warn   2 more (@nestjs/testing, the root project)
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: notifications-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   4 more (@nestjs/core, @nestjs/platform-express, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^10.0.0" from @nestjs/platform-express@10.4.19
+npm warn node_modules/@nestjs/platform-express
+npm warn   peerOptional @nestjs/platform-express@"^10.0.0" from @nestjs/core@10.4.19
+npm warn   2 more (@nestjs/testing, the root project)
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: notifications-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   4 more (@nestjs/core, @nestjs/platform-express, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^10.0.0" from @nestjs/testing@10.4.19
+npm warn node_modules/@nestjs/testing
+npm warn   dev @nestjs/testing@"^10.0.0" from the root project
+npm error code ERESOLVE
+npm error ERESOLVE could not resolve
+npm error
+npm error While resolving: notifications-service@1.0.0
+npm error Found: @nestjs/core@10.4.19
+npm error node_modules/@nestjs/core
+npm error   peer @nestjs/core@"^10.0.0" from @nestjs/platform-express@10.4.19
+npm error   node_modules/@nestjs/platform-express
+npm error     peerOptional @nestjs/platform-express@"^10.0.0" from @nestjs/core@10.4.19
+npm error     peerOptional @nestjs/platform-express@"^10.0.0" from @nestjs/testing@10.4.19
+npm error     node_modules/@nestjs/testing
+npm error       dev @nestjs/testing@"^10.0.0" from the root project
+npm error     1 more (the root project)
+npm error   peer @nestjs/core@"^10.0.0" from @nestjs/testing@10.4.19
+npm error   node_modules/@nestjs/testing
+npm error     dev @nestjs/testing@"^10.0.0" from the root project
+npm error   1 more (the root project)
+npm error
+npm error Could not resolve dependency:
+npm error @nestjs/core@"11.1.3" from the root project
+npm error
+npm error Conflicting peer dependency: @nestjs/platform-express@11.1.3
+npm error node_modules/@nestjs/platform-express
+npm error   peerOptional @nestjs/platform-express@"^11.0.0" from @nestjs/core@11.1.3
+npm error   node_modules/@nestjs/core
+npm error     @nestjs/core@"11.1.3" from the root project
+npm error
+npm error Fix the upstream dependency conflict, or retry
+npm error this command with --force or --legacy-peer-deps
+npm error to accept an incorrect (and potentially broken) dependency resolution.
+npm error
+npm error
+npm error For a full report see:
+npm error C:\Users\bandi\AppData\Local\npm-cache\_logs\2025-06-09T15_42_11_334Z-eresolve-report.txt
+npm error A complete log of this run can be found in: C:\Users\bandi\AppData\Local\npm-cache\_logs\2025-06-09T15_42_11_334Z-debug-0.log
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: post-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   7 more (@nestjs/core, @nestjs/mapped-types, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn node_modules/@nestjs/config
+npm warn   @nestjs/config@"^3.1.1" from the root project
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: post-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   7 more (@nestjs/core, @nestjs/mapped-types, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^10.0.0" from @nestjs/core@10.4.19
+npm warn node_modules/@nestjs/core
+npm warn   peer @nestjs/core@"^10.0.0" from @nestjs/platform-express@10.4.19
+npm warn   node_modules/@nestjs/platform-express
+npm warn   4 more (@nestjs/swagger, @nestjs/testing, @nestjs/typeorm, the root project)
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: post-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   7 more (@nestjs/core, @nestjs/mapped-types, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^10.0.0" from @nestjs/platform-express@10.4.19
+npm warn node_modules/@nestjs/platform-express
+npm warn   peerOptional @nestjs/platform-express@"^10.0.0" from @nestjs/core@10.4.19
+npm warn   2 more (@nestjs/testing, the root project)
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: post-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   7 more (@nestjs/core, @nestjs/mapped-types, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^10.0.0" from @nestjs/testing@10.4.19
+npm warn node_modules/@nestjs/testing
+npm warn   dev @nestjs/testing@"^10.0.0" from the root project
+npm error code ERESOLVE
+npm error ERESOLVE could not resolve
+npm error
+npm error While resolving: post-service@1.0.0
+npm error Found: @nestjs/core@10.4.19
+npm error node_modules/@nestjs/core
+npm error   peer @nestjs/core@"^10.0.0" from @nestjs/platform-express@10.4.19
+npm error   node_modules/@nestjs/platform-express
+npm error     peerOptional @nestjs/platform-express@"^10.0.0" from @nestjs/core@10.4.19
+npm error     peerOptional @nestjs/platform-express@"^10.0.0" from @nestjs/testing@10.4.19
+npm error     node_modules/@nestjs/testing
+npm error       dev @nestjs/testing@"^10.0.0" from the root project
+npm error     1 more (the root project)
+npm error   peer @nestjs/core@"^9.0.0 || ^10.0.0" from @nestjs/swagger@7.4.2
+npm error   node_modules/@nestjs/swagger
+npm error     @nestjs/swagger@"11.2.0" from the root project
+npm error   3 more (@nestjs/testing, @nestjs/typeorm, the root project)
+npm error
+npm error Could not resolve dependency:
+npm error @nestjs/core@"11.1.3" from the root project
+npm error
+npm error Conflicting peer dependency: @nestjs/platform-express@11.1.3
+npm error node_modules/@nestjs/platform-express
+npm error   peerOptional @nestjs/platform-express@"^11.0.0" from @nestjs/core@11.1.3
+npm error   node_modules/@nestjs/core
+npm error     @nestjs/core@"11.1.3" from the root project
+npm error
+npm error Fix the upstream dependency conflict, or retry
+npm error this command with --force or --legacy-peer-deps
+npm error to accept an incorrect (and potentially broken) dependency resolution.
+npm error
+npm error
+npm error For a full report see:
+npm error C:\Users\bandi\AppData\Local\npm-cache\_logs\2025-06-09T15_42_14_547Z-eresolve-report.txt
+npm error A complete log of this run can be found in: C:\Users\bandi\AppData\Local\npm-cache\_logs\2025-06-09T15_42_14_547Z-debug-0.log
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: stats-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   4 more (@nestjs/core, @nestjs/platform-express, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn node_modules/@nestjs/config
+npm warn   @nestjs/config@"^3.1.1" from the root project
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: stats-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   4 more (@nestjs/core, @nestjs/platform-express, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^10.0.0" from @nestjs/core@10.4.19
+npm warn node_modules/@nestjs/core
+npm warn   peer @nestjs/core@"^10.0.0" from @nestjs/platform-express@10.4.19
+npm warn   node_modules/@nestjs/platform-express
+npm warn   2 more (@nestjs/testing, the root project)
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: stats-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   4 more (@nestjs/core, @nestjs/platform-express, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^10.0.0" from @nestjs/platform-express@10.4.19
+npm warn node_modules/@nestjs/platform-express
+npm warn   peerOptional @nestjs/platform-express@"^10.0.0" from @nestjs/core@10.4.19
+npm warn   2 more (@nestjs/testing, the root project)
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: stats-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   4 more (@nestjs/core, @nestjs/platform-express, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^10.0.0" from @nestjs/testing@10.4.19
+npm warn node_modules/@nestjs/testing
+npm warn   dev @nestjs/testing@"^10.0.0" from the root project
+npm error code ERESOLVE
+npm error ERESOLVE could not resolve
+npm error
+npm error While resolving: stats-service@1.0.0
+npm error Found: @nestjs/core@10.4.19
+npm error node_modules/@nestjs/core
+npm error   peer @nestjs/core@"^10.0.0" from @nestjs/platform-express@10.4.19
+npm error   node_modules/@nestjs/platform-express
+npm error     peerOptional @nestjs/platform-express@"^10.0.0" from @nestjs/core@10.4.19
+npm error     peerOptional @nestjs/platform-express@"^10.0.0" from @nestjs/testing@10.4.19
+npm error     node_modules/@nestjs/testing
+npm error       dev @nestjs/testing@"^10.0.0" from the root project
+npm error     1 more (the root project)
+npm error   peer @nestjs/core@"^10.0.0" from @nestjs/testing@10.4.19
+npm error   node_modules/@nestjs/testing
+npm error     dev @nestjs/testing@"^10.0.0" from the root project
+npm error   1 more (the root project)
+npm error
+npm error Could not resolve dependency:
+npm error @nestjs/core@"11.1.3" from the root project
+npm error
+npm error Conflicting peer dependency: @nestjs/platform-express@11.1.3
+npm error node_modules/@nestjs/platform-express
+npm error   peerOptional @nestjs/platform-express@"^11.0.0" from @nestjs/core@11.1.3
+npm error   node_modules/@nestjs/core
+npm error     @nestjs/core@"11.1.3" from the root project
+npm error
+npm error Fix the upstream dependency conflict, or retry
+npm error this command with --force or --legacy-peer-deps
+npm error to accept an incorrect (and potentially broken) dependency resolution.
+npm error
+npm error
+npm error For a full report see:
+npm error C:\Users\bandi\AppData\Local\npm-cache\_logs\2025-06-09T15_42_17_217Z-eresolve-report.txt
+npm error A complete log of this run can be found in: C:\Users\bandi\AppData\Local\npm-cache\_logs\2025-06-09T15_42_17_217Z-debug-0.log
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: tipp-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   4 more (@nestjs/core, @nestjs/platform-express, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn node_modules/@nestjs/config
+npm warn   @nestjs/config@"^3.1.1" from the root project
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: tipp-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   4 more (@nestjs/core, @nestjs/platform-express, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^10.0.0" from @nestjs/core@10.4.19
+npm warn node_modules/@nestjs/core
+npm warn   peer @nestjs/core@"^10.0.0" from @nestjs/platform-express@10.4.19
+npm warn   node_modules/@nestjs/platform-express
+npm warn   2 more (@nestjs/testing, the root project)
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: tipp-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   4 more (@nestjs/core, @nestjs/platform-express, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^10.0.0" from @nestjs/platform-express@10.4.19
+npm warn node_modules/@nestjs/platform-express
+npm warn   peerOptional @nestjs/platform-express@"^10.0.0" from @nestjs/core@10.4.19
+npm warn   2 more (@nestjs/testing, the root project)
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: tipp-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   4 more (@nestjs/core, @nestjs/platform-express, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^10.0.0" from @nestjs/testing@10.4.19
+npm warn node_modules/@nestjs/testing
+npm warn   dev @nestjs/testing@"^10.0.0" from the root project
+npm error code ERESOLVE
+npm error ERESOLVE could not resolve
+npm error
+npm error While resolving: tipp-service@1.0.0
+npm error Found: @nestjs/core@10.4.19
+npm error node_modules/@nestjs/core
+npm error   peer @nestjs/core@"^10.0.0" from @nestjs/platform-express@10.4.19
+npm error   node_modules/@nestjs/platform-express
+npm error     peerOptional @nestjs/platform-express@"^10.0.0" from @nestjs/core@10.4.19
+npm error     peerOptional @nestjs/platform-express@"^10.0.0" from @nestjs/testing@10.4.19
+npm error     node_modules/@nestjs/testing
+npm error       dev @nestjs/testing@"^10.0.0" from the root project
+npm error     1 more (the root project)
+npm error   peer @nestjs/core@"^10.0.0" from @nestjs/testing@10.4.19
+npm error   node_modules/@nestjs/testing
+npm error     dev @nestjs/testing@"^10.0.0" from the root project
+npm error   1 more (the root project)
+npm error
+npm error Could not resolve dependency:
+npm error @nestjs/core@"11.1.3" from the root project
+npm error
+npm error Conflicting peer dependency: @nestjs/platform-express@11.1.3
+npm error node_modules/@nestjs/platform-express
+npm error   peerOptional @nestjs/platform-express@"^11.0.0" from @nestjs/core@11.1.3
+npm error   node_modules/@nestjs/core
+npm error     @nestjs/core@"11.1.3" from the root project
+npm error
+npm error Fix the upstream dependency conflict, or retry
+npm error this command with --force or --legacy-peer-deps
+npm error to accept an incorrect (and potentially broken) dependency resolution.
+npm error
+npm error
+npm error For a full report see:
+npm error C:\Users\bandi\AppData\Local\npm-cache\_logs\2025-06-09T15_42_19_988Z-eresolve-report.txt
+npm error A complete log of this run can be found in: C:\Users\bandi\AppData\Local\npm-cache\_logs\2025-06-09T15_42_19_988Z-debug-0.log
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: user-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   7 more (@nestjs/core, @nestjs/mapped-types, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn node_modules/@nestjs/config
+npm warn   @nestjs/config@"^3.1.1" from the root project
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: user-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   7 more (@nestjs/core, @nestjs/mapped-types, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^10.0.0" from @nestjs/core@10.4.19
+npm warn node_modules/@nestjs/core
+npm warn   peer @nestjs/core@"^10.0.0" from @nestjs/platform-express@10.4.19
+npm warn   node_modules/@nestjs/platform-express
+npm warn   4 more (@nestjs/swagger, @nestjs/testing, @nestjs/typeorm, the root project)
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: user-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   7 more (@nestjs/core, @nestjs/mapped-types, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^10.0.0" from @nestjs/platform-express@10.4.19
+npm warn node_modules/@nestjs/platform-express
+npm warn   peerOptional @nestjs/platform-express@"^10.0.0" from @nestjs/core@10.4.19
+npm warn   2 more (@nestjs/testing, the root project)
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: user-service@1.0.0
+npm warn Found: @nestjs/common@10.4.19
+npm warn node_modules/@nestjs/common
+npm warn   peer @nestjs/common@"^8.0.0 || ^9.0.0 || ^10.0.0" from @nestjs/config@3.3.0
+npm warn   node_modules/@nestjs/config
+npm warn     @nestjs/config@"^3.1.1" from the root project
+npm warn   7 more (@nestjs/core, @nestjs/mapped-types, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer @nestjs/common@"^10.0.0" from @nestjs/testing@10.4.19
+npm warn node_modules/@nestjs/testing
+npm warn   dev @nestjs/testing@"^10.0.0" from the root project
+npm error code ERESOLVE
+npm error ERESOLVE could not resolve
+npm error
+npm error While resolving: user-service@1.0.0
+npm error Found: @nestjs/core@10.4.19
+npm error node_modules/@nestjs/core
+npm error   peer @nestjs/core@"^10.0.0" from @nestjs/platform-express@10.4.19
+npm error   node_modules/@nestjs/platform-express
+npm error     peerOptional @nestjs/platform-express@"^10.0.0" from @nestjs/core@10.4.19
+npm error     peerOptional @nestjs/platform-express@"^10.0.0" from @nestjs/testing@10.4.19
+npm error     node_modules/@nestjs/testing
+npm error       dev @nestjs/testing@"^10.0.0" from the root project
+npm error     1 more (the root project)
+npm error   peer @nestjs/core@"^9.0.0 || ^10.0.0" from @nestjs/swagger@7.4.2
+npm error   node_modules/@nestjs/swagger
+npm error     @nestjs/swagger@"11.2.0" from the root project
+npm error   3 more (@nestjs/testing, @nestjs/typeorm, the root project)
+npm error
+npm error Could not resolve dependency:
+npm error @nestjs/core@"11.1.3" from the root project
+npm error
+npm error Conflicting peer dependency: @nestjs/platform-express@11.1.3
+npm error node_modules/@nestjs/platform-express
+npm error   peerOptional @nestjs/platform-express@"^11.0.0" from @nestjs/core@11.1.3
+npm error   node_modules/@nestjs/core
+npm error     @nestjs/core@"11.1.3" from the root project
+npm error
+npm error Fix the upstream dependency conflict, or retry
+npm error this command with --force or --legacy-peer-deps
+npm error to accept an incorrect (and potentially broken) dependency resolution.
+npm error
+npm error
+npm error For a full report see:
+npm error C:\Users\bandi\AppData\Local\npm-cache\_logs\2025-06-09T15_42_22_791Z-eresolve-report.txt
+npm error A complete log of this run can be found in: C:\Users\bandi\AppData\Local\npm-cache\_logs\2025-06-09T15_42_22_791Z-debug-0.log
