@@ -23,7 +23,7 @@ export function getAuthToken(): string | null {
       return token;
     }
 
-    console.warn('⚠️ No auth token found in centralized store');
+    // Don't show warning for guest users - this is normal behavior
     return null;
   } catch (error) {
     console.error('❌ Error accessing centralized auth token:', error);

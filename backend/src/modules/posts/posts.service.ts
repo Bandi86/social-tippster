@@ -480,7 +480,7 @@ export class PostsService {
     }
   }
 
-  private async incrementViewCount(postId: string, userId: string): Promise<void> {
+  async incrementViewCount(postId: string, userId: string): Promise<void> {
     const existingView = await this.postViewRepository.findOne({
       where: { post_id: postId, user_id: userId },
     });

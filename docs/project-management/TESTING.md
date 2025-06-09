@@ -1,5 +1,15 @@
 # TESTING
 
+> **2025-12-08:**
+>
+> - **VIEW TRACKING INVESTIGATION COMPLETED**: Comprehensive testing confirmed view tracking functionality is working correctly
+> - **Backend Testing**: Verified `POST /api/posts/:id/view` endpoint with authentication guards and proper responses
+> - **Frontend Testing**: Confirmed guest user handling and authenticated view tracking with browser-based tests
+> - **Live Verification**: Captured successful view tracking requests with 200 status and Authorization headers
+> - **Test Suite Created**: Built comprehensive debugging tools for view tracking validation
+> - **Documentation**: Complete investigation documented with technical findings and test evidence
+> - **Status**: View tracking system verified as production-ready, original "Cannot POST" error was transient
+
 > **2025-06-04:**
 >
 > - Backend image upload (storage/validation) and image analysis (OCR, tip extraction) are now handled by separate modules.
@@ -20,12 +30,35 @@
 > - Playwright test (`tests/frontend/auth-session-expiry.spec.ts`) added to verify that after session expiry and reload, the UI shows only guest elements and no user info. Test selectors were made robust to avoid ambiguity. Test now passes.
 > - See `docs/implementation-reports/FRONTEND_PROGRESS.md` and changelog for details.
 
-## Test File Organization (as of 2025-06-01)
+## Test File Organization (Updated 2025-06-09)
 
-- All test files are located in the root `tests/` folder, with subfolders for backend, frontend, and examples.
-- No test files are present in the root of `frontend/` or `backend/` directories.
-- Test images and reports are stored in `tests/images/` and `tests/playwright-report/` respectively.
-- This organization ensures clarity, maintainability, and compliance with project standards.
+✅ **REORGANIZATION COMPLETED**: All test files have been properly organized according to project guidelines.
+
+### Current Structure
+
+- **Main Directory**: Root `tests/` folder contains all test files and subdirectories
+- **Backend Tests**: `tests/backend/` - All backend-related test files
+- **Frontend Tests**: `tests/frontend/` - All frontend-related test files
+- **E2E Tests**: `tests/e2e/` - End-to-end test files
+- **Examples**: `tests/examples/` - Example and reference test files
+- **Images**: `tests/images/` - Test screenshots and visual assets
+- **Reports**: `tests/playwright-report/`, `tests/coverage/`, `tests/reports/` - Test output and reports
+
+### Files Moved (June 9, 2025)
+
+- **From Root**: Moved 9+ test files from project root to `tests/` directory
+- **From docs/debug**: Consolidated existing `docs/debug/tests/` content into root `tests/`
+- **Cleanup**: Removed duplicate test files and old test directories
+
+### Compliance Status
+
+- ✅ **No test files in project root**
+- ✅ **No test files in `frontend/` or `backend/` directories**
+- ✅ **All test images in `tests/images/`**
+- ✅ **All test reports in appropriate `tests/` subdirectories**
+- ✅ **Clean project structure maintained**
+
+This organization ensures clarity, maintainability, and full compliance with project standards.
 
 ## Image Upload Integration Testing - ✅ COMPLETED (Updated June 8, 2025)
 

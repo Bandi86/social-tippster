@@ -7,6 +7,18 @@ import { Activity } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import LiveMatchItem from './LiveMatchItem';
 
+// Add this type guard above the component
+function hasResponseStatus(err: unknown): err is { response: { status: number } } {
+  return (
+    typeof err === 'object' &&
+    err !== null &&
+    'response' in err &&
+    typeof (err as { response?: { status?: unknown } }).response === 'object' &&
+    (err as { response?: { status?: unknown } }).response !== null &&
+    typeof (err as { response: { status?: unknown } }).response.status === 'number'
+  );
+}
+
 export default function LiveMatches() {
   const [matches, setMatches] = useState<LiveMatch[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -36,18 +48,20 @@ export default function LiveMatches() {
           setMatches(data || []);
           setRetryCount(0); // Reset retry count on success
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Error fetching live matches:', err);
 
         if (mounted) {
-          const errorMessage =
-            err?.response?.status === 400
+          // Use the type guard instead of (err as any)
+          const errorMessage = hasResponseStatus(err)
+            ? err.response.status === 400
               ? 'Szerver hiba: helytelen kérés formátum'
-              : err?.response?.status === 401
+              : err.response.status === 401
                 ? 'Nincs jogosultság - próbálj újra bejelentkezni'
-                : err?.response?.status === 404
+                : err.response.status === 404
                   ? 'Az élő meccsek szolgáltatás jelenleg nem elérhető'
-                  : 'Nem sikerült betölteni az élő meccseket';
+                  : 'Nem sikerült betölteni az élő meccseket'
+            : 'Nem sikerült betölteni az élő meccseket';
 
           setError(errorMessage);
 
@@ -87,7 +101,7 @@ export default function LiveMatches() {
         clearInterval(intervalId);
       }
     };
-  }, [isAuthenticated, retryCount]);
+  }, [isAuthenticated, retryCount, error]);
 
   const liveMatchesCount = matches.filter(m => m.status === 'live').length;
 

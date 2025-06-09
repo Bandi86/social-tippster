@@ -1,5 +1,9 @@
 'use client';
 
+import { ArrowLeft, Eye, Loader2 } from 'lucide-react';
+import { notFound, useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+
 import CommentList from '@/components/features/comments/CommentList';
 import PostAuthorInfo from '@/components/features/posts/PostAuthorInfo';
 import PostContent from '@/components/features/posts/PostContent';
@@ -12,48 +16,28 @@ import { useAuth } from '@/hooks/useAuth';
 import { usePosts } from '@/hooks/usePosts';
 import { cn } from '@/lib/utils';
 import { Post } from '@/store/posts';
-import { ArrowLeft, Eye, Loader2, Lock } from 'lucide-react';
-import { notFound, useRouter } from 'next/navigation';
-import { use, useEffect } from 'react';
 
 interface PostDetailPageProps {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }
 
 export default function PostDetailPage({ params }: PostDetailPageProps) {
   const router = useRouter();
   const { currentPost: post, isLoading, error, fetchPostById, trackPostView } = usePosts();
-  const { isAuthenticated } = useAuth();
-
-  // Unwrap params
-  const { id } = use(params);
 
   // Fetch post on mount
   useEffect(() => {
-    if (id) {
-      console.log('🔍 Fetching post with ID:', id);
-      fetchPostById(id);
+    if (params.id) {
+      fetchPostById(params.id);
     }
-  }, [id, fetchPostById]);
+  }, [params.id, fetchPostById]);
 
-  // Track post view when post is loaded (only for authenticated users)
+  // Track post view when post is loaded
   useEffect(() => {
-    if (post && !isLoading && isAuthenticated) {
+    if (post && !isLoading) {
       trackPostView(post.id);
     }
-  }, [post, isLoading, isAuthenticated, trackPostView]);
-
-  // Debug logging
-  useEffect(() => {
-    console.log('🐛 Component Debug state:', {
-      isLoading,
-      error,
-      post: !!post,
-      postId: post?.id,
-      postTitle: post?.title,
-      id: id,
-    });
-  }, [isLoading, error, post, id]);
+  }, [post, isLoading, trackPostView]);
 
   // Loading state
   if (isLoading) {
@@ -81,7 +65,7 @@ export default function PostDetailPage({ params }: PostDetailPageProps) {
               <Button onClick={() => router.back()} variant='outline'>
                 Vissza
               </Button>
-              <Button onClick={() => fetchPostById(id)} variant='default'>
+              <Button onClick={() => fetchPostById(params.id)} variant='default'>
                 Újrapróbálás
               </Button>
             </div>
@@ -91,15 +75,14 @@ export default function PostDetailPage({ params }: PostDetailPageProps) {
     );
   }
 
-  // Post not found - only after loading is complete AND we have no post AND no error
-  if (!isLoading && !post && !error) {
-    console.log('🔍 Post not found, calling notFound()');
+  // Post not found
+  if (!post) {
     notFound();
   }
 
   // Determine layout based on content
-  const hasComments = post ? post.comments_count > 0 : false;
-  const hasImage = !!post?.image_url;
+  const hasComments = post.comments_count > 0;
+  const hasImage = !!post.image_url;
 
   // Layout decision logic
   const getLayoutType = () => {
@@ -128,15 +111,8 @@ export default function PostDetailPage({ params }: PostDetailPageProps) {
             </Button>
             <div className='flex items-center gap-2 text-sm text-gray-500'>
               <Eye className='h-4 w-4' />
-              <span>{post ? post.views_count.toLocaleString() : 0} megtekintés</span>
+              <span>{post.views_count.toLocaleString()} megtekintés</span>
             </div>
-            {/* Guest user notification */}
-            {!isAuthenticated && (
-              <div className='flex items-center gap-2 text-sm text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20'>
-                <Lock className='h-4 w-4' />
-                <span>Vendég mód - interakció korlátozott</span>
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -146,37 +122,15 @@ export default function PostDetailPage({ params }: PostDetailPageProps) {
         {/* Single Panel Layout */}
         {layoutType === 'single' && (
           <div className='max-w-4xl mx-auto'>
-            {post && <PostCard post={post} isDetailView isAuthenticated={isAuthenticated} />}
+            <PostCard post={post} isDetailView />
           </div>
         )}
 
         {/* Two Panel Vertical Layout (Post + Comments) */}
         {layoutType === 'two-vertical' && (
           <div className='max-w-4xl mx-auto space-y-6'>
-            {post && <PostCard post={post} isDetailView isAuthenticated={isAuthenticated} />}
-            {/* Only show comments if authenticated */}
-            {post && isAuthenticated ? (
-              <CommentList postId={post.id} />
-            ) : (
-              <Card className='bg-gray-900/50 border-gray-700/50'>
-                <CardContent className='p-6 text-center'>
-                  <Lock className='h-8 w-8 mx-auto mb-4 text-gray-500' />
-                  <h3 className='text-lg font-semibold text-gray-300 mb-2'>
-                    Kommentek megtekintése korlátozott
-                  </h3>
-                  <p className='text-gray-500 mb-4'>
-                    A kommentek megtekintéséhez bejelentkezés szükséges.
-                  </p>
-                  <Button
-                    onClick={() => router.push('/auth')}
-                    variant='default'
-                    className='bg-amber-500 hover:bg-amber-600'
-                  >
-                    Bejelentkezés
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
+            <PostCard post={post} isDetailView />
+            <CommentList postId={post.id} />
           </div>
         )}
 
@@ -185,13 +139,13 @@ export default function PostDetailPage({ params }: PostDetailPageProps) {
           <div className='max-w-7xl mx-auto'>
             <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
               <div className='lg:col-span-2'>
-                {post && <PostCard post={post} isDetailView isAuthenticated={isAuthenticated} />}
+                <PostCard post={post} isDetailView />
               </div>
               <div className='lg:col-span-1'>
                 <Card className='bg-gray-900/50 border-gray-700/50 overflow-hidden'>
                   <div className='aspect-square relative'>
                     <img
-                      src={post?.image_url}
+                      src={post.image_url}
                       alt='Poszt kép'
                       className='w-full h-full object-cover'
                     />
@@ -207,36 +161,14 @@ export default function PostDetailPage({ params }: PostDetailPageProps) {
           <div className='max-w-7xl mx-auto'>
             <div className='grid grid-cols-1 lg:grid-cols-4 gap-6'>
               <div className='lg:col-span-2 space-y-6'>
-                {post && <PostCard post={post} isDetailView isAuthenticated={isAuthenticated} />}
-                {/* Only show comments if authenticated */}
-                {post && isAuthenticated ? (
-                  <CommentList postId={post.id} />
-                ) : (
-                  <Card className='bg-gray-900/50 border-gray-700/50'>
-                    <CardContent className='p-6 text-center'>
-                      <Lock className='h-8 w-8 mx-auto mb-4 text-gray-500' />
-                      <h3 className='text-lg font-semibold text-gray-300 mb-2'>
-                        Kommentek megtekintése korlátozott
-                      </h3>
-                      <p className='text-gray-500 mb-4'>
-                        A kommentek megtekintéséhez bejelentkezés szükséges.
-                      </p>
-                      <Button
-                        onClick={() => router.push('/auth')}
-                        variant='default'
-                        className='bg-amber-500 hover:bg-amber-600'
-                      >
-                        Bejelentkezés
-                      </Button>
-                    </CardContent>
-                  </Card>
-                )}
+                <PostCard post={post} isDetailView />
+                <CommentList postId={post.id} />
               </div>
               <div className='lg:col-span-2'>
                 <Card className='bg-gray-900/50 border-gray-700/50 overflow-hidden sticky top-24'>
                   <div className='aspect-square relative'>
                     <img
-                      src={post?.image_url}
+                      src={post.image_url}
                       alt='Poszt kép'
                       className='w-full h-full object-cover'
                     />
@@ -255,23 +187,18 @@ export default function PostDetailPage({ params }: PostDetailPageProps) {
 interface PostCardProps {
   post: Post;
   isDetailView?: boolean;
-  isAuthenticated?: boolean;
 }
 
-function PostCard({ post, isDetailView = false, isAuthenticated = false }: PostCardProps) {
+function PostCard({ post, isDetailView = false }: PostCardProps) {
+  const { isAuthenticated: authStatus } = useAuth();
+
   return (
     <Card
       className={cn(
         'bg-gradient-to-br from-gray-900 to-gray-800 border-gray-700/50',
         isDetailView && 'shadow-xl',
-        !isAuthenticated && 'relative',
       )}
     >
-      {/* Guest overlay for interactions */}
-      {!isAuthenticated && (
-        <div className='absolute top-0 left-0 right-0 bottom-0 z-10 bg-black/20 backdrop-blur-[1px] pointer-events-none' />
-      )}
-
       <CardHeader className='pb-3'>
         <div className='flex items-start justify-between'>
           <div className='flex items-center gap-3'>
@@ -290,12 +217,14 @@ function PostCard({ post, isDetailView = false, isAuthenticated = false }: PostC
             )}
           </div>
         </div>
+
         <PostAuthorInfo
           author={post.author}
           createdAt={post.created_at}
           viewsCount={post.views_count}
         />
       </CardHeader>
+
       <CardContent className='space-y-4'>
         <PostContent
           title={post.title}
@@ -305,6 +234,7 @@ function PostCard({ post, isDetailView = false, isAuthenticated = false }: PostC
           maxLength={isDetailView ? 1000 : 120}
           imageUrl={post.image_url}
         />
+
         {post.tags && post.tags.length > 0 && (
           <div className='flex flex-wrap gap-2'>
             {post.tags.map((tag, index) => (
@@ -317,27 +247,10 @@ function PostCard({ post, isDetailView = false, isAuthenticated = false }: PostC
             ))}
           </div>
         )}
+
         <Separator className='bg-gray-700/50' />
 
-        {/* Show interaction bar only for authenticated users */}
-        {isAuthenticated ? (
-          <PostInteractionBar post={post} isAuthenticated={isAuthenticated} />
-        ) : (
-          <div className='p-4 bg-gray-800/50 rounded-lg text-center border border-gray-700/50'>
-            <Lock className='h-6 w-6 mx-auto mb-2 text-gray-500' />
-            <p className='text-gray-400 text-sm mb-3'>
-              A poszttal való interakcióhoz bejelentkezés szükséges
-            </p>
-            <Button
-              size='sm'
-              variant='outline'
-              onClick={() => (window.location.href = '/auth')}
-              className='border-amber-500/50 text-amber-400 hover:bg-amber-500/10'
-            >
-              Bejelentkezés
-            </Button>
-          </div>
-        )}
+        <PostInteractionBar post={post} isAuthenticated={authStatus} />
       </CardContent>
     </Card>
   );

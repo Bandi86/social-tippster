@@ -573,7 +573,7 @@ export const useCommentsStore = create<CommentsState & CommentsActions>()(
           }));
         } catch (error: any) {
           // If the endpoint doesn't exist yet, just update local state for now
-          console.warn('Pin/unpin endpoint not implemented yet, updating local state only');
+          // Silently handle missing endpoint
           set(state => ({
             adminComments: state.adminComments.map(comment =>
               comment.id === id

@@ -30,7 +30,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       !isAuthenticated &&
       pathname &&
       !pathname.startsWith('/auth') &&
-      pathname !== '/'
+      pathname !== '/' &&
+      !pathname.startsWith('/posts') // Allow public access to posts
     ) {
       router.push('/auth');
       // Force re-initialize auth state after redirect

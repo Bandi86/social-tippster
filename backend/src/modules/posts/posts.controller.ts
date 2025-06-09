@@ -198,6 +198,23 @@ export class PostsController {
     return this.postsService.reportPost(id, reportData.reason, user.user_id);
   }
 
+  @Post(':id/view')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Poszt megtekintés követése' })
+  @ApiResponse({ status: 200, description: 'Poszt megtekintés sikeresen rögzítve' })
+  @ApiResponse({ status: 401, description: 'Nincs jogosultság' })
+  @ApiResponse({ status: 404, description: 'Poszt nem található' })
+  @ApiParam({ name: 'id', description: 'Poszt ID', type: 'string' })
+  async trackView(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: User,
+  ): Promise<{ success: boolean }> {
+    await this.postsService.incrementViewCount(id, user.user_id);
+    return { success: true };
+  }
+
   @Get('user/:userId')
   @ApiOperation({ summary: 'Felhasználó posztjainak lekérése' })
   @ApiResponse({ status: 200, description: 'Felhasználó posztjai sikeresen lekérve' })

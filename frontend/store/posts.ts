@@ -7,7 +7,7 @@
 // ---- Importok ----
 import { databaseConfig } from '@/lib/api-client'; // Add this import
 import { getAuthToken } from '@/lib/auth-token'; // Centralized token access
-import axios from '@/lib/axios';
+import api from '@/lib/axios'; // Use the configured axios instance
 import { AxiosRequestConfig } from 'axios';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
@@ -47,7 +47,7 @@ async function axiosPublic(config: AxiosRequestConfig) {
   console.log('🌐 Making public request to:', config.url);
 
   try {
-    const response = await axios({ ...config, headers });
+    const response = await api({ ...config, headers });
     console.log('✅ Public API request successful:', config.url, response.status);
     return response.data;
   } catch (error: unknown) {
@@ -123,7 +123,7 @@ async function axiosWithAuth(config: AxiosRequestConfig) {
   }
 
   try {
-    const response = await axios({ ...config, headers });
+    const response = await api({ ...config, headers });
     console.log('✅ API request successful:', config.url, response.status);
     return response.data;
   } catch (error: unknown) {
@@ -313,6 +313,7 @@ export interface FetchPostsParams {
   search?: string;
   author?: string;
   featured?: boolean;
+  force?: boolean; // Force refresh, bypass cache
 }
 
 // ---- Store state ----
@@ -445,10 +446,100 @@ const initializeViewedPosts = (): Set<string> => {
     const stored = localStorage.getItem('viewedPosts');
     return stored ? new Set(JSON.parse(stored)) : new Set();
   } catch (error) {
-    console.warn('Failed to load viewed posts from localStorage:', error);
+    // Silent fallback for localStorage issues
     return new Set();
   }
 };
+
+// ---- Helper: Map backend post (snake_case) to frontend Post (camelCase) ----
+const allowedTypes = ['general', 'discussion', 'analysis', 'help_request', 'news'] as const;
+type AllowedType = (typeof allowedTypes)[number];
+const allowedStatuses = [
+  'draft',
+  'published',
+  'private',
+  'archived',
+  'deleted',
+  'reported',
+  'premium',
+  'inactive',
+] as const;
+type AllowedStatus = (typeof allowedStatuses)[number];
+const allowedVisibilities = ['public', 'followers_only', 'registered_only', 'private'] as const;
+type AllowedVisibility = (typeof allowedVisibilities)[number];
+const allowedVotes = ['like', 'dislike', null] as const;
+type AllowedVote = (typeof allowedVotes)[number];
+
+function mapPost(raw: unknown): Post {
+  if (!raw || typeof raw !== 'object') throw new Error('Invalid post data');
+  const r = raw as Record<string, unknown>;
+
+  // Type guards for author
+  let author: Post['author'] = undefined;
+  if (r.author && typeof r.author === 'object' && r.author !== null) {
+    const a = r.author as Record<string, unknown>;
+    author = {
+      user_id: String(a.user_id ?? a.id ?? ''),
+      username: String(a.username ?? ''),
+      profile_image: typeof a.profile_image === 'string' ? a.profile_image : undefined,
+      reputation_score: typeof a.reputation_score === 'number' ? a.reputation_score : 0,
+    };
+  }
+
+  // Enum value mapping with fallback
+  const type = allowedTypes.includes(r.type as AllowedType) ? (r.type as AllowedType) : 'general';
+  const status = allowedStatuses.includes(r.status as AllowedStatus)
+    ? (r.status as AllowedStatus)
+    : 'draft';
+  const visibility = allowedVisibilities.includes(r.visibility as AllowedVisibility)
+    ? (r.visibility as AllowedVisibility)
+    : 'public';
+  const user_vote = allowedVotes.includes(r.user_vote as AllowedVote)
+    ? (r.user_vote as AllowedVote)
+    : null;
+
+  return {
+    id: String(r.id ?? ''),
+    title: String(r.title ?? ''),
+    content: String(r.content ?? ''),
+    excerpt: r.excerpt ? String(r.excerpt) : undefined,
+    type,
+    status,
+    visibility,
+    author_id: String(r.author_id ?? ''),
+    author,
+    categoryId: r.category_id
+      ? String(r.category_id)
+      : r.categoryId
+        ? String(r.categoryId)
+        : undefined,
+    views_count: typeof r.views_count === 'number' ? r.views_count : 0,
+    likes_count: typeof r.likes_count === 'number' ? r.likes_count : 0,
+    dislikes_count: typeof r.dislikes_count === 'number' ? r.dislikes_count : 0,
+    comments_count: typeof r.comments_count === 'number' ? r.comments_count : 0,
+    bookmarks_count: typeof r.bookmarks_count === 'number' ? r.bookmarks_count : 0,
+    shares_count: typeof r.shares_count === 'number' ? r.shares_count : 0,
+    is_featured: !!r.is_featured,
+    is_premium: !!r.is_premium,
+    is_pinned: !!r.is_pinned,
+    comments_enabled: r.comments_enabled !== undefined ? !!r.comments_enabled : true,
+    sharing_enabled: r.sharing_enabled !== undefined ? !!r.sharing_enabled : true,
+    sharing_platforms: Array.isArray(r.sharing_platforms) ? (r.sharing_platforms as string[]) : [],
+    image_url: r.image_url ? String(r.image_url) : r.imageUrl ? String(r.imageUrl) : undefined,
+    slug: r.slug ? String(r.slug) : undefined,
+    meta_description: r.meta_description
+      ? String(r.meta_description)
+      : r.metaDescription
+        ? String(r.metaDescription)
+        : undefined,
+    created_at: String(r.created_at ?? ''),
+    updated_at: String(r.updated_at ?? ''),
+    published_at: r.published_at ? String(r.published_at) : undefined,
+    user_vote,
+    user_bookmarked: r.user_bookmarked !== undefined ? !!r.user_bookmarked : false,
+    tags: Array.isArray(r.tags) ? (r.tags as string[]) : [],
+  };
+}
 
 // ---- Zustand store létrehozása ----
 export const usePostsStore = create<PostsState & PostsActions>()(
@@ -496,8 +587,8 @@ export const usePostsStore = create<PostsState & PostsActions>()(
         const cache = get().postsCache.get(cacheKey);
         const now = Date.now();
 
-        // Ellenőrizzük a cache-t
-        if (cache && now - cache.timestamp < CACHE_DURATION) {
+        // Check cache (but allow bypass with force parameter)
+        if (cache && now - cache.timestamp < CACHE_DURATION && !params.force) {
           set({
             posts: append ? [...get().posts, ...cache.posts] : cache.posts,
             totalPosts: cache.meta.total,
@@ -529,10 +620,13 @@ export const usePostsStore = create<PostsState & PostsActions>()(
           if (params?.author) searchParams.append('author', params.author);
           if (params?.featured) searchParams.append('featured', 'true');
 
+          const finalUrl = `/posts?${searchParams.toString()}`;
+
           const response = await axiosPublic({
             method: 'GET',
-            url: `${API_BASE_URL}/posts?${searchParams.toString()}`,
+            url: finalUrl,
           });
+
           const postsData: PostsResponse = response;
 
           // Cache frissítése
@@ -571,7 +665,7 @@ export const usePostsStore = create<PostsState & PostsActions>()(
           set({ isLoading: true, error: null });
           const response = await axiosPublic({
             method: 'GET',
-            url: `${API_BASE_URL}/posts?isFeatured=true&limit=10`,
+            url: `/posts?isFeatured=true&limit=10`,
           });
           const featuredData = response;
           set({
@@ -590,44 +684,45 @@ export const usePostsStore = create<PostsState & PostsActions>()(
 
       fetchPostById: async (id: string) => {
         try {
+          console.log('🔍 Starting fetchPostById for ID:', id);
           set({ isLoading: true, error: null });
-
-          // Try public access first for guest users
           const token = getAuthToken();
           let post;
-
           try {
-            // Try public request first (works for public posts)
+            console.log('🌐 Attempting public API call for post:', id);
             post = await axiosPublic({
               method: 'GET',
-              url: `${API_BASE_URL}/posts/${id}`,
+              url: `/posts/${id}`,
             });
-            console.log('✅ Post fetched via public API:', id);
+            console.log('✅ Public API response received:', post);
           } catch (publicError: unknown) {
-            // If public request fails and user is authenticated, try with auth
+            console.log('❌ Public API failed, trying authenticated:', publicError);
             const apiError = publicError as ApiError;
             if (token && (apiError?.status === 401 || apiError?.status === 403)) {
-              console.log('🔐 Retrying post fetch with authentication:', id);
+              console.log('🔐 Retrying with authentication');
               post = await axiosWithAuth({
                 method: 'GET',
-                url: `${API_BASE_URL}/posts/${id}`,
+                url: `/posts/${id}`,
               });
+              console.log('✅ Authenticated API response received:', post);
             } else {
-              // If no token or other error, throw the original error
               throw publicError;
             }
           }
-
+          console.log('🔄 Mapping post data:', post);
+          const mapped = mapPost(post);
+          console.log('✅ Post mapped successfully:', mapped);
           set({
-            currentPost: post,
+            currentPost: mapped,
             isLoading: false,
             error: null,
           });
-        } catch (error) {
-          console.error('Error fetching post:', error);
+          console.log('✅ Store updated with currentPost');
+        } catch (_error) {
+          console.error('❌ fetchPostById error:', _error);
           set({
             isLoading: false,
-            error: error instanceof Error ? error.message : 'Failed to fetch post',
+            error: _error instanceof Error ? _error.message : 'Failed to fetch post',
           });
         }
       },
@@ -637,7 +732,7 @@ export const usePostsStore = create<PostsState & PostsActions>()(
           set({ isLoading: true, error: null });
           const response = await axiosWithAuth({
             method: 'GET',
-            url: `${API_BASE_URL}/posts/user/${username}?page=${page}&limit=${limit}`,
+            url: `/posts/user/${username}?page=${page}&limit=${limit}`,
           });
           set({ isLoading: false });
           return response;
@@ -656,7 +751,7 @@ export const usePostsStore = create<PostsState & PostsActions>()(
           set({ isSubmitting: true, error: null });
           const newPost = await axiosWithAuth({
             method: 'POST',
-            url: `${API_BASE_URL}/posts`,
+            url: `/posts`,
             data,
           });
 
@@ -684,7 +779,7 @@ export const usePostsStore = create<PostsState & PostsActions>()(
           set({ isSubmitting: true, error: null });
           const updatedPost = await axiosWithAuth({
             method: 'PATCH',
-            url: `${API_BASE_URL}/posts/${id}`,
+            url: `/posts/${id}`,
             data: updates,
           });
 
@@ -713,7 +808,7 @@ export const usePostsStore = create<PostsState & PostsActions>()(
           set({ isSubmitting: true, error: null });
           await axiosWithAuth({
             method: 'DELETE',
-            url: `${API_BASE_URL}/posts/${id}`,
+            url: `/posts/${id}`,
           });
 
           // Remove from posts list
@@ -753,7 +848,7 @@ export const usePostsStore = create<PostsState & PostsActions>()(
         try {
           await axiosWithAuth({
             method: 'POST',
-            url: `${API_BASE_URL}/posts/${id}/vote`,
+            url: `/posts/${id}/vote`,
             data: { type: voteType },
           });
         } catch (error) {
@@ -788,7 +883,7 @@ export const usePostsStore = create<PostsState & PostsActions>()(
         try {
           await axiosWithAuth({
             method: 'DELETE',
-            url: `${API_BASE_URL}/posts/${id}/vote`,
+            url: `/posts/${id}/vote`,
           });
         } catch (error) {
           // Revert optimistic update on error
@@ -806,7 +901,7 @@ export const usePostsStore = create<PostsState & PostsActions>()(
         try {
           const result = await axiosWithAuth({
             method: 'POST',
-            url: `${API_BASE_URL}/posts/${id}/bookmark`,
+            url: `/posts/${id}/bookmark`,
           });
           get().updatePostLocally(id, {
             user_bookmarked: result.bookmarked,
@@ -827,7 +922,7 @@ export const usePostsStore = create<PostsState & PostsActions>()(
         try {
           await axiosWithAuth({
             method: 'POST',
-            url: `${API_BASE_URL}/posts/${id}/share`,
+            url: `/posts/${id}/share`,
             data: { platform },
           });
         } catch (error) {
@@ -842,7 +937,7 @@ export const usePostsStore = create<PostsState & PostsActions>()(
         try {
           await axiosWithAuth({
             method: 'POST',
-            url: `${API_BASE_URL}/posts/${id}/report`,
+            url: `/posts/${id}/report`,
             data: { reason, additional_details: additionalDetails },
           });
         } catch (error) {
@@ -918,7 +1013,7 @@ export const usePostsStore = create<PostsState & PostsActions>()(
             try {
               await axiosWithAuth({
                 method: 'POST',
-                url: `${API_BASE_URL}/posts/${id}/view`,
+                url: `/posts/${id}/view`,
               });
 
               // Success: Mark as viewed and persist to localStorage
@@ -998,7 +1093,7 @@ export const usePostsStore = create<PostsState & PostsActions>()(
 
           const response = await axiosWithAuth({
             method: 'GET',
-            url: `${API_BASE_URL}/posts?${searchParams.toString()}`,
+            url: `/posts?${searchParams.toString()}`,
           });
 
           // Transform regular posts to admin posts format
@@ -1037,7 +1132,7 @@ export const usePostsStore = create<PostsState & PostsActions>()(
           // Since we don't have a dedicated stats endpoint, calculate from posts
           const response = await axiosWithAuth({
             method: 'GET',
-            url: `${API_BASE_URL}/posts?limit=1000`,
+            url: `/posts?limit=1000`,
           });
 
           const posts = response.posts || [];

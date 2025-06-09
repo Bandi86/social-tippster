@@ -415,3 +415,73 @@ backend/src/modules/auth/
 **Current Status**: Authentication system **FULLY OPERATIONAL** ✅
 
 **Impact**: Login flow should now work end-to-end without 404 errors in browser console.
+
+## Frontend Routing Authentication Fix (June 9, 2025) ✅ COMPLETED
+
+### 3. Post Navigation Authentication Conflict Resolution
+
+- **Problem**: Clicking on post links redirected unauthenticated users to the auth page instead of showing post content
+- **Details**: Posts were meant to be publicly accessible, but AuthProvider was treating them as protected routes
+- **Root Cause**: Overly restrictive authentication logic in `frontend/providers/AuthProvider.tsx`
+- **Symptoms**:
+  - Post card links (titles, images, "tovább" links) redirected to `/auth` instead of `/posts/[id]`
+  - Posts list page (`/posts`) was inaccessible to unauthenticated users
+  - Guest users couldn't view any post content
+
+#### Solution ✅ IMPLEMENTED
+
+1. **Updated AuthProvider routing logic**:
+
+   ```typescript
+   // Previous logic - too restrictive
+   if (
+     isInitialized &&
+     !isLoading &&
+     !isAuthenticated &&
+     pathname &&
+     !pathname.startsWith('/auth') &&
+     pathname !== '/' // Only home page was public
+   ) {
+     router.push('/auth'); // Redirected everything else
+   }
+
+   // New logic - allows public post access
+   if (
+     isInitialized &&
+     !isLoading &&
+     !isAuthenticated &&
+     pathname &&
+     !pathname.startsWith('/auth') &&
+     pathname !== '/' &&
+     !pathname.startsWith('/posts') // ✅ Allow public access to posts
+   ) {
+     router.push('/auth');
+   }
+   ```
+
+2. **Maintained proper authentication behavior**:
+   - Posts are publicly viewable without authentication
+   - Guest users see limited interaction options (no voting, commenting)
+   - Authentication still required for admin routes and user-specific actions
+   - Login prompts show for guests who want to interact with posts
+
+#### Result ✅ VERIFIED
+
+- ✅ Post navigation links work correctly from all entry points
+- ✅ Posts list page (`/posts`) accessible to all users
+- ✅ Post detail pages (`/posts/[id]`) accessible to all users
+- ✅ Guest users can view posts with appropriate interaction limitations
+- ✅ Authentication protection maintained for truly protected routes
+- ✅ No impact on existing admin route protection
+
+#### Files Modified
+
+- `frontend/providers/AuthProvider.tsx` - Updated routing logic to allow public posts access
+
+#### Testing Verified
+
+- ✅ http://localhost:3000/posts - Lists page accessible without auth
+- ✅ http://localhost:3000/posts/1 - Detail page accessible without auth
+- ✅ Post card navigation links work from posts list
+- ✅ Post content displays correctly for guest users
+- ✅ Admin routes still properly protected

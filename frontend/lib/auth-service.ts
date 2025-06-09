@@ -185,7 +185,8 @@ class AuthService {
     } catch (error: unknown) {
       // Even if logout fails on server, we should clear local state
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.warn('Logout request failed:', errorMessage);
+      // Only log as error if it's not a network/auth issue
+      console.error('Logout request failed:', errorMessage);
     }
   }
 

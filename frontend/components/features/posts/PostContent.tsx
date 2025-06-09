@@ -12,6 +12,7 @@ interface PostContentProps {
   maxLength?: number;
   className?: string;
   imageUrl?: string;
+  isDetailView?: boolean;
 }
 
 /**
@@ -26,6 +27,7 @@ export default function PostContent({
   maxLength = 120,
   className,
   imageUrl,
+  isDetailView = false,
 }: PostContentProps) {
   const displayContent = content || excerpt || '';
   const isContentLong = displayContent.length > maxLength;
@@ -39,37 +41,54 @@ export default function PostContent({
 
   return (
     <div className={`mb-4 ${className || ''}`}>
-      <Link href={`/posts/${postId}`} className='block group'>
-        <h3 className='text-lg font-bold text-white group-hover:text-amber-400 transition-colors duration-200 mb-3 leading-tight'>
-          {title}
-        </h3>
-      </Link>
+      {!isDetailView && (
+        <Link href={`/posts/${postId}`} className='block group'>
+          <h3 className='text-lg font-bold text-white group-hover:text-amber-400 transition-colors duration-200 mb-3 leading-tight'>
+            {title}
+          </h3>
+        </Link>
+      )}
+
+      {isDetailView && (
+        <h1 className='text-2xl font-bold text-white mb-4 leading-tight'>{title}</h1>
+      )}
 
       {/* Image display */}
       {imageUrl && (
         <div className='mb-3 rounded-lg overflow-hidden border border-gray-700/50'>
-          <Link href={`/posts/${postId}`} className='block group'>
+          {!isDetailView ? (
+            <Link href={`/posts/${postId}`} className='block group'>
+              <Image
+                src={imageUrl}
+                alt={title}
+                width={600}
+                height={300}
+                className='w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300'
+                priority={false}
+              />
+            </Link>
+          ) : (
             <Image
               src={imageUrl}
               alt={title}
-              width={600}
-              height={300}
-              className='w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300'
-              priority={false}
+              width={800}
+              height={400}
+              className='w-full h-64 object-cover'
+              priority={true}
             />
-          </Link>
+          )}
         </div>
       )}
 
       {/* Content display */}
-      {processedDisplayContent && ( // Use processedDisplayContent here
+      {processedDisplayContent && (
         <div className='text-gray-300 text-sm leading-relaxed'>
-         {/*
-          THIS CODE IS COMMENTED OUT BECAUSE DUPLICATE CONTENT
-         <span className='line-clamp-1'>
-            {truncateContent(processedDisplayContent, maxLength)}
-          </span> */}
-          {isContentLong && (
+          <span className={isDetailView ? '' : 'line-clamp-3'}>
+            {isDetailView
+              ? processedDisplayContent
+              : truncateContent(processedDisplayContent, maxLength)}
+          </span>
+          {!isDetailView && isContentLong && (
             <Link
               href={`/posts/${postId}`}
               className='text-amber-400 hover:text-amber-300 ml-1 font-semibold transition-colors duration-200'
