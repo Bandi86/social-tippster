@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "social-tippster-devtools": {
+      "command": "node",
+      "args": [
+        "c:\\Users\\bandi\\Documents\\code\\social-tippster\\social-tippster\\backend_new\\services\\devtools\\dist\\main.js"
+      ],
+      "env": {
+        "NODE_ENV": "production",
+        "PORT": "3033",
+        "PROJECT_ROOT": "c:\\Users\\bandi\\Documents\\code\\social-tippster\\social-tippster"
+      }
+    }
+  }
+}

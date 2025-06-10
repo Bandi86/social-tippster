@@ -1,0 +1,29 @@
+{
+  "mcpServers": {
+    "devtools": {
+      "command": "node",
+      "args": [
+        "-e",
+        "const express = require('express'); const app = express(); app.use(express.json()); app.post('/mcp', (req, res) => { console.log('MCP Request:', JSON.stringify(req.body, null, 2)); res.json({ jsonrpc: '2.0', id: req.body.id, result: { capabilities: { tools: {}, resources: {} } } }); }); app.listen(3034, () => console.log('MCP Test Server running on port 3034'));"
+      ],
+      "env": {
+        "PORT": "3034"
+      }
+    },
+    "devtools-http": {
+      "transport": {
+        "type": "stdio"
+      },
+      "command": "curl",
+      "args": [
+        "-X",
+        "POST",
+        "-H",
+        "Content-Type: application/json",
+        "-d",
+        "@-",
+        "http://localhost:3033/api/mcp/request"
+      ]
+    }
+  }
+}

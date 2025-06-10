@@ -1,9 +1,11 @@
-import { NestFactory } from '@nestjs/core';
 import { Logger, ValidationPipe } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { AppModule } from './app.module';
-import helmet from 'helmet';
 import * as compression from 'compression';
+import helmet from 'helmet';
+import { AppModule } from './app.module';
+import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -16,6 +18,12 @@ async function bootstrap() {
   // Security middleware
   app.use(helmet());
   app.use(compression());
+
+  // Global exception filter
+  app.useGlobalFilters(new GlobalExceptionFilter());
+
+  // Global logging interceptor
+  app.useGlobalInterceptors(new LoggingInterceptor());
 
   // Global validation pipe
   app.useGlobalPipes(

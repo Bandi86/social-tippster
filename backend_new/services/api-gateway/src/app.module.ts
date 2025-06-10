@@ -1,11 +1,9 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { ProxyModule } from './proxy/proxy.module';
 import { AuthModule } from './auth/auth.module';
 import { HealthModule } from './health/health.module';
-//import { CacheModule } from '@nestjs/cache-manager';
-import { registerAs } from '@nestjs/config';
+import { ProxyModule } from './proxy/proxy.module';
 
 @Module({
   imports: [
@@ -13,22 +11,19 @@ import { registerAs } from '@nestjs/config';
       isGlobal: true,
       envFilePath: ['.env.local', '.env', '.env.docker'],
     }),
-    ThrottlerModule.forRoot([
-      {
-        ttl: 60000, // 1 minute
-        limit: 100, // requests per ttl
-      },
-    ]),
-  /*    CacheModule.registerAsync({
-      useFactory: async (configService: ConfigService) => ({
-        store: (await import('cache-manager-ioredis')).default,
-        host: configService.get('REDIS_HOST'),
-        port: configService.get('REDIS_PORT'),
-        password: configService.get('REDIS_PASSWORD'),
-        ttl: configService.get('CACHE_TTL'), // optional
-      }),
+    ThrottlerModule.forRootAsync({
+      useFactory: (configService: ConfigService) => [
+        {
+          ttl: configService.get('RATE_LIMIT_TTL', 60) * 1000, // Convert to milliseconds
+          limit: configService.get('RATE_LIMIT_REQUESTS', 100),
+        },
+      ],
       inject: [ConfigService],
-    }), */
+    }),
+    // TODO: Add Redis cache when dependencies are resolved
+    // CacheModule.registerAsync({...}),
+    // TODO: Add RabbitMQ when @nestjs/microservices is installed
+    // ClientsModule.registerAsync([...]),
     ProxyModule,
     AuthModule,
     HealthModule,
