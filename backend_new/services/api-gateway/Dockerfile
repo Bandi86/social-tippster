@@ -1,5 +1,5 @@
 # Build stage
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
@@ -12,13 +12,12 @@ COPY .env* ./
 
 # Copy source code and prisma
 COPY src ./src
-COPY prisma ./prisma
 
 # Install dependencies and build the application
-RUN npm ci && npm run build
+RUN npm install --legacy-peer-deps && npm run build
 
 # Development stage
-FROM node:18-alpine AS dev
+FROM node:20-alpine AS dev
 
 WORKDIR /app
 
@@ -31,10 +30,9 @@ COPY .env* ./
 
 # Copy source code and prisma
 COPY src ./src
-COPY prisma ./prisma
 
-# Install dependencies
-RUN npm ci
+# Install dependencies (dev stage)
+RUN npm install --legacy-peer-deps
 
 # Expose port
 EXPOSE 3000
@@ -43,7 +41,7 @@ EXPOSE 3000
 CMD ["npm", "run", "start:dev"]
 
 # Production stage
-FROM node:18-alpine AS production
+FROM node:20-alpine AS production
 
 WORKDIR /app
 

@@ -120,3 +120,15 @@ Az alábbiakban részletesen bemutatjuk a projektbe illeszthető lehetséges mic
 ---
 
 _Last updated: 2025-06-09 by GitHub Copilot_
+
+# NestJS technológiai modulok, amiket érdemes beépítenedFunkció	Csomag
+gRPC	@nestjs/microservices
+Redis	@nestjs/redis, ioredis
+RabbitMQ	@nestjs/microservices (transport: 'RMQ')
+WebSocket	@nestjs/websockets, socket.io
+Job queue (pl. tippfeldolgozás)	@nestjs/bull, bullmq
+Cron/ütemezés	@nestjs/schedule
+Auth (JWT, Guard)	@nestjs/passport, passport-jwt
+File upload	@nestjs/platform-express, multer
+Monitoring	prom-client, @willsoto/nestjs-prometheus
+Logging	winston, nestjs-pino, elastic-apm-node

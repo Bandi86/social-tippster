@@ -1,28 +1,28 @@
 # Dockerfile for log microservice
 # Build stage
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
 COPY tsconfig.json ./
 COPY .env* ./
 COPY src ./src
 COPY prisma ./prisma
-RUN npm ci && npm run build
+RUN npm install --legacy-peer-deps && npm run build
 
 # Development stage
-FROM node:18-alpine AS dev
+FROM node:20-alpine AS dev
 WORKDIR /app
 COPY package*.json ./
 COPY tsconfig.json ./
 COPY .env* ./
 COPY src ./src
 COPY prisma ./prisma
-RUN npm ci
+RUN npm install --legacy-peer-deps
 EXPOSE 3012
 CMD ["npm", "run", "start:dev"]
 
 # Production stage
-FROM node:18-alpine AS production
+FROM node:20-alpine AS production
 WORKDIR /app
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules

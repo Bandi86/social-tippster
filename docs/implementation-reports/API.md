@@ -227,3 +227,21 @@ app.enableCors({
 - **Solution**: Moved database name header logic directly into the main request interceptor
 - **Before**: Nested `this.client.interceptors.request.use()` inside another interceptor
 - **After**: Direct header assignment within the existing interceptor
+
+# API Changes – API Gateway Prefix & DB Cleanup (2025-06-10)
+
+**Update:**
+
+- API Gateway route prefix javítva: megszűnt a dupla `/api/api` Swagger és endpoint útvonalakban, mostantól minden végpont helyesen `/api/...` formátumú.
+- Prisma, saját adatbázis és minden kapcsolódó környezeti változó eltávolítva az API Gateway-ből.
+- Docker Compose-ból törölve a `postgres_api_gateway` service és minden hivatkozás.
+- Dockerfile-ból törölve a Prisma-ra vonatkozó build lépés.
+
+**Ellenőrizve:**
+
+- Swagger UI helyesen mutatja az útvonalakat: `/api/auth/*`, `/api/users/*`, stb.
+- API Gateway build és futtatás Dockerben hibamentes.
+
+---
+
+_Frissítve: 2025-06-10 (Copilot Chat)_

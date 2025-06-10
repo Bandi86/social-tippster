@@ -1,8 +1,21 @@
-# Environment Setup – Docker & Microservices (2025-06-09)
+# Environment Setup – Docker & Microservices (2025-06-10)
+
+## [2025-06-10] API Gateway prefix és DB tisztítás
+
+- Az API Gateway route prefix javítva: megszűnt a dupla `/api/api` Swagger és endpoint útvonalakban, mostantól minden végpont helyesen `/api/...` formátumú.
+- Prisma, saját adatbázis és minden kapcsolódó környezeti változó eltávolítva az API Gateway-ből.
+- Docker Compose-ból törölve a `postgres_api_gateway` service és minden hivatkozás.
+- Dockerfile-ból törölve a Prisma-ra vonatkozó build lépés.
+
+## [2025-06-10] API Gateway adatbázis eltávolítás
+
+- Az API Gateway szervizből eltávolítottuk az összes adatbázisra (PostgreSQL) vonatkozó környezeti változót.
+- A docker-compose.yml-ből töröltük a postgres_api_gateway service-t.
+- Az API Gateway mostantól nem igényel saját adatbázist, csak Redis-t, RabbitMQ-t és a többi mikroszervizt használja.
 
 ## Overview
 
-As of June 9, 2025, the Social Tippster project uses a fully containerized microservices architecture for both backend and frontend, orchestrated via Docker Compose. This guide describes the environment setup for local development and production.
+As of June 10, 2025, the Social Tippster project uses a fully containerized microservices architecture for both backend and frontend, orchestrated via Docker Compose. This guide describes the environment setup for local development and production.
 
 ---
 
@@ -100,3 +113,17 @@ _Last updated: 2025-06-09 by GitHub Copilot_
 - `docs/implementation-reports/BACKEND_PROGRESS.md`
 - `docs/implementation-reports/FRONTEND_PROGRESS.md`
 - `docs/project-management/CHANGE_LOG_20250609.md`
+
+---
+
+## NestJS fejlesztői Dockerfile minta
+
+Minden backend_new mikroszolgáltatás fejlesztői Dockerfile-jában a Nest CLI globálisan telepítve van:
+
+```dockerfile
+RUN npm install --legacy-peer-deps && npm install -g @nestjs/cli
+```
+
+Ez biztosítja, hogy a `nest` parancs minden dev konténerben elérhető, így a hot reload (`npm run start:dev`) és a fejlesztői workflow hibamentesen működik.
+
+Ha új mikroszolgáltatást hozol létre, ezt a mintát kövesd a Dockerfile dev szakaszában!

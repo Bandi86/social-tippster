@@ -1,14 +1,13 @@
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
-import { Logger } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  const port = process.env.PORT || 3005;
-  const logger = new Logger('TippService')
-  logger.log('Tipp service is starting')
+  const port = process.env.PORT || 3006;
+  const logger = new Logger('TippService');
+  logger.log('Tipp service is starting');
 
   // Global validation pipe
   app.useGlobalPipes(
@@ -19,7 +18,7 @@ async function bootstrap() {
     }),
   );
 
-    // Enable global prefix for API routes
+  // Enable global prefix for API routes
   app.setGlobalPrefix('api');
 
   // CORS configuration

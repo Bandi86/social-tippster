@@ -1,10 +1,10 @@
-import { All, Controller, Req, Res, HttpException, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { All, Controller, HttpException, HttpStatus, Req, Res } from '@nestjs/common';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { ProxyService } from './proxy.service';
 
 @ApiTags('Proxy')
-@Controller('api')
+@Controller()
 export class ProxyController {
   constructor(private readonly proxyService: ProxyService) {}
 
@@ -84,10 +84,7 @@ export class ProxyController {
         return res.send(error.response.data);
       }
 
-      throw new HttpException(
-        `Service ${serviceName} unavailable`,
-        HttpStatus.SERVICE_UNAVAILABLE,
-      );
+      throw new HttpException(`Service ${serviceName} unavailable`, HttpStatus.SERVICE_UNAVAILABLE);
     }
   }
 }
