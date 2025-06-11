@@ -4,3 +4,7 @@ Dockerfile
 # DevTools MCP Server is now part of the project
 # services/devtools/ - REMOVED, DevTools is now included
 uploads/
+
+# cookie files
+*.cookie
+cookies.txt

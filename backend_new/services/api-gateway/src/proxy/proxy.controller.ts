@@ -34,6 +34,8 @@ export class ProxyController {
     return this.forwardRequest('tipp', req, res);
   }
 
+  // comments are part the posts service
+  //TODO : remove this endpoint when comments are fully integrated into posts service
   @All('comments/*path')
   @ApiOperation({ summary: 'Forward requests to comment service' })
   async forwardToComment(@Req() req: Request, @Res() res: Response) {
@@ -60,7 +62,8 @@ export class ProxyController {
 
   private async forwardRequest(serviceName: string, req: Request, res: Response) {
     try {
-      const path = req.path.replace(`/api/${serviceName}`, '');
+      // Keep the full /api/{service} path for forwarding to microservices
+      const path = req.path;
       const headers = { ...req.headers };
       delete headers.host;
 

@@ -1,40 +1,19 @@
-import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
-import { ProxyService } from '../proxy/proxy.service';
+import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import { SessionService } from '../session/session.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private readonly proxyService: ProxyService) {}
+  constructor(private readonly sessionService: SessionService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const token = this.extractTokenFromHeader(request);
 
-    if (!token) {
-      throw new UnauthorizedException('Token not found');
+    // If middleware already validated session and set user context, allow access
+    if (request.user && request.userId) {
+      return true;
     }
 
-    try {
-      // Validate token with auth service
-      const response = await this.proxyService.forwardRequest(
-        'auth',
-        '/validate-token',
-        'POST',
-        { token },
-      );
-
-      if (response.status === 200 && response.data.valid) {
-        request.user = response.data.user;
-        return true;
-      }
-
-      throw new UnauthorizedException('Invalid token');
-    } catch (error) {
-      throw new UnauthorizedException('Token validation failed');
-    }
-  }
-
-  private extractTokenFromHeader(request: any): string | undefined {
-    const [type, token] = request.headers.authorization?.split(' ') ?? [];
-    return type === 'Bearer' ? token : undefined;
+    // If no user context, session validation failed
+    throw new UnauthorizedException('Authentication required');
   }
 }

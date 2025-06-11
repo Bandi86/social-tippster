@@ -1,8 +1,9 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from './auth/auth.module';
 import { HealthModule } from './health/health.module';
+import { SessionMiddleware } from './middleware/session.middleware';
 import { ProxyModule } from './proxy/proxy.module';
 
 @Module({
@@ -29,4 +30,8 @@ import { ProxyModule } from './proxy/proxy.module';
     HealthModule,
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(SessionMiddleware).forRoutes('*'); // Apply to all routes
+  }
+}

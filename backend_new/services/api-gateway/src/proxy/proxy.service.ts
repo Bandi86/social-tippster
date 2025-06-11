@@ -43,17 +43,24 @@ export class ProxyService {
     try {
       this.logger.debug(`Forwarding ${method} ${url} [${correlationId}]`);
 
-      const response = await axios({
-        method: method as any,
+      // Use a simplified axios configuration that we know works
+      const config = {
+        method: method.toLowerCase() as any,
         url,
-        data,
         headers: {
-          ...headers,
           'Content-Type': 'application/json',
+          ...headers,
         },
-        timeout: 30000, // 30 seconds
-        validateStatus: status => status < 500, // Don't throw for 4xx errors
-      });
+        timeout: 10000, // Reduced timeout
+        validateStatus: status => status < 500,
+      };
+
+      // Only add data for methods that support it
+      if (data && ['post', 'put', 'patch'].includes(method.toLowerCase())) {
+        config['data'] = data;
+      }
+
+      const response = await axios(config);
 
       this.logger.debug(`Response from ${serviceName}: ${response.status} [${correlationId}]`);
       return response;

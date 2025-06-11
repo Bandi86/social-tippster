@@ -1,0 +1,670 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Redis Session Test Interface</title>
+    <style>
+      body {
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        background: linear-gradient(135deg, #1e1e2e 0%, #2a2a3e 100%);
+        color: #ffffff;
+        margin: 0;
+        padding: 20px;
+        min-height: 100vh;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: rgba(42, 42, 62, 0.8);
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(10px);
+      }
+
+      h1 {
+        text-align: center;
+        color: #00d4aa;
+        margin-bottom: 30px;
+        font-size: 2.5em;
+        text-shadow: 0 2px 4px rgba(0, 212, 170, 0.3);
+      }
+
+      .section {
+        background: rgba(30, 30, 46, 0.6);
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+        border: 1px solid rgba(0, 212, 170, 0.2);
+      }
+
+      .section h2 {
+        color: #00d4aa;
+        margin-top: 0;
+        border-bottom: 2px solid rgba(0, 212, 170, 0.3);
+        padding-bottom: 10px;
+      }
+
+      .form-group {
+        margin: 15px 0;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 5px;
+        color: #a6adc8;
+        font-weight: 500;
+      }
+
+      input[type='email'],
+      input[type='password'],
+      input[type='text'] {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid rgba(0, 212, 170, 0.3);
+        border-radius: 6px;
+        background: rgba(30, 30, 46, 0.8);
+        color: #ffffff;
+        font-size: 16px;
+        transition: border-color 0.3s ease;
+        box-sizing: border-box;
+      }
+
+      input:focus {
+        outline: none;
+        border-color: #00d4aa;
+        box-shadow: 0 0 10px rgba(0, 212, 170, 0.2);
+      }
+
+      button {
+        background: linear-gradient(135deg, #00d4aa 0%, #00a583 100%);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        margin: 5px;
+      }
+
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 212, 170, 0.3);
+      }
+
+      button:active {
+        transform: translateY(0);
+      }
+
+      .status {
+        padding: 15px;
+        border-radius: 6px;
+        margin: 15px 0;
+        font-weight: 500;
+      }
+
+      .status.success {
+        background: rgba(0, 212, 170, 0.2);
+        border: 1px solid rgba(0, 212, 170, 0.5);
+        color: #00d4aa;
+      }
+
+      .status.error {
+        background: rgba(255, 99, 99, 0.2);
+        border: 1px solid rgba(255, 99, 99, 0.5);
+        color: #ff6363;
+      }
+
+      .status.info {
+        background: rgba(137, 180, 250, 0.2);
+        border: 1px solid rgba(137, 180, 250, 0.5);
+        color: #89b4fa;
+      }
+
+      .debug-console {
+        background: #0a0a0a;
+        border: 2px solid #333;
+        border-radius: 6px;
+        padding: 15px;
+        height: 300px;
+        overflow-y: auto;
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        white-space: pre-wrap;
+        margin-top: 10px;
+      }
+
+      .log-entry {
+        margin: 2px 0;
+        padding: 2px 0;
+      }
+
+      .log-info {
+        color: #89b4fa;
+      }
+      .log-success {
+        color: #00d4aa;
+      }
+      .log-error {
+        color: #ff6363;
+      }
+      .log-warning {
+        color: #f9e2af;
+      }
+      .log-debug {
+        color: #a6adc8;
+      }
+
+      .user-info {
+        background: rgba(137, 180, 250, 0.1);
+        border: 1px solid rgba(137, 180, 250, 0.3);
+        border-radius: 6px;
+        padding: 15px;
+        margin: 15px 0;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .json-display {
+        background: #0a0a0a;
+        border: 1px solid #333;
+        border-radius: 4px;
+        padding: 10px;
+        margin: 10px 0;
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        overflow-x: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🔐 Redis Session Test Interface</h1>
+
+      <!-- Debug Console -->
+      <div class="section">
+        <h2>🐛 Debug Console</h2>
+        <button onclick="clearConsole()">Clear Console</button>
+        <button onclick="testRedisConnection()">Test Redis Connection</button>
+        <div id="debugConsole" class="debug-console"></div>
+      </div>
+
+      <!-- Registration Section -->
+      <div class="section">
+        <h2>📝 User Registration</h2>
+        <div class="form-group">
+          <label for="regEmail">Email:</label>
+          <input
+            type="email"
+            id="regEmail"
+            placeholder="test@example.com"
+            value="frontend-test@redis.com"
+          />
+        </div>
+        <div class="form-group">
+          <label for="regUsername">Username:</label>
+          <input type="text" id="regUsername" placeholder="username" value="frontendtest" />
+        </div>
+        <div class="form-group">
+          <label for="regPassword">Password:</label>
+          <input type="password" id="regPassword" placeholder="password" value="FrontendTest123!" />
+        </div>
+        <button onclick="registerUser()">Register User</button>
+        <div id="registerStatus"></div>
+      </div>
+
+      <!-- Login Section -->
+      <div class="section">
+        <h2>🔑 User Login</h2>
+        <div class="form-group">
+          <label for="loginEmail">Email:</label>
+          <input
+            type="email"
+            id="loginEmail"
+            placeholder="test@example.com"
+            value="frontend-test@redis.com"
+          />
+        </div>
+        <div class="form-group">
+          <label for="loginPassword">Password:</label>
+          <input
+            type="password"
+            id="loginPassword"
+            placeholder="password"
+            value="FrontendTest123!"
+          />
+        </div>
+        <button onclick="loginUser()">Login</button>
+        <div id="loginStatus"></div>
+      </div>
+
+      <!-- Session Management -->
+      <div class="section">
+        <h2>🍪 Session Management</h2>
+        <button onclick="getProfile()">Get Profile (Fresh DB Query)</button>
+        <button onclick="validateSession()">Validate Session</button>
+        <button onclick="refreshToken()">Refresh Token</button>
+        <button onclick="getSessions()">Get All Sessions</button>
+        <button onclick="logoutUser()">Logout</button>
+        <button onclick="logoutAllSessions()">Logout All Sessions</button>
+        <div id="sessionStatus"></div>
+      </div>
+
+      <!-- User Info Display -->
+      <div id="userInfo" class="user-info hidden">
+        <h3>👤 Current User</h3>
+        <div id="userDisplay"></div>
+      </div>
+
+      <!-- Redis Session Info -->
+      <div class="section">
+        <h2>📊 Redis Session Info</h2>
+        <button onclick="checkRedisHealth()">Check Redis Health</button>
+        <button onclick="getSessionData()">Get Session Data from Redis</button>
+        <div id="redisStatus"></div>
+      </div>
+    </div>
+
+    <script>
+      let currentUser = null;
+      let accessToken = null;
+
+      const API_BASE_URL = 'http://localhost:3001/api';
+
+      // Debug console functions
+      function log(message, type = 'info') {
+        const debugConsoleElement = document.getElementById('debugConsole');
+        const timestamp = new Date().toISOString().split('T')[1].split('.')[0];
+        const logEntry = document.createElement('div');
+        logEntry.className = `log-entry log-${type}`;
+        logEntry.textContent = `[${timestamp}] ${message}`;
+        debugConsoleElement.appendChild(logEntry);
+        debugConsoleElement.scrollTop = debugConsoleElement.scrollHeight;
+
+        // Also log to browser console
+        window.console[type === 'error' ? 'error' : 'log'](`[Redis Session Test] ${message}`);
+      }
+
+      function clearConsole() {
+        document.getElementById('debugConsole').innerHTML = '';
+        log('Console cleared', 'info');
+      }
+
+      function showStatus(elementId, message, type = 'info') {
+        const element = document.getElementById(elementId);
+        element.innerHTML = `<div class="status ${type}">${message}</div>`;
+        log(`${elementId}: ${message}`, type);
+      }
+
+      // API call wrapper with full debug logging
+      async function apiCall(endpoint, options = {}) {
+        const url = `${API_BASE_URL}${endpoint}`;
+        log(`🚀 API Call: ${options.method || 'GET'} ${url}`, 'info');
+
+        // Log request details
+        if (options.body) {
+          log(`📤 Request Body: ${options.body}`, 'debug');
+        }
+        if (options.headers) {
+          log(`📋 Request Headers: ${JSON.stringify(options.headers, null, 2)}`, 'debug');
+        }
+
+        const defaultOptions = {
+          credentials: 'include', // Include cookies
+          headers: {
+            'Content-Type': 'application/json',
+            Origin: 'http://localhost:3002',
+          },
+        };
+
+        // Add Authorization header if we have a token
+        if (accessToken && !options.headers?.Authorization) {
+          defaultOptions.headers.Authorization = `Bearer ${accessToken}`;
+          log(`🔑 Added Authorization header`, 'debug');
+        }
+
+        const finalOptions = {
+          ...defaultOptions,
+          ...options,
+          headers: {
+            ...defaultOptions.headers,
+            ...options.headers,
+          },
+        };
+
+        try {
+          log(`⏳ Sending request...`, 'debug');
+          const response = await fetch(url, finalOptions);
+
+          log(
+            `📥 Response Status: ${response.status} ${response.statusText}`,
+            response.ok ? 'success' : 'error',
+          );
+
+          // Log response headers
+          const responseHeaders = {};
+          response.headers.forEach((value, key) => {
+            responseHeaders[key] = value;
+          });
+          log(`📋 Response Headers: ${JSON.stringify(responseHeaders, null, 2)}`, 'debug');
+
+          let data;
+          const contentType = response.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            data = await response.json();
+            log(`📥 Response Data: ${JSON.stringify(data, null, 2)}`, 'debug');
+          } else {
+            data = await response.text();
+            log(`📥 Response Text: ${data}`, 'debug');
+          }
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${data.message || data}`);
+          }
+
+          return { data, response };
+        } catch (error) {
+          log(`❌ API Error: ${error.message}`, 'error');
+          throw error;
+        }
+      }
+
+      // Test Redis connection
+      async function testRedisConnection() {
+        try {
+          log('🔍 Testing Redis connection...', 'info');
+          const { data } = await apiCall('/health');
+          showStatus(
+            'redisStatus',
+            `Health Check: ${data.status} | Database: ${data.database}`,
+            'success',
+          );
+        } catch (error) {
+          showStatus('redisStatus', `Health check failed: ${error.message}`, 'error');
+        }
+      }
+
+      // User registration
+      async function registerUser() {
+        const email = document.getElementById('regEmail').value;
+        const username = document.getElementById('regUsername').value;
+        const password = document.getElementById('regPassword').value;
+
+        if (!email || !username || !password) {
+          showStatus('registerStatus', 'Please fill all fields', 'error');
+          return;
+        }
+
+        try {
+          log(`👤 Registering user: ${email}`, 'info');
+          const { data } = await apiCall('/auth/register', {
+            method: 'POST',
+            body: JSON.stringify({ email, username, password }),
+          });
+
+          showStatus('registerStatus', `Registration successful! ${data.message}`, 'success');
+        } catch (error) {
+          showStatus('registerStatus', `Registration failed: ${error.message}`, 'error');
+        }
+      }
+
+      // User login
+      async function loginUser() {
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+
+        if (!email || !password) {
+          showStatus('loginStatus', 'Please fill all fields', 'error');
+          return;
+        }
+
+        try {
+          log(`🔐 Logging in user: ${email}`, 'info');
+          const { data } = await apiCall('/auth/login', {
+            method: 'POST',
+            body: JSON.stringify({ email, password }),
+          });
+
+          // Store user data and token
+          currentUser = data.user;
+          accessToken = data.accessToken;
+
+          log(`✅ Login successful! User ID: ${currentUser.id}`, 'success');
+          log(`🔑 Access Token: ${accessToken.substring(0, 20)}...`, 'debug');
+
+          showStatus('loginStatus', `Login successful! Welcome ${currentUser.username}`, 'success');
+
+          displayUserInfo();
+        } catch (error) {
+          showStatus('loginStatus', `Login failed: ${error.message}`, 'error');
+        }
+      }
+
+      // Get user profile (fresh DB query)
+      async function getProfile() {
+        if (!accessToken) {
+          showStatus('sessionStatus', 'Please login first', 'error');
+          return;
+        }
+
+        try {
+          log('👤 Fetching fresh profile data from database...', 'info');
+          const { data } = await apiCall('/auth/profile');
+
+          currentUser = data;
+          log(`✅ Fresh profile loaded: ${data.email} | Online: ${data.isOnline}`, 'success');
+          log(`📊 Last Online: ${data.lastOnlineAt}`, 'debug');
+
+          showStatus(
+            'sessionStatus',
+            `Profile loaded fresh from DB. Online: ${data.isOnline}`,
+            'success',
+          );
+
+          displayUserInfo();
+        } catch (error) {
+          showStatus('sessionStatus', `Profile fetch failed: ${error.message}`, 'error');
+        }
+      }
+
+      // Validate session
+      async function validateSession() {
+        if (!accessToken) {
+          showStatus('sessionStatus', 'Please login first', 'error');
+          return;
+        }
+
+        try {
+          log('🔍 Validating current session...', 'info');
+          const { data } = await apiCall('/auth/validate');
+
+          log(`✅ Session valid: ${data.valid} | User ID: ${data.user.id}`, 'success');
+
+          showStatus('sessionStatus', `Session is valid! User: ${data.user.id}`, 'success');
+        } catch (error) {
+          showStatus('sessionStatus', `Session validation failed: ${error.message}`, 'error');
+        }
+      }
+
+      // Refresh token
+      async function refreshToken() {
+        try {
+          log('🔄 Refreshing access token...', 'info');
+          const { data } = await apiCall('/auth/refresh', {
+            method: 'POST',
+          });
+
+          accessToken = data.accessToken;
+          log(`✅ Token refreshed successfully!`, 'success');
+          log(`🔑 New Access Token: ${accessToken.substring(0, 20)}...`, 'debug');
+
+          showStatus('sessionStatus', 'Token refreshed successfully!', 'success');
+        } catch (error) {
+          showStatus('sessionStatus', `Token refresh failed: ${error.message}`, 'error');
+        }
+      }
+
+      // Get all sessions
+      async function getSessions() {
+        if (!accessToken) {
+          showStatus('sessionStatus', 'Please login first', 'error');
+          return;
+        }
+
+        try {
+          log('📊 Fetching all user sessions...', 'info');
+          const { data } = await apiCall('/auth/sessions');
+
+          log(`📋 Found ${data.sessions?.length || 0} sessions`, 'success');
+
+          showStatus(
+            'sessionStatus',
+            `Found ${data.sessions?.length || 0} active sessions`,
+            'info',
+          );
+
+          // Display session data
+          const sessionData = document.createElement('div');
+          sessionData.className = 'json-display';
+          sessionData.textContent = JSON.stringify(data, null, 2);
+          document.getElementById('sessionStatus').appendChild(sessionData);
+        } catch (error) {
+          showStatus('sessionStatus', `Failed to get sessions: ${error.message}`, 'error');
+        }
+      }
+
+      // Logout user
+      async function logoutUser() {
+        if (!accessToken) {
+          showStatus('sessionStatus', 'Already logged out', 'info');
+          return;
+        }
+
+        try {
+          log('🚪 Logging out user...', 'info');
+          const { data } = await apiCall('/auth/logout', {
+            method: 'POST',
+          });
+
+          // Clear local data
+          currentUser = null;
+          accessToken = null;
+
+          log(`✅ Logout successful!`, 'success');
+
+          showStatus('sessionStatus', 'Logged out successfully!', 'success');
+
+          hideUserInfo();
+        } catch (error) {
+          showStatus('sessionStatus', `Logout failed: ${error.message}`, 'error');
+        }
+      }
+
+      // Logout all sessions
+      async function logoutAllSessions() {
+        if (!accessToken) {
+          showStatus('sessionStatus', 'Please login first', 'error');
+          return;
+        }
+
+        try {
+          log('🚪 Logging out all sessions...', 'info');
+          const { data } = await apiCall('/auth/logout-all', {
+            method: 'POST',
+          });
+
+          // Clear local data
+          currentUser = null;
+          accessToken = null;
+
+          log(`✅ All sessions logged out!`, 'success');
+
+          showStatus('sessionStatus', 'All sessions logged out successfully!', 'success');
+
+          hideUserInfo();
+        } catch (error) {
+          showStatus('sessionStatus', `Logout all failed: ${error.message}`, 'error');
+        }
+      }
+
+      // Check Redis health
+      async function checkRedisHealth() {
+        try {
+          log('🔍 Checking Redis health...', 'info');
+          const { data } = await apiCall('/health');
+
+          log(`✅ Redis Status: ${data.status}`, 'success');
+
+          showStatus(
+            'redisStatus',
+            `Redis Health: ${data.status} | Service: ${data.service}`,
+            'success',
+          );
+
+          // Display full health data
+          const healthData = document.createElement('div');
+          healthData.className = 'json-display';
+          healthData.textContent = JSON.stringify(data, null, 2);
+          document.getElementById('redisStatus').appendChild(healthData);
+        } catch (error) {
+          showStatus('redisStatus', `Redis health check failed: ${error.message}`, 'error');
+        }
+      }
+
+      // Get session data from Redis (mock - would need backend endpoint)
+      async function getSessionData() {
+        try {
+          log('📊 Attempting to get Redis session data...', 'info');
+          showStatus(
+            'redisStatus',
+            'Session data would be retrieved from Redis. Check Docker logs for Redis keys.',
+            'info',
+          );
+          log(
+            '💡 Tip: Run "docker exec redis redis-cli -a your_secure_password keys session:*" to see Redis sessions',
+            'warning',
+          );
+        } catch (error) {
+          showStatus('redisStatus', `Failed to get session data: ${error.message}`, 'error');
+        }
+      }
+
+      // Display user info
+      function displayUserInfo() {
+        if (!currentUser) return;
+
+        const userInfo = document.getElementById('userInfo');
+        const userDisplay = document.getElementById('userDisplay');
+
+        userDisplay.innerHTML = `
+                <div class="json-display">
+                    ${JSON.stringify(currentUser, null, 2)}
+                </div>
+            `;
+
+        userInfo.classList.remove('hidden');
+      }
+
+      // Hide user info
+      function hideUserInfo() {
+        document.getElementById('userInfo').classList.add('hidden');
+      }
+
+      // Initialize
+      document.addEventListener('DOMContentLoaded', function () {
+        log('🚀 Redis Session Test Interface Loaded', 'success');
+        log('📡 API Base URL: ' + API_BASE_URL, 'info');
+        log('🔧 Ready for testing Redis session implementation', 'info');
+
+        // Test initial connection
+        testRedisConnection();
+      });
+    </script>
+  </body>
+</html>

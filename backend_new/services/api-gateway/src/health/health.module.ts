@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
+import { AuthModule } from '../auth/auth.module';
+import { ProxyModule } from '../proxy/proxy.module';
 import { HealthController } from './health.controller';
 import { HealthService } from './health.service';
-import { ProxyModule } from '../proxy/proxy.module';
 
 @Module({
-  imports: [ProxyModule],
+  imports: [ProxyModule, AuthModule],
   controllers: [HealthController],
   providers: [HealthService],
 })
