@@ -20,17 +20,30 @@ RUN npm run build
 # Development mode: enable hot reload for local development
 FROM node:18-alpine AS dev
 WORKDIR /app
+
+# Install dependencies
 COPY package.json package-lock.json* ./
 RUN npm ci
+
+# Copy source code
 COPY . .
+
+# Set environment variables for hot reload
+ENV NODE_ENV=development
+ENV WATCHPACK_POLLING=true
+ENV CHOKIDAR_USEPOLLING=true
+
+# Expose port
 EXPOSE 3002
-CMD ["npm", "run", "dev"]
+
+# Start development server with hot reload
+CMD ["npm", "run", "dev", "--", "--hostname", "0.0.0.0", "--port", "3002"]
 
 # Production image, copy all the files and run next
 FROM base AS runner
 WORKDIR /app
 
-ENV NODE_ENV production
+ENV NODE_ENV=production
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs

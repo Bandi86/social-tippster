@@ -1,0 +1,24 @@
+# Docker Compose override for Windows development
+# This file provides Windows-specific configurations for better hot reload
+
+version: '3.8'
+
+services:
+  frontend_new_dev:
+    environment:
+      # Windows-specific file watching
+      CHOKIDAR_USEPOLLING: 'true'
+      CHOKIDAR_INTERVAL: 1000
+      WATCHPACK_POLLING: 'true'
+      # Force Next.js to use polling
+      FORCE_COLOR: 1
+    volumes:
+      # Use consistent file watching on Windows
+      - ../frontend_new:/app:cached
+      - frontend_new_node_modules:/app/node_modules
+      # Exclude problematic directories
+      - /app/.next
+      - /app/node_modules/.cache
+    # Enable TTY for better log output
+    tty: true
+    stdin_open: true

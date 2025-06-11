@@ -6,143 +6,58 @@
 
 ### Important to know
 
-- frontend uses `next.js` framework. Please read the [next.js documentation](https://nextjs.org/docs) for more information. Follow the latest patterns and practices.
-- backend uses `nestjs` framework. Please read the [nestjs documentation](https://docs.nestjs.com/) for more information.
-- All test files, images, and documentation must be organized in specific folders to maintain a clean project structure.
+- Monorepo structure: The project is organized as a monorepo, which means all related packages and services are stored in a single repository.
+- frontend is the frontend_new folder, which contains the frontend code.
+- backend is the backend_new folder, which contains the backend code.
+note: ignore the old frontend and backend folders, they are not used anymore.
 
-## File Organization Guidelines
+# Project Structure
+- everything is docker containerized all services are running in docker containers.
+- The project is structured as follows:
+  - `frontend_new/`: Contains the frontend code.
+  - `backend_new/`: Contains the backend code.
+  - `docker-compose.yml`: Docker Compose file to run all services. path: backend_new `docker-compose.yml`.
+  - `README.md`: Project documentation.
 
-- **Test Files**: All test files (e.g., `*.spec.ts`, `*.test.js`, and all test scripts) must be placed in the `tests/` folder at the root. If there are many files, use subfolders:
-  - `tests/backend/` (backend tests)
-  - `tests/frontend/` (frontend tests)
-  - `tests/examples/` (example tests)
-  - `tests/images/` (test screenshots)
-  - `tests/playwright-report/` (E2E test reports)
-- No test files are present in the root of `frontend/` or `backend/` directories. This structure is up-to-date and compliant with project documentation standards.
-- **Test Images**: All test-generated images (screenshots, PNGs) must be placed in `tests/images/`, including those from any subproject or test folder.
-- **Documentation**: All Markdown files (`*.md`) must be placed in the `docs/` folder, not in the root or any other folder (except for the main `README.md`, which stays in root).
-- **Debug Files**: All debug PNGs and scripts (e.g., `debug-*.png`, `check-admin-status.js`) must be placed in `docs/debug/`, not in the root or other folders.
-- **Important Files**: Never ignore or delete the `cookies.txt` file - it must be stored in `docs/`.
-- **Root Directory**: Keep the root clean - no test, image, debug, or documentation files in the root. All such files must be organized as above.
-- **Subproject Cleanliness**: The same organization applies to `backend/` and `frontend/` folders: do not keep test, image, debug, or documentation files in their roots; always move them to the central `tests/` or `docs/` folders at the project root.
-- **Test Folder Consolidation**: If there are multiple test-related folders (e.g., `test/`, `tests-examples/`), consolidate their contents into the main `tests/` folder, using subfolders if needed for clarity.
-- **Organization Status**: ✅ **COMPLETED** - Project reorganization completed June 1, 2025. All files now follow the above guidelines.
+  ### how to use it? use mcp server devtools!
 
-## Development Server Guidelines
+# Frontend code suggestions
+ nextjs 15 latest version https://nextjs.org/docs
+ - follow Next.js best practices for file organization and component structure.
+- Use TypeScript for type safety and better development experience.
+- Organize components into directories based on their functionality.
+- Use taiwlindcss for styling, and shadcn/ui for UI components.
+- Use `@tanstack/react-query` for data fetching and state management.
+- Use `react-hook-form` for form handling and validation.
+- Use `zod` for schema validation.
+- Use `react-i18next` for internationalization.
+- Use `eslint` and `prettier` for code linting and formatting.
+- use `axios` for API requests.
+- use `zustand` for state management.
+- try use logical components structure if page file is too big, split it into smaller components.
+- always try to use server components when possible, to reduce client-side bundle size and improve performance.
+- care about performance every component and page should be optimized for performance.
 
-**Single Command Rule**: Start both frontend (localhost:3000) and backend (localhost:3001) using the unified root command:
+# Backend code suggestions
+backend_new is michroservices architecture, each service is a separate package its created by nestjs and its docker containerized.
+- you can use the `nest` CLI to generate new services, controllers, and modules.
+- Use TypeScript for type safety and better development experience.
+- Organize services into directories based on their functionality.
+- Use `@nestjs/swagger` for API documentation.
+- using prisma for database can use `prisma generate` to generate types and client.
+- using redis for caching and message brokering.
+- the api getaway is the main entry point for the backend, it handles all incoming requests and routes them to the appropriate service.
 
-```bash
-npm run dev
-```
+# Testing suggestions
+- Be careful with curl commands, they are not recommended for testing in this project because the project is dockerized and uses `docker-compose` to run all services. if you want to test try to use the devtools mcp server
+- Use `jest` for unit testing and `supertest` for integration testing.
+- Write tests for all new features and bug fixes.
+- Aim for high test coverage, but prioritize testing critical functionality.
+- Use `mocking` to isolate tests and avoid hitting external dependencies.
+- the test folder is located at `tests` directory. have separated folders for frontend and backend tests and more.
+- Frontend test should use playwright for e2e testing, and `@testing-library/react` for unit testing. located folder is samme /`tests` in root directory
 
-**Do Not Start Servers Automatically or in Parallel**:
-If the development servers are already running on ports 3000 or 3001, do not attempt to start them again — either manually or programmatically (e.g., via Copilot task suggestions). This causes port conflicts, server duplication, or unexpected behavior.
-
-**Do Not Auto-Restart Servers**:
-Copilot or developer scripts must never attempt to "help" by starting a server just because a port is occupied. If a port is in use, it usually means the server is already running, and that’s expected.
-
-**Single Terminal Policy**:
-
-- Use only one integrated terminal in VSCode to run the dev server.
-- Do not open multiple terminals to start frontend/backend separately.
-- Do not run alternative commands like dev:frontend or dev:backend unless debugging in isolation (and even then, prefer `npm run dev`).
-
-**Restart Protocol**:
-If a server crashes or needs to be restarted, stop the current process and re-run:
-
-```bash
-npm run dev
-```
-
-**Avoid Conflicts**:
-
-- Never run separate frontend/backend instances in different terminals.
-- If port 3000 or 3001 is unavailable, check if the server is already running rather than starting a new instance.
-- Multiple concurrent servers are not supported and will break the dev environment.
-
-**No Server Boot Logic in Tasks**:
-
-- Do not attach server start logic to test or documentation tasks.
-- Do not include server bootstrap logic in test runners, file watchers, or script executions.
-
-**Alternative Commands (Use only when necessary)**:
-
-- `npm run dev:backend` – Starts backend only (not recommended)
-- `npm run dev:frontend` – Starts frontend only (not recommended)
-
-### Package.json Configuration
-
-- **Root Dependencies**: Project uses comprehensive testing and development dependencies:
-  - **Testing**: Jest (`^29.7.0`), Playwright (`^1.52.0`), ts-jest (`^29.3.4`)
-  - **Reporting**: jest-html-reporter, jest-junit for test output
-  - **TypeScript**: Full TypeScript support with ts-node and type definitions
-  - **Linting/Formatting**: ESLint, Prettier with automated commit hooks
-  - **Development**: Concurrently for running multiple processes, cross-env for environment variables
-- **Backend Dependencies**: NestJS testing framework, Supertest for HTTP testing
-- **Build Scripts**: Separate build commands for frontend and backend components
-- **Quality Assurance**: Husky pre-commit hooks, lint-staged for automated code quality checks
-
-## Terminal Best Practices
-
-- **Terminal Type**: Use `bash` or `zsh` for script compatibility.
-- **Encoding**: Ensure UTF-8 encoding for special characters.
-- **IDE Integration**: Use integrated terminal in VSCode for better development experience.
-- **Port Management**: If port conflicts occur, close conflicting processes before restarting.
-- **Error Handling**: Check terminal logs for errors and reset terminal if needed.
-
-## Testing & Documentation
-
-### Test Infrastructure
-
-- **Jest Configuration**: Root `jest.config.ts` with TypeScript support, coverage reporting, and HTML/JUnit output
-- **Test Scripts**: Available npm scripts for comprehensive testing:
-  - `npm test` - Run Jest unit tests with coverage
-  - `npm run test:e2e` - Run Playwright end-to-end tests
-  - `npm run test:auth:run` - Run authentication integration test suite
-  - `npm run start:test` - Start backend in test environment
-- **Backend Testing**: NestJS testing framework with custom Jest configurations:
-  - `tests/backend/jest.auth-integration.config.js` - Authentication integration tests
-  - In-memory SQLite database for isolated testing
-  - Coverage reports in `tests/coverage/` directory
-- **Frontend Testing**: Playwright tests for UI components and auth store integration
-- **Authentication Test Suite**: Comprehensive testing framework:
-  - `tests/run-auth-tests.js` - Automated test runner script
-  - Backend API endpoint testing (security, performance, edge cases)
-  - Frontend authentication store and UI integration tests
-  - End-to-end user authentication flows
-  - Test reporting with detailed pass/fail analysis
-
-### Testing Categories
-
-- **Unit Tests**: Jest-based tests for backend modules and services
-- **Integration Tests**: Authentication system, database operations, API endpoints
-- **E2E Testing**: Playwright for complete user workflows and browser testing
-- **Performance Tests**: Authentication response times and concurrent user scenarios
-- **Security Tests**: Token validation, CSRF protection, brute force protection
-
-### Test Execution
-
-- **Development Testing**: Run `npm run dev` first, then execute test commands
-- **Isolated Testing**: Backend tests use in-memory database, no server dependency required
-- **Continuous Testing**: All test files organized in `tests/` with subfolders for different categories
-- **Test Reports**: Automatic generation of HTML reports and JUnit XML for CI/CD integration
-
-### API Documentation
-
-- **Swagger UI**: Accessible at `http://localhost:3001/api/docs`
-- **Authentication Testing**: Use Swagger's "Authorize" button to test protected endpoints
-- **API Testing Scripts**: Manual testing scripts in `tests/backend/` for validation
-
-### Task Focus
-
-- Complete requested tasks and end conversation after updating documentation.
-- Always run relevant tests after making changes to ensure system integrity.
-- Update test documentation when adding new test categories or modifying test infrastructure.
-
-## Documentation Update Requirements
-
-After completing any task, **always update**:
+# After task is finished update the documentation in docs folder
 
 ### Core Documentation
 

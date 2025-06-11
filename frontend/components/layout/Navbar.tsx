@@ -1,6 +1,7 @@
 'use client';
 
 import { NotificationsBell } from '@/components/features/notifications/NotificationsBell';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useAuth } from '@/hooks/useAuth';
 import { BookOpen, Home, Menu, MessageSquare, Star, TrendingUp, X } from 'lucide-react';
 import Link from 'next/link';
@@ -18,7 +19,7 @@ const navigationItems = [
 
 const UserNavbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { user, isLoading, isAuthenticated } = useAuth();
+  const { user, isLoading } = useAuth();
   const pathname = usePathname();
 
   const getActiveClass = (href: string) => {
@@ -77,6 +78,9 @@ const UserNavbar = () => {
 
           {/* Right Side - User Actions */}
           <div className='flex items-center space-x-3'>
+            {/* Theme Toggle */}
+            <ThemeToggle />
+
             {/* Messages and Notifications - Only visible for authenticated users */}
             {user && (
               <div className='hidden md:flex items-center space-x-2'>
@@ -165,6 +169,11 @@ const UserNavbar = () => {
 
             {/* Mobile User Section */}
             <div className='pt-4 border-t border-amber-500/20'>
+              {/* Theme Toggle for Mobile */}
+              <div className='flex justify-center pb-4'>
+                <ThemeToggle />
+              </div>
+
               {/* Mobile Messages and Notifications - Only for authenticated users */}
               {user && (
                 <div className='flex justify-center gap-4 pb-4'>
